@@ -2,7 +2,9 @@ local players = game:GetService('Players')
 local replicatedstorage = game:GetService("ReplicatedStorage")
 local client = players.LocalPlayer
 local camera = workspace:FindFirstChildWhichIsA('Camera')
+
 shared.afy = not shared.afy
+getconnections(client.Idled)[1]:Disconnect()
 
 local get_car = function()
     for i,v in pairs(workspace.Vehicles:GetChildren()) do
@@ -27,13 +29,12 @@ while (shared.afy and task.wait()) do
             replicatedstorage["Game Modes V2"].Shared.Remotes.RemoteEvents.Invite:FireServer(17)
         end
 
-        while (not client.PlayerGui:FindFirstChild('RaceGui')) do
-            task.wait()
-        end
-
         local checkpoint = camera:FindFirstChildWhichIsA('Part')
         if (checkpoint) then
-            my_car:PivotTo(checkpoint.CFrame * CFrame.new(0, 5, 0))
+            my_car.PrimaryPart.Anchored = false
+            my_car:PivotTo(checkpoint.CFrame + Vector3.new(0, 1, 0))
+        else
+            my_car.PrimaryPart.Anchored = true
         end
     end
 end
