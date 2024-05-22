@@ -1,7 +1,8 @@
 local players = game:GetService('Players')
 local replicatedstorage = game:GetService("ReplicatedStorage")
-local client = players.LocalPlayer
+
 local camera = workspace:FindFirstChildWhichIsA('Camera')
+local client = players.LocalPlayer
 
 shared.afy = not shared.afy
 getconnections(client.Idled)[1]:Disconnect()
