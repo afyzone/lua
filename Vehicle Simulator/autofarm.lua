@@ -22,9 +22,9 @@ while (shared.afy and task.wait()) do
         end
         
         if (not client.PlayerGui:FindFirstChild('RaceGui')) then
-            replicatedstorage["Game Modes V2"].Shared.Remotes.RemoteEvents.Invite:FireServer(14)
-            replicatedstorage["Game Modes V2"].Shared.Remotes.RemoteFunctions["join_mode"]:InvokeServer(14)
-            replicatedstorage["Game Modes V2"].Shared.Remotes.RemoteEvents.Invite:FireServer(14)
+            replicatedstorage["Game Modes V2"].Shared.Remotes.RemoteEvents.Invite:FireServer(17)
+            replicatedstorage["Game Modes V2"].Shared.Remotes.RemoteFunctions["join_mode"]:InvokeServer(17)
+            replicatedstorage["Game Modes V2"].Shared.Remotes.RemoteEvents.Invite:FireServer(17)
         end
 
         while (not client.PlayerGui:FindFirstChild('RaceGui')) do
