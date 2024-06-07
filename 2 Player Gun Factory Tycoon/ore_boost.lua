@@ -6,7 +6,7 @@ shared.afy = not shared.afy
 while (shared.afy and task.wait()) do
     local ct = os.clock()
 
-    while (os.clock() - ct < 10 and task.wait()) do 
+    while (shared.afy and os.clock() - ct < 10 and task.wait()) do 
         for i,v in (workspace.DropStorage:FindFirstChildWhichIsA('Model'):GetChildren()) do
             for i,v2 in (workspace.Tycoons[our_color].PurchasedObjects:GetChildren()) do
                 if not (v2:FindFirstChild('Upgrade') and v2.Upgrade:FindFirstChildWhichIsA('TouchTransmitter')) then continue end
