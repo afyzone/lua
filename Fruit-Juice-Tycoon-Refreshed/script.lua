@@ -1,12 +1,13 @@
 -- https://www.roblox.com/games/6755746130 | Execute twice to toggle
 
-AUTO_LOBBY = true
+AUTO_OBBY = true
 AUTO_SHAKEORBUY = true
-AUTO_SELL = true
+AUTO_SELL = false
 AUTO_PRESTIGE = true
 AUTO_COLLECT = true
 AUTO_BALOON = true
 AUTO_USE_BUFFS = true
+AUTO_CHEST = true
 
 SHAKEORBUY_DELAY = 0
 SELL_DELAY = 20
@@ -43,6 +44,11 @@ while (shared.afy and task.wait()) do
     local my_tycoon = client.OwnedTycoon.Value
 
     if (char and root and my_tycoon:FindFirstChild('Essentials')) then
+        if (AUTO_PRESTIGE and tick() - prestige > 20) then
+            replicatedstorage.Remotes['RequestPrestige']:FireServer()
+            prestige = tick()
+        end
+
         if (AUTO_SELL and tick() - sell_time > SELL_DELAY) then
             local current_pos = root.CFrame
 
@@ -58,7 +64,7 @@ while (shared.afy and task.wait()) do
             sell_time = tick()
         end
 
-        if (AUTO_LOBBY and tick() - obby > 20 and workspace.ObbyParts.ObbyStartPart.Color ~= Color3.fromRGB(255,0,0)) then
+        if (AUTO_OBBY and tick() - obby > 20 and workspace.ObbyParts.ObbyStartPart.Color ~= Color3.fromRGB(255, 0, 0)) then
             local current_pos = root.CFrame
 
             root.CFrame = workspace.ObbyParts.RealObbyStartPart.CFrame
@@ -68,6 +74,18 @@ while (shared.afy and task.wait()) do
             root.CFrame = current_pos
 
             obby = tick()
+        end
+
+        if (AUTO_USE_BUFFS) then
+            for i,v in (backpack:GetChildren()) do
+                v.Parent = char
+            end
+
+            for i,v in (char:GetChildren()) do
+                if (v:IsA('Tool')) then
+                    v:Activate()
+                end
+            end
         end
 
         if (AUTO_SHAKEORBUY and tick() - shake_and_buttons > SHAKEORBUY_DELAY) then
@@ -91,11 +109,6 @@ while (shared.afy and task.wait()) do
 
             root.CFrame = current_pos
             shake_and_buttons = tick()
-        end
-
-        if (AUTO_PRESTIGE and tick() - prestige > 20) then
-            replicatedstorage.Remotes['RequestPrestige']:FireServer()
-            prestige = tick()
         end
 
         if (AUTO_COLLECT and my_tycoon:FindFirstChild('Essentials')) then
@@ -128,15 +141,16 @@ while (shared.afy and task.wait()) do
             root.CFrame = current_pos
         end
 
-        if (AUTO_USE_BUFFS) then
-            for i,v in (backpack:GetChildren()) do
-                v.Parent = char
-            end
+        if (AUTO_CHEST and my_tycoon:FindFirstChild('Essentials')) then
+            local current_chest = my_tycoon.Essentials.ItemChest1.InfoGui.ItemsLabel.Text:gsub(' items', '')
+            local current_chest_stat = current_chest:split('/')
 
-            for i,v in (char:GetChildren()) do
-                if (v:IsA('Tool')) then
-                    v:Activate()
-                end
+            if (current_chest_stat and current_chest_stat[1] == current_chest_stat[2]) then
+                local current_pos = root.CFrame
+                root.CFrame = my_tycoon.Essentials.ItemChest1.Root.CFrame
+                task.wait(.5)
+                fireproximityprompt(my_tycoon.Essentials.ItemChest1.Root.PromptAttachment.UsePrompt)
+                root.CFrame = current_pos
             end
         end
     end
