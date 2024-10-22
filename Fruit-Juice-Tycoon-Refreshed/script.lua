@@ -1,7 +1,5 @@
 -- https://www.roblox.com/games/6755746130 | Execute twice to toggle
 
--- https://www.roblox.com/games/6755746130 | Execute twice to toggle
-
 ENABLE_AUTO_LOBBY = true
 ENABLE_AUTO_SHAKEORBUY = true
 ENABLE_AUTO_SELL = true
