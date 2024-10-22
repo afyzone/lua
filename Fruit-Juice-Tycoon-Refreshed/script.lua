@@ -38,7 +38,7 @@ while (shared.afy and task.wait()) do
     local char = client.Character
     local root = char and char:FindFirstChild('HumanoidRootPart')
 
-    if (char and root) then
+    if (char and root and my_tycoon:FindFirstChild('Essentials')) then
         if (AUTO_SELL and tick() - sell_time > SELL_DELAY) then
             local current_pos = root.CFrame
 
@@ -55,7 +55,6 @@ while (shared.afy and task.wait()) do
 
             root.CFrame = workspace.ObbyParts.Stages.Hard.VictoryPart.CFrame
             task.wait(.5)
-            -- firetouchinterest(root, workspace.ObbyParts.Stages.Hard.VictoryPart, 0)
             root.CFrame = current_pos
 
             obby = tick()
@@ -81,7 +80,7 @@ while (shared.afy and task.wait()) do
             prestige = tick()
         end
 
-        if (AUTO_COLLECT and my_tycoon:FindFirstChild('Essentials')) then
+        if (AUTO_COLLECT) then
             local pick_fruit = backpack:FindFirstChild('PickFruit')
 
             if (pick_fruit) then
