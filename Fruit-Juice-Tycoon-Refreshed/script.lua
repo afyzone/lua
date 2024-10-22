@@ -13,6 +13,7 @@ SELL_DELAY = 20
 local players = game:GetService('Players')
 local replicatedstorage = game:GetService('ReplicatedStorage')
 local client = players.LocalPlayer
+local backpack = client:FindFirstChildWhichIsA('Backpack')
 
 while (not client.OwnedTycoon.Value) do task.wait() end
 
@@ -66,7 +67,16 @@ while (shared.afy and task.wait()) do
         end
 
         if (ENABLE_AUTO_COLLECT) then
-            replicatedstorage['CollectFruit']:FireServer()
+            local pick_fruit = backpack:FindFirstChild('PickFruit')
+
+            if (pick_fruit) then
+                pick_fruit.Parent = char
+            else
+                pick_fruit = char:FindFirstChild('PickFruit')
+            end
+
+            workspace.Ignored.CollectOrb.CollectOrb.Size = Vector3.new(200, 2, 2)
+            workspace.Ignored.CollectOrb.CollectOrb.CFrame = my_tycoon.Essentials.CollectAll.CollectorPart.CFrame
         end
     end
 end
