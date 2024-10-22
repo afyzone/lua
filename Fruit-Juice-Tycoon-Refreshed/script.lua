@@ -5,6 +5,7 @@ ENABLE_AUTO_SHAKEORBUY = true
 ENABLE_AUTO_SELL = true
 ENABLE_AUTO_PRESTIGE = true
 ENABLE_AUTO_COLLECT = true
+ENABLE_AUTO_BALOON = true
 
 SHAKEORBUY_DELAY = 0
 OBBY_DELAY = 20
@@ -21,6 +22,17 @@ local my_tycoon = client.OwnedTycoon.Value
 local sell_time, shake_and_buttons, obby, prestige = 0, 0, 0, 0
 
 shared.afy = not shared.afy
+
+task.spawn(function()
+    while (shared.afy and task.wait()) do
+        local char = client.Character
+        local root = char and char.HumanoidRootPart
+    
+        if (char and root) then
+            root.AssemblyLinearVelocity = Vector3.zero
+        end
+    end
+end)
 
 while (shared.afy and task.wait()) do
     local char = client.Character
@@ -66,7 +78,7 @@ while (shared.afy and task.wait()) do
             prestige = tick()
         end
 
-        if (ENABLE_AUTO_COLLECT) then
+        if (ENABLE_AUTO_COLLECT and my_tycoon:FindFirstChild('Essentials')) then
             local pick_fruit = backpack:FindFirstChild('PickFruit')
 
             if (pick_fruit) then
@@ -77,6 +89,23 @@ while (shared.afy and task.wait()) do
 
             workspace.Ignored.CollectOrb.CollectOrb.Size = Vector3.new(200, 2, 2)
             workspace.Ignored.CollectOrb.CollectOrb.CFrame = my_tycoon.Essentials.CollectAll.CollectorPart.CFrame
+        end
+
+        if (ENABLE_AUTO_BALOON) then
+            for i,v in (workspace.BalloonContainer:GetChildren()) do
+                if (v:FindFirstChild('HitBox')) then
+                    local current_pos = root.CFrame
+
+                    root.CFrame = v.HitBox.CFrame
+                    task.wait(.5)
+
+                    if (v and v:FindFirstChild('HitBox')) then
+                        firetouchinterest(root, v.HitBox, 0)
+                    end
+
+                    root.CFrame = current_pos
+                end
+            end
         end
     end
 end
