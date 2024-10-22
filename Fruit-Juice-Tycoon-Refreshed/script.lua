@@ -1,9 +1,12 @@
 -- https://www.roblox.com/games/6755746130 | Execute twice to toggle
 
+-- https://www.roblox.com/games/6755746130 | Execute twice to toggle
+
 ENABLE_AUTO_LOBBY = true
 ENABLE_AUTO_SHAKEORBUY = true
 ENABLE_AUTO_SELL = true
 ENABLE_AUTO_PRESTIGE = true
+ENABLE_AUTO_COLLECT = true
 
 SHAKEORBUY_DELAY = 0
 OBBY_DELAY = 20
@@ -62,6 +65,10 @@ while (shared.afy and task.wait()) do
         if (ENABLE_AUTO_PRESTIGE and tick() - prestige > 20) then
             replicatedstorage.Remotes['RequestPrestige']:FireServer()
             prestige = tick()
+        end
+
+        if (ENABLE_AUTO_COLLECT) then
+            replicatedstorage['CollectFruit']:FireServer()
         end
     end
 end
