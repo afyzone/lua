@@ -15,6 +15,10 @@ local replicatedstorage = game:GetService('ReplicatedStorage')
 local client = players.LocalPlayer
 local backpack = client:FindFirstChildWhichIsA('Backpack')
 
+for i, v in pairs(getconnections(client.Idled)) do 
+	v:Disable()
+end
+
 while (not client.OwnedTycoon.Value) do task.wait() end
 
 local sell_time, shake_and_buttons, obby, prestige = 0, 0, 0, 0
