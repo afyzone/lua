@@ -3,18 +3,20 @@
 ENABLE_AUTO_LOBBY = true
 ENABLE_AUTO_SHAKEORBUY = true
 ENABLE_AUTO_SELL = true
+ENABLE_AUTO_PRESTIGE = true
 
 SHAKEORBUY_DELAY = 0
 OBBY_DELAY = 20
 SELL_DELAY = 20
 
 local players = game:GetService("Players")
+local replicatedstorage = game:GetService('ReplicatedStorage')
 local client = players.LocalPlayer
 
 while (not client.OwnedTycoon.Value) do task.wait() end
 
 local my_tycoon = client.OwnedTycoon.Value
-local sell_time, shake_and_buttons, obby = 0, 0, 0
+local sell_time, shake_and_buttons, obby, prestige = 0, 0, 0, 0
 
 shared.afy = not shared.afy
 
@@ -34,7 +36,7 @@ while (shared.afy and task.wait()) do
             sell_time = tick()
         end
 
-        if (ENABLE_AUTO_LOBBY and tick() - obby > OBBY_DELAY and workspace.ObbyParts.ObbyStartPart.Color ~= Color3.fromRGB(255, 0, 0)) then
+        if (ENABLE_AUTO_LOBBY and tick() - obby > OBBY_DELAY and workspace.ObbyParts.ObbyStartPart.Color ~= Color3.fromRGB(255,0,0)) then
             local current_pos = root.CFrame
 
             root.CFrame = workspace.ObbyParts.Stages.Hard.VictoryPart.CFrame
@@ -55,6 +57,11 @@ while (shared.afy and task.wait()) do
             end
 
             shake_and_buttons = tick()
+        end
+
+        if (ENABLE_AUTO_PRESTIGE and tick() - prestige > 20) then
+            replicatedstorage.Remotes['RequestPrestige']:FireServer()
+            prestige = tick()
         end
     end
 end
