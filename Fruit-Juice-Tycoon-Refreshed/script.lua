@@ -62,6 +62,8 @@ while (shared.afy and task.wait()) do
         end
 
         if (ENABLE_AUTO_SHAKEORBUY and tick() - shake_and_buttons > SHAKEORBUY_DELAY) then
+            local current_pos = root.CFrame
+            
             for i,v in (my_tycoon:GetDescendants()) do
                 if (v:IsA('TouchTransmitter') and v.Parent) then
                     root.CFrame = v.Parent.CFrame
@@ -70,6 +72,7 @@ while (shared.afy and task.wait()) do
                 end
             end
 
+            root.CFrame = current_pos
             shake_and_buttons = tick()
         end
 
@@ -92,20 +95,20 @@ while (shared.afy and task.wait()) do
         end
 
         if (ENABLE_AUTO_BALOON) then
+            local current_pos = root.CFrame
+
             for i,v in (workspace.BalloonContainer:GetChildren()) do
                 if (v:FindFirstChild('HitBox')) then
-                    local current_pos = root.CFrame
-
                     root.CFrame = v.HitBox.CFrame
                     task.wait(.5)
 
                     if (v and v:FindFirstChild('HitBox')) then
                         firetouchinterest(root, v.HitBox, 0)
                     end
-
-                    root.CFrame = current_pos
                 end
             end
+
+            root.CFrame = current_pos
         end
     end
 end
