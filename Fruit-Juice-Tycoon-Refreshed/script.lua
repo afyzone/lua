@@ -9,7 +9,7 @@ SHAKEORBUY_DELAY = 0
 OBBY_DELAY = 20
 SELL_DELAY = 20
 
-local players = game:GetService("Players")
+local players = game:GetService('Players')
 local replicatedstorage = game:GetService('ReplicatedStorage')
 local client = players.LocalPlayer
 
