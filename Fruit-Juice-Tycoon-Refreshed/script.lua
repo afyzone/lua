@@ -26,7 +26,7 @@ shared.afy = not shared.afy
 task.spawn(function()
     while (shared.afy and task.wait()) do
         local char = client.Character
-        local root = char and char.HumanoidRootPart
+        local root = char and char:FindFirstChild('HumanoidRootPart')
     
         if (char and root) then
             root.AssemblyLinearVelocity = Vector3.zero
@@ -36,7 +36,7 @@ end)
 
 while (shared.afy and task.wait()) do
     local char = client.Character
-    local root = char and char.HumanoidRootPart
+    local root = char and char:FindFirstChild('HumanoidRootPart')
 
     if (char and root) then
         if (ENABLE_AUTO_SELL and tick() - sell_time > SELL_DELAY) then
