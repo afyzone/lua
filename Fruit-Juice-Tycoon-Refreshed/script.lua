@@ -6,6 +6,7 @@ AUTO_SELL = true
 AUTO_PRESTIGE = true
 AUTO_COLLECT = true
 AUTO_BALOON = true
+AUTO_USE_BUFFS = true
 
 SHAKEORBUY_DELAY = 0
 SELL_DELAY = 20
@@ -16,7 +17,7 @@ local client = players.LocalPlayer
 local backpack = client:FindFirstChildWhichIsA('Backpack')
 
 for i, v in pairs(getconnections(client.Idled)) do 
-	v:Disable()
+    v:Disable()
 end
 
 while (not client.OwnedTycoon.Value) do task.wait() end
@@ -73,10 +74,18 @@ while (shared.afy and task.wait()) do
             local current_pos = root.CFrame
             
             for i,v in (my_tycoon:GetDescendants()) do
-                if (v:IsA('TouchTransmitter') and v.Parent) then
-                    root.CFrame = v.Parent.CFrame
-                    firetouchinterest(root, v.Parent, 0)
-                    task.wait()
+                if (my_tycoon:FindFirstChild('Buttons') and my_tycoon.Buttons:FindFirstChild('Statue') and v:IsDescendantOf(my_tycoon.Buttons)) then
+                    if (v == my_tycoon.Buttons.Statue) then
+                        root.CFrame = my_tycoon.Buttons.Statue.CFrame
+                        firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+                        task.wait()
+                    end
+                else
+                    if (v:IsA('TouchTransmitter') and v.Parent) then
+                        root.CFrame = v.Parent.CFrame
+                        firetouchinterest(root, v.Parent, 0)
+                        task.wait()
+                    end
                 end
             end
 
@@ -117,6 +126,18 @@ while (shared.afy and task.wait()) do
             end
 
             root.CFrame = current_pos
+        end
+
+        if (AUTO_USE_BUFFS) then
+            for i,v in (backpack:GetChildren()) do
+                v.Parent = char
+            end
+
+            for i,v in (char:GetChildren()) do
+                if (v:IsA('Tool')) then
+                    v:Activate()
+                end
+            end
         end
     end
 end
