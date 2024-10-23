@@ -95,9 +95,14 @@ while (shared.afy and task.wait()) do
             
             for i,v in (my_tycoon:GetDescendants()) do
                 if (my_tycoon:FindFirstChild('Buttons') and my_tycoon.Buttons:FindFirstChild('Statue') and v:IsDescendantOf(my_tycoon.Buttons)) then
-                    if (v == my_tycoon.Buttons.Statue) then
-                        root.CFrame = my_tycoon.Buttons.Statue.CFrame
-                        firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+                    -- if (v == my_tycoon.Buttons.Statue) then
+                    --     root.CFrame = my_tycoon.Buttons.Statue.CFrame
+                    --     firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+                    --     task.wait()
+                    -- end
+                    if (v:IsA('TouchTransmitter') and v.Parent) then
+                        root.CFrame = v.Parent.CFrame
+                        firetouchinterest(root, v.Parent, 0)
                         task.wait()
                     end
                 else
