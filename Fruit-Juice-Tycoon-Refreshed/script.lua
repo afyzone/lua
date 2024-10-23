@@ -8,6 +8,7 @@ AUTO_COLLECT = true
 AUTO_BALOON = true
 AUTO_USE_BUFFS = true
 AUTO_CHEST = true
+AVOID_BUYING_IF_STATUE = false
 
 SHAKEORBUY_DELAY = 0
 SELL_DELAY = 20
@@ -95,15 +96,18 @@ while (shared.afy and task.wait()) do
             
             for i,v in (my_tycoon:GetDescendants()) do
                 if (my_tycoon:FindFirstChild('Buttons') and my_tycoon.Buttons:FindFirstChild('Statue') and v:IsDescendantOf(my_tycoon.Buttons)) then
-                    -- if (v == my_tycoon.Buttons.Statue) then
-                    --     root.CFrame = my_tycoon.Buttons.Statue.CFrame
-                    --     firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
-                    --     task.wait()
-                    -- end
-                    if (v:IsA('TouchTransmitter') and v.Parent) then
-                        root.CFrame = v.Parent.CFrame
-                        firetouchinterest(root, v.Parent, 0)
-                        task.wait()
+                    if (AVOID_BUYING_IF_STATUE) then
+                        if (v == my_tycoon.Buttons.Statue) then
+                            root.CFrame = my_tycoon.Buttons.Statue.CFrame
+                            firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+                            task.wait()
+                        end
+                    else
+                        if (v:IsA('TouchTransmitter') and v.Parent) then
+                            root.CFrame = v.Parent.CFrame
+                            firetouchinterest(root, v.Parent, 0)
+                            task.wait()
+                        end
                     end
                 else
                     if (v:IsA('TouchTransmitter') and v.Parent) then
