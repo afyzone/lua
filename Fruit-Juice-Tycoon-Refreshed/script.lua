@@ -45,10 +45,6 @@ while (shared.afy and task.wait()) do
     local my_tycoon = client.OwnedTycoon.Value
 
     if (char and root and my_tycoon:FindFirstChild('Essentials')) then
-        if (AUTO_PRESTIGE and my_tycoon.Purchases:FindFirstChild('PrestigeStatue')) then
-            replicatedstorage.Remotes['RequestPrestige']:FireServer()
-        end
-
         if (AUTO_SELL and tick() - sell_time > SELL_DELAY) then
             local current_pos = root.CFrame
 
@@ -62,6 +58,10 @@ while (shared.afy and task.wait()) do
             root.CFrame = current_pos
 
             sell_time = tick()
+        end
+
+        if (AUTO_PRESTIGE and my_tycoon.Purchases:FindFirstChild('PrestigeStatue')) then
+            replicatedstorage.Remotes['RequestPrestige']:FireServer()
         end
 
         if (AUTO_OBBY and tick() - obby > 20 and workspace.ObbyParts.ObbyStartPart.Color ~= Color3.fromRGB(255, 0, 0)) then
