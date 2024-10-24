@@ -94,6 +94,7 @@ while (shared.afy and task.wait()) do
             local current_pos = root.CFrame
             
             for i,v in (my_tycoon:GetDescendants()) do
+                if (AUTO_PRESTIGE and my_tycoon.Purchases:FindFirstChild('PrestigeStatue')) then break end
                 if (my_tycoon:FindFirstChild('Buttons') and my_tycoon.Buttons:FindFirstChild('Statue') and v:IsDescendantOf(my_tycoon.Buttons)) then
                     if (AVOID_BUYING_IF_STATUE) then
                         if (v == my_tycoon.Buttons.Statue) then
