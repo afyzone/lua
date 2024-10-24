@@ -17,6 +17,7 @@ local players = game:GetService('Players')
 local replicatedstorage = game:GetService('ReplicatedStorage')
 local client = players.LocalPlayer
 local backpack = client:FindFirstChildWhichIsA('Backpack')
+local my_money = client.leaderstats.Money
 
 for i, v in pairs(getconnections(client.Idled)) do 
     v:Disable()
@@ -92,25 +93,53 @@ while (shared.afy and task.wait()) do
 
         if (AUTO_SHAKEORBUY and tick() - shake_and_buttons > SHAKEORBUY_DELAY) then
             local current_pos = root.CFrame
-            
+
             for i,v in (my_tycoon:GetDescendants()) do
                 if (AUTO_PRESTIGE and my_tycoon.Purchases:FindFirstChild('PrestigeStatue')) then break end
+                if not (v:IsA('TouchTransmitter') and v.Parent) then continue end
+
                 if (my_tycoon:FindFirstChild('Buttons') and my_tycoon.Buttons:FindFirstChild('Statue') and v:IsDescendantOf(my_tycoon.Buttons)) then
                     if (AVOID_BUYING_IF_STATUE) then
                         if (v == my_tycoon.Buttons.Statue) then
-                            root.CFrame = my_tycoon.Buttons.Statue.CFrame
-                            firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
-                            task.wait()
+                            local cost = my_tycoon.Buttons.Statue:GetAttribute('Cost')
+
+                            if (cost) then
+                                if (my_money.Value > cost) then
+                                    root.CFrame = my_tycoon.Buttons.Statue.CFrame
+                                    firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+                                    task.wait()
+                                end
+                            else
+                                root.CFrame = my_tycoon.Buttons.Statue.CFrame
+                                firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+                                task.wait()
+                            end
                         end
                     else
-                        if (v:IsA('TouchTransmitter') and v.Parent) then
+                        local cost = v.Parent:GetAttribute('Cost')
+
+                        if (cost) then
+                            if (my_money.Value > cost) then
+                                root.CFrame = v.Parent.CFrame
+                                firetouchinterest(root, v.Parent, 0)
+                                task.wait()
+                            end
+                        else
                             root.CFrame = v.Parent.CFrame
                             firetouchinterest(root, v.Parent, 0)
                             task.wait()
                         end
                     end
                 else
-                    if (v:IsA('TouchTransmitter') and v.Parent) then
+                    local cost = v.Parent:GetAttribute('Cost')
+
+                    if (cost) then
+                        if (my_money.Value > cost) then
+                            root.CFrame = v.Parent.CFrame
+                            firetouchinterest(root, v.Parent, 0)
+                            task.wait()
+                        end
+                    else
                         root.CFrame = v.Parent.CFrame
                         firetouchinterest(root, v.Parent, 0)
                         task.wait()
