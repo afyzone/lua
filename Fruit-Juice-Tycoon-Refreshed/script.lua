@@ -106,13 +106,13 @@ while (shared.afy and task.wait()) do
                             if (cost) then
                                 if (my_money.Value > cost) then
                                     root.CFrame = my_tycoon.Buttons.Statue.CFrame
-                                    firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
                                     task.wait()
+                                    firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
                                 end
                             else
                                 root.CFrame = my_tycoon.Buttons.Statue.CFrame
-                                firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
                                 task.wait()
+                                firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
                             end
                         end
                     else
@@ -121,13 +121,13 @@ while (shared.afy and task.wait()) do
                         if (cost) then
                             if (my_money.Value > cost) then
                                 root.CFrame = v.Parent.CFrame
-                                firetouchinterest(root, v.Parent, 0)
                                 task.wait()
+                                firetouchinterest(root, v.Parent, 0)
                             end
                         else
                             root.CFrame = v.Parent.CFrame
-                            firetouchinterest(root, v.Parent, 0)
                             task.wait()
+                            firetouchinterest(root, v.Parent, 0)
                         end
                     end
                 else
@@ -136,13 +136,13 @@ while (shared.afy and task.wait()) do
                     if (cost) then
                         if (my_money.Value > cost) then
                             root.CFrame = v.Parent.CFrame
-                            firetouchinterest(root, v.Parent, 0)
                             task.wait()
+                            firetouchinterest(root, v.Parent, 0)
                         end
                     else
                         root.CFrame = v.Parent.CFrame
-                        firetouchinterest(root, v.Parent, 0)
                         task.wait()
+                        firetouchinterest(root, v.Parent, 0)
                     end
                 end
             end
