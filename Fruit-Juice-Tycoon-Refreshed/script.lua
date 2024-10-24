@@ -104,44 +104,49 @@ while (shared.afy and task.wait()) do
                             local cost = my_tycoon.Buttons.Statue:GetAttribute('Cost')
 
                             if (cost) then
-                                if (my_money.Value > cost) then
+                                if (my_money.Value >= cost) then
                                     root.CFrame = my_tycoon.Buttons.Statue.CFrame
                                     task.wait()
-                                    firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+
+                                    if my_tycoon:FindFirstChild('Buttons') and my_tycoon.Buttons:FindFirstChild('Statue') then
+                                        firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+                                    end
                                 end
                             else
                                 root.CFrame = my_tycoon.Buttons.Statue.CFrame
                                 task.wait()
-                                firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+
+                                if my_tycoon:FindFirstChild('Buttons') and my_tycoon.Buttons:FindFirstChild('Statue') then
+                                    firetouchinterest(root, my_tycoon.Buttons.Statue, 0)
+                                end
                             end
                         end
                     else
                         local cost = v.Parent:GetAttribute('Cost')
 
                         if (cost) then
-                            if (my_money.Value > cost) then
+                            if (my_money.Value >= cost) then
                                 root.CFrame = v.Parent.CFrame
                                 task.wait()
-                                firetouchinterest(root, v.Parent, 0)
+
+                                if (v and v.Parent) then
+                                    firetouchinterest(root, v.Parent, 0)
+                                end
                             end
                         else
                             root.CFrame = v.Parent.CFrame
                             task.wait()
-                            firetouchinterest(root, v.Parent, 0)
+
+                            if (v and v.Parent) then
+                                firetouchinterest(root, v.Parent, 0)
+                            end
                         end
                     end
                 else
-                    local cost = v.Parent:GetAttribute('Cost')
+                    root.CFrame = v.Parent.CFrame
+                    task.wait()
 
-                    if (cost) then
-                        if (my_money.Value > cost) then
-                            root.CFrame = v.Parent.CFrame
-                            task.wait()
-                            firetouchinterest(root, v.Parent, 0)
-                        end
-                    else
-                        root.CFrame = v.Parent.CFrame
-                        task.wait()
+                    if (v and v.Parent) then
                         firetouchinterest(root, v.Parent, 0)
                     end
                 end
