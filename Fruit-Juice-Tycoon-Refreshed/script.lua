@@ -24,7 +24,7 @@ end
 
 while (not client.OwnedTycoon.Value) do task.wait() end
 
-local sell_time, shake_and_buttons, obby, prestige, buff_delay = 0, 0, 0, 0, 0
+local sell_time, shake_and_buttons, obby, buff_delay = 0, 0, 0, 0
 
 shared.afy = not shared.afy
 
@@ -45,9 +45,8 @@ while (shared.afy and task.wait()) do
     local my_tycoon = client.OwnedTycoon.Value
 
     if (char and root and my_tycoon:FindFirstChild('Essentials')) then
-        if (AUTO_PRESTIGE and tick() - prestige > 5) then
+        if (AUTO_PRESTIGE and my_tycoon.Purchases:FindFirstChild('PrestigeStatue')) then
             replicatedstorage.Remotes['RequestPrestige']:FireServer()
-            prestige = tick()
         end
 
         if (AUTO_SELL and tick() - sell_time > SELL_DELAY) then
