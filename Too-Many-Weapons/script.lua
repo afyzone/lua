@@ -5,8 +5,6 @@ local replicatedstorage = game:GetService("ReplicatedStorage")
 local client = players.LocalPlayer
 local backpack = client.Backpack
 
-local flip, flag = tick()
-
 shared.afy = not shared.afy
 
 while shared.afy and task.wait() do
