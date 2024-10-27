@@ -12,7 +12,6 @@ while shared.afy and task.wait() do
     
     if (char) then
         local root = char:FindFirstChild('HumanoidRootPart')
-        local hum = char:FindFirstChildWhichIsA('Humanoid')
         local my_slime = char:FindFirstChild('Slime')
 
         if (root and my_slime) then
