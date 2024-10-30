@@ -38,9 +38,7 @@ local auto_upgrade = function()
     local failed = playergui:WaitForChild('MainGui'):FindFirstChild("UpgradeFailedF")
 
     if (failed and failed.Visible) then
-        task.delay(0.1, function()
-            failed.Visible = false
-        end)
+        failed.Visible = false
     end
 
     if (main_gui) then
@@ -107,6 +105,7 @@ while (shared.afy and task.wait()) do
 
             if (katana) then
                 katana:Activate()
+                katana.Parent = backpack
             end
 
             auto_upgrade()
