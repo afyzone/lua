@@ -35,13 +35,25 @@ end
 local sword_delay, shuriken_delay, class_delay, realm_delay = 0, 0, 0, 0
 local auto_upgrade = function()
     local main_gui = playergui:WaitForChild('MainGui'):FindFirstChild("UpgradeF")
-    local failed = playergui:WaitForChild('MainGui'):FindFirstChild("UpgradeFailedF")
+    local failed_upgrade = playergui:WaitForChild('MainGui'):FindFirstChild("UpgradeFailedF")
+    local failed_class = playergui:WaitForChild('MainGui'):FindFirstChild("UpgradeAscensionFailedF")
+    local failed_ascension = playergui:WaitForChild('MainGui'):FindFirstChild("UpgradeClassFailedF")
 
-    if (failed and failed.Visible) then
-        failed.Visible = false
+    if (failed_upgrade and failed_upgrade.Visible) then
+        failed_upgrade.Visible = false
+    end
+
+    if (failed_class and failed_class.Visible) then
+        failed_class.Visible = false
+    end
+
+    if (failed_ascension and failed_ascension.Visible) then
+        failed_ascension.Visible = false
     end
 
     if (main_gui) then
+        main_gui.Position = UDim2.fromScale(0.5, 0.5)
+        
         local sword = main_gui["SwordF"]:FindFirstChild("MaxUpgradeBtn")
         local shuriken = main_gui["ShurikenF"]:FindFirstChild("ShurikenImgBtn")
         local class = main_gui["ClassF"]:FindFirstChild("ClassImgBtn")
