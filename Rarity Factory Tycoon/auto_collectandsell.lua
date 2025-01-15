@@ -28,9 +28,10 @@ while (shared.afy and task.wait()) do
     for i,v in (my_tycoon.Drops:GetChildren()) do
         v.CFrame = root.CFrame
     end
-    
-    firetouchinterest(my_tycoon["Orb Processor"].Model.Deposit.Button, root, 0)
-    firetouchinterest(my_tycoon["Orb Processor"].Model.Deposit.Button, root, 1)
+
+    local seller = my_tycoon:FindFirstChild('Basement') and my_tycoon.Basement:FindFirstChild('Processor') and my_tycoon.Basement.Processor:FindFirstChild('Deposit') or my_tycoon["Orb Processor"].Model:FindFirstChild('Deposit')
+    firetouchinterest(seller.Button, root, 0)
+    firetouchinterest(seller.Button, root, 1)
 
     for i,v in (workspace.Obby.RewardButtons:GetChildren()) do
         if not v:IsA('Model') then continue end
@@ -49,5 +50,10 @@ while (shared.afy and task.wait()) do
     if is_purchasable(my_tycoon.Rebirth) then
         firetouchinterest(my_tycoon.Rebirth.Button, root, 0)
         firetouchinterest(my_tycoon.Rebirth.Button, root, 1)
+    end
+
+    for i,v in (my_tycoon.RebirthTree.Drops:GetChildren()) do
+        firetouchinterest(v, root, 0)
+        firetouchinterest(v, root, 1)
     end
 end
