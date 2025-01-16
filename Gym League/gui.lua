@@ -212,16 +212,16 @@ local script_handler = {}; do
         local remote_service = replicatedstorage.common.packages._Index["sleitnick_knit@1.5.1"].knit.Services[service]
         local remote_folder = remote_service and remote_service[folder]
         local remote = remote_folder and remote_folder[remote]
-        local args = ...
+        local args = {...}
 
         if (not remote) then return end
 
         if (remote:IsA('RemoteEvent') or remote:IsA('UnreliableRemoteEvent')) then
-            return remote:FireServer(args)
+            return remote:FireServer(unpack(args))
         end
         
         if (remote:IsA('RemoteFunction')) then
-            return remote:InvokeServer(args)
+            return remote:InvokeServer(unpack(args))
         end
     end
 
@@ -350,7 +350,7 @@ local script_handler = {}; do
                     self.current_farming_instance = nil
                     self:can_collide(true)
                     self:call('EquipmentService', 'RF', 'Leave')
-                    self:call('PodiumService', 'RF', 'Teleport')
+                    self:call('MiniPodiumService', 'RF', 'Teleport')
 
                     self.debounces['competition'] = os.clock()
                 end
@@ -386,7 +386,7 @@ local script_handler = {}; do
             else
                 if (not boost.Visible and self.buy_powerup and os.clock() - (self.debounces[item] or 0) >= 2) then
                     self.debounces[item] = os.clock()
-                    self:call('PowerUpsService', 'RF', 'Buy', item)
+                    self:call('PowerUpsService', 'RF', 'Buy', {item, 1})
                 end
             end
         end
