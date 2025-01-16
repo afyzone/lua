@@ -340,9 +340,7 @@ local script_handler = {}; do
         local podium = playergui.Podium
         local rewards = podium.RewardsFrame
 
-        if (podium.Enabled) then
-            self:call('PodiumService', 'RE', 'Event')
-        else
+        if (not podium.Enabled) then
             if (label_timer.Text:lower():find('starting')) then 
                 self.comp_yield = true
 
