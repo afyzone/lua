@@ -278,6 +278,7 @@ local script_handler = {}; do
                     if (self.farmmode) then
                         self:call('EquipmentService', 'RF', 'ChangeSpeed', true)
                         self:call('EquipmentService', 'RE', 'click')
+                        self:call('EquipmentService', 'RF', 'Leave')
                     else
                         self:call('EquipmentService', 'RF', 'ChangeSpeed', false)
                     end
@@ -285,6 +286,7 @@ local script_handler = {}; do
                     if (self.farmmode) then 
                         self:call('EquipmentService', 'RF', 'AutoLoad')
                         self:call('EquipmentService', 'RE', 'click')
+                        self:call('EquipmentService', 'RF', 'Leave')
                     end
                 end
             else
