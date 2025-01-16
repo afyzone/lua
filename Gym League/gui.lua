@@ -183,7 +183,10 @@ local script_handler = {}; do
     
                     local distance = (waypointPosition - root.Position).Magnitude
                     while (distance > 5) do
-                        if (not self.current_path or not get_hum(get_char(client))) then break end
+                        local char = get_char(client)
+                        local hum = get_hum(char)
+                        if (not self.current_path or not hum or hum.MoveToPoint == Vector3.zero) then break end
+                        self:move(waypointPosition)
                         distance = (waypointPosition - root.Position).Magnitude
                         task.wait()
                     end
@@ -278,15 +281,13 @@ local script_handler = {}; do
                     if (self.farmmode) then
                         self:call('EquipmentService', 'RF', 'ChangeSpeed', true)
                         self:call('EquipmentService', 'RE', 'click')
-                        self:call('EquipmentService', 'RF', 'Leave')
                     else
                         self:call('EquipmentService', 'RF', 'ChangeSpeed', false)
                     end
-                else 
+                else
                     if (self.farmmode) then 
                         self:call('EquipmentService', 'RF', 'AutoLoad')
                         self:call('EquipmentService', 'RE', 'click')
-                        self:call('EquipmentService', 'RF', 'Leave')
                     end
                 end
             else
@@ -342,7 +343,15 @@ local script_handler = {}; do
         local podium = playergui.Podium
         local rewards = podium.RewardsFrame
 
-        if (not podium.Enabled) then
+        if (podium.Enabled) then
+            for i,v in (getconnections(playergui.Podium.RewardsFrame.CanvasGroup.Continue.MouseButton1Up)) do
+                v:Function()
+            end
+            
+            for i,v in (getconnections(playergui.Podium.winners.ok.MouseButton1Up)) do
+                v:Function()
+            end
+        else
             if (label_timer.Text:lower():find('starting')) then 
                 self.comp_yield = true
 
