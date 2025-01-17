@@ -25,7 +25,7 @@ for i,v in getconnections(client.Idled) do
     v:Disable()
 end
 
-local powerups, equipment_rewards = {}, {
+local powerups, equipment_rewards, fast_mode = {}, {
     ['Stamina'] = 'treadmill',
     ['Chest'] = 'benchpress',
     ['Triceps'] = 'tricepscurl',
@@ -36,6 +36,17 @@ local powerups, equipment_rewards = {}, {
     ['Back'] = 'deadlift',
     ['Biceps'] = 'hammercurl',
     ['Calves'] = 'frontsquat',
+}, {
+    ['Stamina'] = false,
+    ['Chest'] = true,
+    ['Triceps'] = true,
+    ['Shoulder'] = true,
+    ['Abs'] = true,
+    ['Forearm'] = true,
+    ['Legs'] = false,
+    ['Back'] = true,
+    ['Biceps'] = true,
+    ['Calves'] = true,
 }
 
 for i,v in (playergui.Frames.GymStore.PowerUps.CanvasGroup.List:GetChildren()) do
@@ -68,6 +79,7 @@ local script_handler = {}; do
     function script_handler.new() 
         local self = setmetatable({}, script_handler)
         self.debounces = {}
+        self.fast_mode_delay = 0
         self.current_path = nil
         self.current_farming = nil
         self.current_farming_instance = nil
@@ -75,6 +87,7 @@ local script_handler = {}; do
         self.manual_farm = nil
         self.farmmode = false
         self.autofarm = false
+        self.fast_mode = false
 
         self.manual = false
         
@@ -288,6 +301,17 @@ local script_handler = {}; do
                     if (self.farmmode) then 
                         self:call('EquipmentService', 'RF', 'AutoLoad')
                         self:call('EquipmentService', 'RE', 'click')
+                        
+                        if (self.fast_mode and os.clock() - self.fast_mode_delay > 0.015) then
+                            self:call('EquipmentService', 'RF', 'Leave')
+
+                            local target, target_prompt = self:get_equipment(self.current_farming)
+                            if (target and target_prompt) then 
+                                fireproximityprompt(target_prompt, 1, true)
+                            end
+
+                            self.fast_mode_delay = os.clock()
+                        end
                     end
                 end
             else
@@ -322,6 +346,8 @@ local script_handler = {}; do
                 local equipment = self:get_equipment(equipment_rewards[i])
                 if (not equipment) then continue end
 
+                self.fast_mode = fast_mode[i]
+
                 return equipment_rewards[i]
             end
         end)()
@@ -344,6 +370,8 @@ local script_handler = {}; do
         local rewards = podium.RewardsFrame
 
         if (podium.Enabled) then
+            replicatedstorage.common.minigames.Competition.comm:FireServer()
+
             for i,v in (getconnections(playergui.Podium.RewardsFrame.CanvasGroup.Continue.MouseButton1Up)) do
                 v:Function()
             end
@@ -375,9 +403,9 @@ local script_handler = {}; do
     function script_handler:powerup_handler(item)
         local char = get_char(client)
         local backpack = get_backpack(client)
-        local boost = playergui.Main.BottomCenter.Boosts:FindFirstChild(item)
+        local boost = playergui.Main.BottomCenter.Boosts.Scrolling.Inside:FindFirstChild(item)
 
-        if (char and backpack and boost) then
+        if (char and backpack) then
             local character_item = char:FindFirstChild(item)
             local backpack_item = backpack:FindFirstChild(item)
 
@@ -393,9 +421,9 @@ local script_handler = {}; do
                     end
                 end
             else
-                if (not boost.Visible and self.buy_powerup and os.clock() - (self.debounces[item] or 0) >= 2) then
+                if (not boost and self.buy_powerup and os.clock() - (self.debounces[item] or 0) >= 2) then
                     self.debounces[item] = os.clock()
-                    self:call('PowerUpsService', 'RF', 'Buy', {item, 1})
+                    self:call('PowerUpsService', 'RF', 'Buy', item, 1)
                 end
             end
         end
