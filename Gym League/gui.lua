@@ -28,7 +28,7 @@ end
 local powerups, equipment_rewards, fast_mode = {}, {
     ['Stamina'] = 'treadmill',
     ['Chest'] = 'benchpress',
-    ['Triceps'] = 'tricepscurl',
+    ['Triceps'] = workspace.Equipments:FindFirstChild('triceppushdown') and 'triceppushdown' or 'tricepscurl',
     ['Shoulder'] = 'pushpress',
     ['Abs'] = 'crunch',
     ['Forearm'] = 'wristcurl',
@@ -39,7 +39,7 @@ local powerups, equipment_rewards, fast_mode = {}, {
 }, {
     ['Stamina'] = false,
     ['Chest'] = true,
-    ['Triceps'] = true,
+    ['Triceps'] = not workspace.Equipments:FindFirstChild('triceppushdown'),
     ['Shoulder'] = true,
     ['Abs'] = true,
     ['Forearm'] = true,
@@ -307,6 +307,7 @@ local script_handler = {}; do
 
                             local target, target_prompt = self:get_equipment(self.current_farming)
                             if (target and target_prompt) then 
+                                root.CFrame = target:FindFirstChildWhichIsA('Part').CFrame
                                 fireproximityprompt(target_prompt, 1, true)
                             end
 
