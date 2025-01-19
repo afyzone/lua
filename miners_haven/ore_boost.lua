@@ -1,5 +1,4 @@
 shared.afy = not shared.afy
-print(shared.afy)
 
 local players = game:GetService('Players')
 local client = players.LocalPlayer
