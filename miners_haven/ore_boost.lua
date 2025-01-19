@@ -12,10 +12,6 @@ local get_char, get_root, get_hum; do
     get_root = function(character)
         return character and character:FindFirstChild('HumanoidRootPart')
     end
-
-    get_hum = function()
-        return character and character:FindFirstChildWhichIsA('Humanoid')
-    end
 end
 
 local my_tycoon = (function()
