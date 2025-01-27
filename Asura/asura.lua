@@ -34,8 +34,8 @@ local flags = {
 	tween_speed = 2.25,
 	food_minimum = 20,
 	minstamina = 20,
-	farm_location = 'Gym',
-	roadworktype = 'Speed',
+    farm_location = 'Gym',
+    roadworktype = 'Speed',
 	punchingtype = 'Strike Power Training',
 	foodtype = 'Chicken',
 	calisthenictype = 'Push Up',
@@ -50,12 +50,12 @@ local flags = {
 }
 
 local highrank = {
-	'Contributors',
-	'Staff',
-	'Developers',
-	'Developers+',
-	'Co-Creators',
-	'Head Developer'
+    'Contributors',
+    'Staff',
+    'Developers',
+    'Developers+',
+    'Co-Creators',
+    'Head Developer'
 }
 
 local all_foods = {
@@ -262,74 +262,74 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		flags.eating = false
 	end
 
-	get_strike_power = function()
-		local part = nil 
-		local dist = math.huge 
+    get_strike_power = function()
+        local part = nil 
+        local dist = math.huge 
 
-		local char = client.Character 
-		local root = char and char.PrimaryPart
+        local char = client.Character 
+        local root = char and char.PrimaryPart
 
-		if (char and root) then 
-			for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
-				if (v:IsA('Model') and v.Name == 'Strike Power Training' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
-					local mag = (v:GetPivot().Position - root.Position).magnitude
-					
-					if (mag < dist) then 
-						dist = mag 
-						part = v
-					end
-				end
-			end
-		end
+        if (char and root) then 
+            for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
+                if (v:IsA('Model') and v.Name == 'Strike Power Training' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
+                    local mag = (v:GetPivot().Position - root.Position).magnitude
+                    
+                    if (mag < dist) then 
+                        dist = mag 
+                        part = v
+                    end
+                end
+            end
+        end
 
-		return part
-	end
+        return part
+    end
 
 	get_bodycondition = function()
-		local part = nil 
-		local dist = math.huge 
+        local part = nil 
+        local dist = math.huge 
 
-		local char = client.Character 
-		local root = char and char.PrimaryPart
+        local char = client.Character 
+        local root = char and char.PrimaryPart
 
-		if (char and root) then 
-			for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
-				if (v:IsA('Model') and v.Name == 'Body Conditioning' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
-					local mag = (v:GetPivot().Position - root.Position).magnitude
-					
-					if (mag < dist) then 
-						dist = mag 
-						part = v
-					end
-				end
-			end
-		end
+        if (char and root) then 
+            for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
+                if (v:IsA('Model') and v.Name == 'Body Conditioning' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
+                    local mag = (v:GetPivot().Position - root.Position).magnitude
+                    
+                    if (mag < dist) then 
+                        dist = mag 
+                        part = v
+                    end
+                end
+            end
+        end
 
-		return part
-	end
+        return part
+    end
 
-	get_strike_speed = function()
-		local part = nil 
-		local dist = math.huge 
+    get_strike_speed = function()
+        local part = nil 
+        local dist = math.huge 
 
-		local char = client.Character 
-		local root = char and char.PrimaryPart
+        local char = client.Character 
+        local root = char and char.PrimaryPart
 
-		if (char and root) then 
-			for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
-				if (v:IsA('Model') and v.Name == 'Strike Speed Training' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
-					local mag = (v:GetPivot().Position - root.Position).magnitude
-					
-					if (mag < dist) then 
-						dist = mag 
-						part = v
-					end
-				end
-			end
-		end
+        if (char and root) then 
+            for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
+                if (v:IsA('Model') and v.Name == 'Strike Speed Training' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
+                    local mag = (v:GetPivot().Position - root.Position).magnitude
+                    
+                    if (mag < dist) then 
+                        dist = mag 
+                        part = v
+                    end
+                end
+            end
+        end
 
-		return part
-	end
+        return part
+    end
 
 	playerradiuscheck = function(radius)
 		local clientPosition = client.Character and client.Character.PrimaryPart and client.Character.PrimaryPart.Position
@@ -448,12 +448,12 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			end
 		end
 	end
-	
-	task.spawn(update_menu_name)
-	
-	Menu.Accent = main_color
-	Menu.Watermark()
-	Menu.Watermark:Update('discord.gg/VudGqHwCHb') 
+    
+    task.spawn(update_menu_name)
+    
+    Menu.Accent = main_color
+    Menu.Watermark()
+    Menu.Watermark:Update('discord.gg/VudGqHwCHb') 
 
 	-- Tabs 
 	local Main = Menu.Tab("Main")
@@ -498,8 +498,8 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 
 	local Farming = Menu.Container('Main', 'Job Farm', 'Right'); do -- Job Farm
 		Menu.ComboBox('Main', 'Job Farm', 'Job Type', 'Both', {'Both', 'Delivery', 'Clean Floors'}, function(self)
-			flags.jobtype = self
-		end)
+            flags.jobtype = self
+        end)
 
 		Menu.CheckBox('Main', 'Job Farm', 'Auto Deposit', false, function(self)
 			flags.autodeposit = self
@@ -527,7 +527,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 						end
 
 						autowithdraw()
-						eatfood()
+                        eatfood()
 
 						local job_status = main_gui and main_gui:FindFirstChild('LabelJob')
 
@@ -620,25 +620,25 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 		end)
 	end
 
-	local Stats = Menu.Container('Main', 'Stats', 'Left'); do -- Stats Farm 
+    local Stats = Menu.Container('Main', 'Stats', 'Left'); do -- Stats Farm 
 		Menu.CheckBox('Main', 'Stats', 'Auto Withdraw', false, function(self)
-			flags.autowithdraw = self
-		end)
+            flags.autowithdraw = self
+        end)
 
 		Menu.Slider('Main', 'Stats', 'All Farms Stamina Minimum', 0, 100, 20, '', 0, function(self)
-			flags.minstamina = self
-		end)
+            flags.minstamina = self
+        end)
 
-		Menu.ComboBox('Main', 'Stats', 'Farm Area', 'Gym', {'Gym', 'Senkaimon'}, function(self)
-			flags.farm_location = self
-		end)
+        Menu.ComboBox('Main', 'Stats', 'Farm Area', 'Gym', {'Gym', 'Senkaimon'}, function(self)
+            flags.farm_location = self
+        end)
 
-		Menu.ComboBox('Main', 'Stats', 'Roadwork Type', 'Speed', {'Speed', 'Stamina'}, function(self)
-			flags.roadworktype = self
-		end)
+        Menu.ComboBox('Main', 'Stats', 'Roadwork Type', 'Speed', {'Speed', 'Stamina'}, function(self)
+            flags.roadworktype = self
+        end)
 
-		Menu.CheckBox('Main', 'Stats', 'Auto Roadwork', false, function(self)
-			flags.autoroadwork = self
+        Menu.CheckBox('Main', 'Stats', 'Auto Roadwork', false, function(self)
+            flags.autoroadwork = self
 
 			local jump_check = tick()
 
@@ -730,11 +730,11 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 					end
 				end
 			end)
-		end)
+        end)
 
 		Menu.ComboBox('Main', 'Stats', 'Punching Bag Type', 'Strike Power Training', {'Strike Power Training', 'Strike Speed Training'}, function(self)
-			flags.punchingtype = self
-		end)
+            flags.punchingtype = self
+        end)
 
 		Menu.CheckBox('Main', 'Stats', 'Auto Punching Bag', false, function(self)
 			flags.autopunchingbag = self
@@ -835,7 +835,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 					end
 				end
 			end)
-		end)
+        end)
 
 		Menu.ComboBox('Main', 'Stats', 'Calisthenic Type', 'Push Up', {'Push Up', 'Sit Up', 'Squat'}, function(self)
 			flags.calisthenictype = self
@@ -874,8 +874,8 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 		end)
 
 		Menu.Slider('Main', 'Stats', 'Health Minimum', 0, 100, 10, '', 0, function(self)
-			flags.healthmin = self
-		end)
+            flags.healthmin = self
+        end)
 
 		Menu.CheckBox('Main', 'Stats', 'Alternative Auto Durability', false, function(self)
 			flags.autodura = self
@@ -1006,7 +1006,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 				end
 			end)
 		end)
-	end
+    end
 
 	local Food = Menu.Container('Main', 'Auto Food', 'Right'); do
 		Menu.ComboBox('Main', 'Auto Food', 'Food Type', 'Chicken', {'Chicken', 'Cheeseburger', 'Milkshake', 'Sushi', 'Protein Shake'}, function(self)
@@ -1125,9 +1125,9 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 		end
 	end)
 
-	task.spawn(function()
-		while task.wait() do
-			if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic or flags.autodura) then
+    task.spawn(function()
+        while task.wait() do
+            if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic or flags.autodura) then
 				client.Character.Humanoid:ChangeState(16)
 
 				if (client.Character and client.Character.PrimaryPart) then
@@ -1173,21 +1173,21 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 						client.Character.PrimaryPart.CFrame = client.Character.PrimaryPart.CFrame * CFrame.Angles(math.pi, 0, 0)
 					end
 				end
-			end
-		end
-	end)
+            end
+        end
+    end)
 
 	task.spawn(function()
-		while task.wait() do
-			if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic) then
-				if flags.autopunchingbag then
-					if (client.Character:FindFirstChild('Ragdoll') or (client.Character.Humanoid.Health / client.Character.Humanoid.MaxHealth) * 100 <= 20) then
-						moveto(CFrame.new(client.Character.PrimaryPart.Position.X, -23.7, client.Character.PrimaryPart.Position.Z), flags.tween_speed)
-					end
-				end
-			end
-		end
-	end)
+        while task.wait() do
+            if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic) then
+                if flags.autopunchingbag then
+                    if (client.Character:FindFirstChild('Ragdoll') or (client.Character.Humanoid.Health / client.Character.Humanoid.MaxHealth) * 100 <= 20) then
+                        moveto(CFrame.new(client.Character.PrimaryPart.Position.X, -23.7, client.Character.PrimaryPart.Position.Z), flags.tween_speed)
+                    end
+                end
+            end
+        end
+    end)
 end
 
 Menu.Watermark:SetVisible(true)
