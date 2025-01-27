@@ -22,6 +22,12 @@ local tempadornee;
 local main_gui = playergui and playergui:WaitForChild('Main')
 local clean_parts = workspace.CleaningParts
 local smart_walk_tick = tick()
+local firetouchinterest = function(...)
+	local args = {...}
+	task.spawn(function()
+		firetouchinterest(unpack(args))
+	end)
+end
 
 local flags = {
 	farm_method = 'Tween',
@@ -576,6 +582,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										end
 									else
 										moveto(CFrame.new(root.Position.X, -23.7, root.Position.Z), flags.tween_speed)
+
 										if (job_status.Text:find('floor')) then
 											replicatedstorage:FindFirstChild("Events"):FindFirstChild("EventCore"):FireServer("CancelJob") 
 											
@@ -589,12 +596,10 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										local height = -23.7
 
 										if (os.clock() - flags.got_crate > 12.5) then
-											height = -5.5
+											height = -4.8
 										end
 
 										moveto(CFrame.new(get_part.Position), flags.tween_speed, -10, height)
-										local part = nil 
-										local dist = math.huge 
 									
 										local char = client.Character 
 										local root = char and char:FindFirstChild('HumanoidRootPart')
@@ -602,25 +607,16 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										if (char and root) then 
 											for _, v in pairs(workspace.Delivery:GetDescendants()) do 
 												if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 8) then 
-													local crate = v.Parent
-													local mag = (crate.Position - root.Position).magnitude
-													
-													if (mag < dist) then 
-														dist = mag 
-														part = crate
-													end
+													firetouchinterest(root, v.Parent, 0)
+													firetouchinterest(root, v.Parent, 1)
 												end
-											end
-
-											if (part) then 
-												firetouchinterest(root, part, 0)
-												firetouchinterest(root, part, 1)
 											end
 										end
 
 										moveto(CFrame.new(get_part.Position), flags.tween_speed, -10, -23.7)
 									else
 										moveto(CFrame.new(root.Position.X, -23.7, root.Position.Z), flags.tween_speed)
+
 										if (job_status.Text:find('crate')) then
 											replicatedstorage:FindFirstChild("Events"):FindFirstChild("EventCore"):FireServer("CancelJob") 
 
@@ -708,10 +704,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							end
 							
 						elseif (billboard) then
-							moveto(CFrame.new(billboard.Adornee.Position), flags.tween_speed, -10, -5.5)
-
-							local part = nil 
-							local dist = math.huge 
+							moveto(CFrame.new(billboard.Adornee.Position), flags.tween_speed, -10, -5)
 						
 							local char = client.Character 
 							local root = char and char:FindFirstChild('HumanoidRootPart')
@@ -719,19 +712,9 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							if (char and root) then 
 								for _, v in pairs(workspace.Roadworks:GetDescendants()) do 
 									if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 8) then 
-										local thing = v.Parent
-										local mag = (thing.Position - root.Position).magnitude
-										
-										if (mag < dist) then 
-											dist = mag 
-											part = thing
-										end
+										firetouchinterest(root, v.Parent, 0)
+										firetouchinterest(root, v.Parent, 1)
 									end
-								end
-
-								if (part) then
-									firetouchinterest(root, part, 0)
-									firetouchinterest(root, part, 1)
 								end
 							end
 						elseif (has_item('Roadwork Training') and not billboard) then 
@@ -793,7 +776,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							if (mag < 12) then
 								for i = 1, 3 do
 									hum:UnequipTools()
-									
+
 									if (item_type:FindFirstChildWhichIsA('ClickDetector')) then
 										fireclickdetector(item_type.ClickDetector)
 										task.wait(.6)
