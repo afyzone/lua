@@ -242,8 +242,10 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 				
 						if (mag < 12) then
 							for i = 1, 5 do
-								fireclickdetector(selectedfood.ClickDetector)
-								task.wait(.6)
+								if (selectedfood:FindFirstChildWhichIsA('ClickDetector')) then
+									fireclickdetector(selectedfood:FindFirstChildWhichIsA('ClickDetector'))
+									task.wait(.6)
+								end
 							end
 
 							moveto(CFrame.new(foodpart.Position), flags.tween_speed, -10, -23.7)
@@ -686,7 +688,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							local mag = (road_type:GetPivot().Position - root.Position).magnitude
 
 							if (mag < 25) then 
-								local road_type = (flags.farm_location == 'Gym' and gym_road.ClickDetector) or senkai_road.ClickDetector
+								local road_type = (flags.farm_location == 'Gym' and gym_road:FindFirstChildWhichIsA('ClickDetector')) or senkai_road:FindFirstChildWhichIsA('ClickDetector')
 
 								for i = 1, 3 do
 									fireclickdetector(road_type)
@@ -782,8 +784,10 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							
 							if (mag < 12) then
 								for i = 1, 3 do
-									fireclickdetector(item_type.ClickDetector)
-									task.wait(.6)
+									if (item_type:FindFirstChildWhichIsA('ClickDetector')) then
+										fireclickdetector(item_type.ClickDetector)
+										task.wait(.6)
+									end
 								end
 
 							else
@@ -919,8 +923,10 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							
 							if (mag < 12) then
 								for i = 1, 3 do
-									fireclickdetector(item_type.ClickDetector)
-									task.wait(.6)
+									if (item_type:FindFirstChildWhichIsA('ClickDetector')) then
+										fireclickdetector(item_type.ClickDetector)
+										task.wait(.6)
+									end
 								end
 
 							else
