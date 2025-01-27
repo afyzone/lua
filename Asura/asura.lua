@@ -19,19 +19,14 @@ local targetgroup = 32353519
 local MenuVis = true
 local currentlymoving = false
 local tempadornee;
-local main_gui = playergui and playergui:FindFirstChild('Main')
+local main_gui = playergui and playergui:WaitForChild('Main')
 local clean_parts = workspace.CleaningParts
 local smart_walk_tick = tick()
-local firetouchinterest = function(...)
-	local args = {...}
-	task.spawn(function()
-		fireclickdetector(unpack(args))
-	end)
-end
 
 local flags = {
 	farm_method = 'Tween',
 	tween_speed = 2.25,
+	bobbing_speed = 1.2,
 	food_minimum = 20,
 	minstamina = 20,
 	farm_location = 'Gym',
@@ -45,6 +40,7 @@ local flags = {
 	autowithdraw = false,
 	antimod = false,
 	jobtype = 'Both',
+	got_crate = 0,
 	healthmin = 10,
 	downbool = false
 }
@@ -74,18 +70,18 @@ for i, v in pairs(getconnections(client.Idled)) do
 end
 
 -- Functions
-local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernearobj, safestbag, has_item, autowithdraw, gym_road, playerradiuscheck, senkai_road, bankpart, get_strike_power, get_bodycondition, get_strike_speed; do 
+local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernearobj, safestbag, has_item, autowithdraw, gym_road, playerradiuscheck, senkai_road, bankpart, get_strike_power, get_bodycondition, get_strike_speed, on_char_added; do 
 	moveto = function(destination, increment, targetY, postY, upsideDown)
 		if currentlyMoving then return end
 		currentlyMoving = true
 	
 		local character = client.Character
-		if not (character and character.PrimaryPart) then
+		if not (character and character:FindFirstChild('HumanoidRootPart')) then
 			currentlyMoving = false
 			return
 		end
 	
-		local root = character.PrimaryPart
+		local root = character:FindFirstChild('HumanoidRootPart')
 		local currentPos = root.Position
 		local destinationPos = (typeof(destination) == "CFrame" and destination.Position or destination) + Vector3.new(0, postY or 0, 0)
 	
@@ -97,6 +93,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 	
 			while distance > (increment / 10) do
 				currentPos = currentPos + direction * (increment / 10)
+
 				root.CFrame = CFrame.new(currentPos)
 	
 				if not upsideDown then
@@ -106,16 +103,16 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 					end
 				end
 	
-				task.wait()
+				task.wait(1/60)
 				distance = (targetPos - currentPos).Magnitude
 			end
 		end
-	
+
 		if (math.abs(destinationPos.X - root.Position.X) > 1 or
 			math.abs(destinationPos.Z - root.Position.Z) > 1) and
 			not (root.Position.Y >= (targetY - 1) and root.Position.Y <= (targetY + 1)) then
 	
-			moveToTarget(Vector3.new(currentPos.X, targetY, currentPos.Z), 1.2)
+			moveToTarget(Vector3.new(currentPos.X, targetY, currentPos.Z), flags.bobbing_speed)
 		end
 	
 		local finalTarget = (math.abs(destinationPos.X - root.Position.X) > 1 or
@@ -124,13 +121,13 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 	
 		moveToTarget(finalTarget, (math.abs(destinationPos.X - root.Position.X) > 1 or
 									math.abs(destinationPos.Z - root.Position.Z) > 1)
-									and increment or 1.2)
+									and increment or flags.bobbing_speed)
 		currentlyMoving = false
 	end
 	
 	forceusetool = function(tool)
 		local char = client.Character 
-		local root = char and char.PrimaryPart
+		local root = char and char:FindFirstChild('HumanoidRootPart')
 		local hum = char and char:FindFirstChild('Humanoid')
 
 		if not (char and root and hum) then return; end
@@ -150,7 +147,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		local dist = math.huge 
 
 		local char = client.Character 
-		local root = char and char.PrimaryPart
+		local root = char and char:FindFirstChild('HumanoidRootPart')
 
 		if (char and root) then 
 			if (clean_parts:FindFirstChild(client.Name)) then 
@@ -174,7 +171,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 
 	fire_click = function()
 		local char = client.Character
-		local root = char and char.PrimaryPart
+		local root = char and char:FindFirstChild('HumanoidRootPart')
 
 		if (char and root) then 
 			local floor = get_floor() 
@@ -200,7 +197,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 
 	use_food = function(hunger)
 		local char = client.Character 
-		local root = char and char.PrimaryPart
+		local root = char and char:FindFirstChild('HumanoidRootPart')
 		local hum = char and char:FindFirstChild('Humanoid')
 		if (not (char and root and hum)) then return end 
 
@@ -224,7 +221,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 	eatfood = function()
 		if (not flags.eating or not flags.autofood) then return end 
 		local char = client.Character 
-		local root = char and char.PrimaryPart
+		local root = char and char:FindFirstChild('HumanoidRootPart')
 		local hum = char and char:FindFirstChild('Humanoid')
 
 		if (char and root and hum) then
@@ -267,7 +264,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local dist = math.huge 
 
         local char = client.Character 
-        local root = char and char.PrimaryPart
+        local root = char and char:FindFirstChild('HumanoidRootPart')
 
         if (char and root) then 
             for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
@@ -290,7 +287,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local dist = math.huge 
 
         local char = client.Character 
-        local root = char and char.PrimaryPart
+        local root = char and char:FindFirstChild('HumanoidRootPart')
 
         if (char and root) then 
             for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
@@ -313,7 +310,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local dist = math.huge 
 
         local char = client.Character 
-        local root = char and char.PrimaryPart
+        local root = char and char:FindFirstChild('HumanoidRootPart')
 
         if (char and root) then 
             for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
@@ -332,13 +329,13 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
     end
 
 	playerradiuscheck = function(radius)
-		local clientPosition = client.Character and client.Character.PrimaryPart and client.Character.PrimaryPart.Position
+		local clientPosition = client.Character and client.Character:FindFirstChild('HumanoidRootPart') and client.Character.HumanoidRootPart.Position
 	
 		if not clientPosition then return end
 		for _, player in pairs(game.Players:GetPlayers()) do
 			if player ~= client and player.Character then
-				if player.Character.PrimaryPart and player.Character.PrimaryPart.Position then
-					local distance = (Vector3.new(playerPosition.X, 0, playerPosition.Z) - Vector3.new(client.Character.PrimaryPart.Position.X, 0, client.Character.PrimaryPart.Position.Z)).magnitude
+				if player.Character:FindFirstChild('HumanoidRootPart') and player.Character.HumanoidRootPart.Position then
+					local distance = (Vector3.new(playerPosition.X, 0, playerPosition.Z) - Vector3.new(client.Character.HumanoidRootPart.Position.X, 0, client.Character.HumanoidRootPart.Position.Z)).magnitude
 	
 					if distance <= radius then
 						return true
@@ -351,7 +348,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 	autowithdraw = function()
 		if (not flags.autowithdraw) then return end
 		local char = client.Character 
-		local root = char and char.PrimaryPart
+		local root = char and char:FindFirstChild('HumanoidRootPart')
 		local hum = char and char:FindFirstChild('Humanoid')
 	
 		if (char and root and hum) then
@@ -368,7 +365,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 	end
 
 	playernearobj = function(player, obj)
-		local playerposition = player.Character and player.Character.PrimaryPart and player.Character.PrimaryPart.Position
+		local playerposition = player.Character and player.Character:FindFirstChild('HumanoidRootPart') and player.Character.HumanoidRootPart.Position
 		local objposition = obj:FindFirstChildWhichIsA('BasePart') and obj:FindFirstChildWhichIsA('BasePart').Position
 	
 		if objposition and playerposition then
@@ -396,7 +393,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 					end
 	
 					if not is_near then
-						local distance = (main.Position - client.Character.PrimaryPart.Position).magnitude
+						local distance = (main.Position - client.Character.HumanoidRootPart.Position).magnitude
 	
 						if distance < closest then
 							closest = distance
@@ -408,6 +405,14 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		end
 	
 		return obj
+	end
+
+	on_char_added = function(char)
+		char.ChildAdded:Connect(function(child)
+			if (child.Name == 'Crate') then
+				flags.got_crate = os.clock()
+			end
+		end)
 	end
 end
 
@@ -487,7 +492,11 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 	end
 
 	local Settings = Menu.Container('Main', 'Settings', 'Right'); do 
-		Menu.Slider('Main', 'Settings', 'Tween Speed', 0, 10, 2.25, '', 1, function(self)
+		Menu.Slider('Main', 'Settings', 'Bobbing Speed', 0, 20, 1.2, '', 1, function(self)
+			flags.bobbing_speed = self
+		end)
+
+		Menu.Slider('Main', 'Settings', 'Tween Speed', 0, 20, 2.25, '', 1, function(self)
 			flags.tween_speed = self
 		end)
 
@@ -517,7 +526,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			task.spawn(function()
 				while (flags.job_farm and task.wait()) do 
 					local char = client.Character 
-					local root = char and char.PrimaryPart
+					local root = char and char:FindFirstChild('HumanoidRootPart')
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root) then 
@@ -529,7 +538,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 						autowithdraw()
                         eatfood()
 
-						local job_status = main_gui and main_gui:FindFirstChild('LabelJob')
+						local job_status = main_gui:FindFirstChild('LabelJob')
 
 						if (job_status.Text == '') then
 							replicatedstorage.Events.EventCore:FireServer('Job')
@@ -563,15 +572,18 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										moveto(CFrame.new(root.Position.X, -23.7, root.Position.Z), flags.tween_speed)
 										if (job_status.Text:find('floor')) then
 											replicatedstorage:FindFirstChild("Events"):FindFirstChild("EventCore"):FireServer("CancelJob") 
-											repeat task.wait() until job_status.Text == ''
+											
+											while (job_status.Text ~= '' and task.wait()) do
+												moveto(CFrame.new(root.Position.X, -23.7, root.Position.Z), flags.tween_speed)
+											end
 										end
 									end
 								else
 									if (flags.jobtype == 'Both' or flags.jobtype == 'Delivery') then
-										local height = -5.5
+										local height = -23.7
 
-										if (char:FindFirstChild('Crate') and tonumber(playergui.Main.LabelJob2.Text) > 179) then
-											height = -23.7
+										if (os.clock() - flags.got_crate > 12.5) then
+											height = -5.5
 										end
 
 										moveto(CFrame.new(get_part.Position), flags.tween_speed, -10, height)
@@ -579,11 +591,11 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										local dist = math.huge 
 									
 										local char = client.Character 
-										local root = char and char.PrimaryPart
+										local root = char and char:FindFirstChild('HumanoidRootPart')
 									
 										if (char and root) then 
 											for _, v in pairs(workspace.Delivery:GetDescendants()) do 
-												if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 5) then 
+												if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 8) then 
 													local crate = v.Parent
 													local mag = (crate.Position - root.Position).magnitude
 													
@@ -648,7 +660,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 
 			if (flags.autoroadwork) then 
 				local char = client.Character
-				local root = char and char.PrimaryPart
+				local root = char and char:FindFirstChild('HumanoidRootPart')
 
 				if (char and root and root.CFrame.Y > 0 and flags.farm_location == 'Senkaimon') then 
 					Menu.Notify('WARNING: Goto senkaimon area first')
@@ -659,7 +671,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			task.spawn(function()
 				while (flags.autoroadwork and task.wait()) do 
 					local char = client.Character 
-					local root = char and char.PrimaryPart
+					local root = char and char:FindFirstChild('HumanoidRootPart')
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root and hum) then 
@@ -686,16 +698,17 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							end
 							
 						elseif (billboard) then
-							moveto(CFrame.new(billboard.Adornee.Position), flags.tween_speed, -10, -21.7)
+							moveto(CFrame.new(billboard.Adornee.Position), flags.tween_speed, -10, -5.5)
+
 							local part = nil 
 							local dist = math.huge 
 						
 							local char = client.Character 
-							local root = char and char.PrimaryPart
+							local root = char and char:FindFirstChild('HumanoidRootPart')
 						
 							if (char and root) then 
 								for _, v in pairs(workspace.Roadworks:GetDescendants()) do 
-									if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 5) then 
+									if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 8) then 
 										local thing = v.Parent
 										local mag = (thing.Position - root.Position).magnitude
 										
@@ -720,9 +733,13 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 								char:FindFirstChild('Roadwork Training'):Activate()
 							end
 
-							if (roadwork_gain.Visible == true and roadwork_gain:FindFirstChild(flags.roadworktype)) then 
-								firesignal(roadwork_gain[flags.roadworktype].MouseButton1Up)
-								task.wait()
+							if (roadwork_gain.Visible == true) then
+								local button = roadwork_gain:FindFirstChild(flags.roadworktype) 
+
+								if (button) then
+									game:GetService("VirtualInputManager"):SendMouseButtonEvent(button.AbsolutePosition.X + button.AbsoluteSize.X / 2, button.AbsolutePosition.Y + game:GetService("GuiService"):GetGuiInset().Y + (button.AbsoluteSize.Y / 2), 0, true, button, 1)
+									game:GetService("VirtualInputManager"):SendMouseButtonEvent(button.AbsolutePosition.X + button.AbsoluteSize.X / 2, button.AbsolutePosition.Y + game:GetService("GuiService"):GetGuiInset().Y + (button.AbsoluteSize.Y / 2), 0, false, button, 1)
+								end
 							end
 
 						elseif (billboard and roadwork_gain and roadwork_gain.Visible == true) then
@@ -749,7 +766,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			task.spawn(function()
 				while (flags.autopunchingbag and task.wait()) do 
 					local char = client.Character 
-					local root = char and char.PrimaryPart
+					local root = char and char:FindFirstChild('HumanoidRootPart')
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root and hum) then
@@ -848,7 +865,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			task.spawn(function()
 				while (flags.autocalisthenic and task.wait()) do 
 					local char = client.Character 
-					local root = char and char.PrimaryPart
+					local root = char and char:FindFirstChild('HumanoidRootPart')
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root and hum) then
@@ -886,7 +903,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			task.spawn(function()
 				while (flags.autodura and initialdura and task.wait()) do 
 					local char = client.Character 
-					local root = char and char.PrimaryPart
+					local root = char and char:FindFirstChild('HumanoidRootPart')
 					local hum = char and char:FindFirstChild('Humanoid')
 			
 					if (char and root and hum) then
@@ -1024,7 +1041,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			task.spawn(function()
 				while (flags.autofood and task.wait()) do 
 					local char = client.Character 
-					local root = char and char.PrimaryPart
+					local root = char and char:FindFirstChild('HumanoidRootPart')
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root and hum) then
@@ -1069,7 +1086,9 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 				local stamina = playergui and playergui:FindFirstChild('Main') and playergui.Main.HUD.Stamina.Clipping.Size.X.Scale * 100
 				if (stamina <= flags.minstamina) then 
 					replicatedstorage.Events.EventCore:FireServer('Run', 'Start', false)
-				elseif (stamina >= 95 and tick() - smart_walk_tick >= .5) then 
+				end
+				
+				if (stamina >= 95 and tick() - smart_walk_tick >= .5) then 
 					replicatedstorage.Events.EventCore:FireServer('Run', 'Start', true, 1)
 					smart_walk_tick = tick()
 				end 
@@ -1081,8 +1100,8 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 				end
 			end
 
-			if (client.Character and client.Character.PrimaryPart) then
-				client.Character.PrimaryPart.Velocity = Vector3.new(0,0,0)
+			if (client.Character and client.Character:FindFirstChild('HumanoidRootPart')) then
+				client.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
 			end
 
 			for i,v in pairs(client.Character.Humanoid:GetPlayingAnimationTracks()) do
@@ -1090,6 +1109,12 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			end
 		end
 	end)
+
+	if (client.Character) then
+		on_char_added(client.Character)
+	end
+
+	client.CharacterAdded:Connect(on_char_added)
 
 	task.spawn(function()
 		for _, v in pairs(players:GetPlayers()) do
@@ -1131,15 +1156,15 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic or flags.autodura) then
 				client.Character.Humanoid:ChangeState(16)
 
-				if (client.Character and client.Character.PrimaryPart) then
-					client.Character.PrimaryPart.Velocity = Vector3.new()
+				if (client.Character and client.Character:FindFirstChild('HumanoidRootPart')) then
+					client.Character.HumanoidRootPart.Velocity = Vector3.new()
 				end
 
 				local char = client.Character 
-				local spawnprotectionui = main_gui and main_gui:FindFirstChild('Protection')
+				local spawnprotectionui = main_gui:FindFirstChild('Protection')
 
 				if (spawnprotectionui and spawnprotectionui.Visible) then
-					moveto(CFrame.new(client.Character.PrimaryPart.Position.X, -23.7, client.Character.PrimaryPart.Position.Z), flags.tween_speed)
+					moveto(CFrame.new(client.Character.HumanoidRootPart.Position.X, -23.7, client.Character.HumanoidRootPart.Position.Z), flags.tween_speed)
 			
 					game:GetService("VirtualInputManager"):SendKeyEvent(true, "W", false, game)
 					task.wait()
@@ -1157,21 +1182,21 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 				if flags.autopunchingbag then
 					if (tempadornee and not client.Character:FindFirstChild('Ragdoll') and (client.Character.Humanoid.Health / client.Character.Humanoid.MaxHealth) * 100 > 20 and client.Character:FindFirstChild('Gloves')) then
 						if (playerradiuscheck(35)) then
-							moveto(CFrame.new(client.Character.PrimaryPart.Position.X, -23.7, client.Character.PrimaryPart.Position.Z), flags.tween_speed)
+							moveto(CFrame.new(client.Character.HumanoidRootPart.Position.X, -23.7, client.Character.HumanoidRootPart.Position.Z), flags.tween_speed)
 						else
-							if (tempadornee - client.Character.PrimaryPart.Position).magnitude <= 20 then
+							if (tempadornee - client.Character.HumanoidRootPart.Position).magnitude <= 20 then
 								if (not flags.downbool) then
-									client.Character.PrimaryPart.CFrame = CFrame.new(tempadornee + Vector3.new(0, -5, 0), tempadornee) * CFrame.Angles(0, math.rad(--[[50]]25), math.rad(90))
+									client.Character.HumanoidRootPart.CFrame = CFrame.new(tempadornee + Vector3.new(0, -5, 0), tempadornee) * CFrame.Angles(0, math.rad(--[[50]]25), math.rad(90))
 								else
-									client.Character.PrimaryPart.CFrame = CFrame.new(tempadornee + Vector3.new(0, -9, 0), tempadornee) * CFrame.Angles(0, math.rad(--[[50]]0), math.rad(90))
+									client.Character.HumanoidRootPart.CFrame = CFrame.new(tempadornee + Vector3.new(0, -9, 0), tempadornee) * CFrame.Angles(0, math.rad(--[[50]]0), math.rad(90))
 								end
 							end
 						end
 					end
 
 				elseif flags.job_farm then
-					if client.Character and client.Character.PrimaryPart.Rotation.X < 10 and client.Character.PrimaryPart.Rotation.X > -10 then
-						client.Character.PrimaryPart.CFrame = client.Character.PrimaryPart.CFrame * CFrame.Angles(math.pi, 0, 0)
+					if client.Character and client.Character:FindFirstChild('HumanoidRootPart') and client.Character.HumanoidRootPart.Rotation.X < 10 and client.Character.HumanoidRootPart.Rotation.X > -10 then
+						client.Character.HumanoidRootPart.CFrame = client.Character.HumanoidRootPart.CFrame * CFrame.Angles(3.1415, 0, 0)
 					end
 				end
 			end
@@ -1183,7 +1208,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
             if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic) then
                 if flags.autopunchingbag then
                     if (client.Character:FindFirstChild('Ragdoll') or (client.Character.Humanoid.Health / client.Character.Humanoid.MaxHealth) * 100 <= 20) then
-                        moveto(CFrame.new(client.Character.PrimaryPart.Position.X, -23.7, client.Character.PrimaryPart.Position.Z), flags.tween_speed)
+                        moveto(CFrame.new(client.Character.HumanoidRootPart.Position.X, -23.7, client.Character.HumanoidRootPart.Position.Z), flags.tween_speed)
                     end
                 end
             end
