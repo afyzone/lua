@@ -722,6 +722,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 
 							if (roadwork_gain.Visible == true and roadwork_gain:FindFirstChild(flags.roadworktype)) then 
 								firesignal(roadwork_gain[flags.roadworktype].MouseButton1Up)
+								task.wait()
 							end
 
 						elseif (billboard and roadwork_gain and roadwork_gain.Visible == true) then
