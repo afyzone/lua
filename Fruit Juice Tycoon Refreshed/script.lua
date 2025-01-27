@@ -1,17 +1,17 @@
 -- https://www.roblox.com/games/6755746130 | Execute twice to toggle
 
-AUTO_OBBY = true
-AUTO_SHAKEORBUY = true
-AUTO_SELL = false
-AUTO_PRESTIGE = true
-AUTO_COLLECT = true
-AUTO_BALOON = true
-AUTO_USE_BUFFS = true
-AUTO_CHEST = true
-AVOID_BUYING_IF_STATUE = false
+local AUTO_OBBY = true
+local AUTO_SHAKEORBUY = true
+local AUTO_SELL = false
+local AUTO_PRESTIGE = true
+local AUTO_COLLECT = true
+local AUTO_BALOON = true
+local AUTO_USE_BUFFS = true
+local AUTO_CHEST = true
+local AVOID_BUYING_IF_STATUE = false
 
-SHAKEORBUY_DELAY = 0
-SELL_DELAY = 20
+local SHAKEORBUY_DELAY = 0
+local SELL_DELAY = 20
 
 local players = game:GetService('Players')
 local replicatedstorage = game:GetService('ReplicatedStorage')
