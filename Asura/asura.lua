@@ -12,7 +12,7 @@ local userinputservice = game:GetService('UserInputService')
 
 -- Variables
 local client = players.LocalPlayer
-local playergui = client.PlayerGui
+local playergui = client:WaitForChild('PlayerGui')
 local main_color = Color3.fromRGB(255, 94, 159)
 local req = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or getgenv().request or request
 local targetgroup = 32353519
@@ -22,10 +22,16 @@ local tempadornee;
 local main_gui = playergui and playergui:FindFirstChild('Main')
 local clean_parts = workspace.CleaningParts
 local smart_walk_tick = tick()
+local firetouchinterest = function(...)
+	local args = {...}
+	task.spawn(function()
+		fireclickdetector(unpack(args))
+	end)
+end
 
 local flags = {
 	farm_method = 'Tween',
-	tween_speed = 6,
+	tween_speed = 2.25,
 	food_minimum = 20,
 	minstamina = 20,
     farm_location = 'Gym',
@@ -69,60 +75,62 @@ end
 
 -- Functions
 local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernearobj, safestbag, has_item, autowithdraw, gym_road, playerradiuscheck, senkai_road, bankpart, get_strike_power, get_bodycondition, get_strike_speed; do 
-	local moveto = function(destination, increment, YPosition, PostYPosition, upsidedown)
-		if (currentlymoving) then return end
-		currentlymoving = true
-
-		if not (client.Character and client.Character:FindFirstChild('HumanoidRootPart')) then return end
-
-		local oldTarget = (typeof(destination) == 'CFrame' and destination.Position or destination) + Vector3.new(0, PostYPosition or 0, 0)
-		local currentPos = client.Character.HumanoidRootPart.Position
-		
-		YPosition = client.Character.HumanoidRootPart.CFrame.X > 5000 and -27.7 or -23.7
-
-		if (math.abs(oldTarget.X - client.Character.HumanoidRootPart.CFrame.X) > 1 or math.abs(oldTarget.Z - client.Character.HumanoidRootPart.CFrame.Z) > 1) and not (client.Character.HumanoidRootPart.CFrame.Y >= (YPosition - 1) and client.Character.HumanoidRootPart.CFrame.Y <= (YPosition + 1)) then
-			currentPos = client.Character.HumanoidRootPart.Position
-			local endPosition = Vector3.new(currentPos.x, YPosition, currentPos.z)
-
-			local distance = (endPosition - client.Character.HumanoidRootPart.Position).Magnitude
-			local direction = (endPosition - client.Character.HumanoidRootPart.Position).Unit
-
+	moveto = function(destination, increment, targetY, postY, upsideDown)
+		if currentlyMoving then return end
+		currentlyMoving = true
+	
+		local character = client.Character
+		if not (character and character.PrimaryPart) then
+			currentlyMoving = false
+			return
+		end
+	
+		local root = character.PrimaryPart
+		local currentPos = root.Position
+		local destinationPos = (typeof(destination) == "CFrame" and destination.Position or destination) + Vector3.new(0, postY or 0, 0)
+	
+		targetY = root.CFrame.X > 5000 and -27.7 or -23.7
+	
+		local function moveToTarget(targetPos, increment)
+			local distance = (targetPos - currentPos).Magnitude
+			local direction = (targetPos - currentPos).Unit
+	
 			while distance > (increment / 10) do
 				currentPos = currentPos + direction * (increment / 10)
-				client.Character.HumanoidRootPart.CFrame = CFrame.new(currentPos)
-				if not upsidedown then
-					if client.Character and client.Character.HumanoidRootPart.Rotation.X < 10 and client.Character.HumanoidRootPart.Rotation.X > -10 then
-						client.Character.HumanoidRootPart.CFrame = client.Character.HumanoidRootPart.CFrame * CFrame.Angles(math.pi, 0, 0)
+				root.CFrame = CFrame.new(currentPos)
+	
+				if not upsideDown then
+					local rotationX = root.Rotation.X
+					if rotationX < 10 and rotationX > -10 then
+						root.CFrame = root.CFrame * CFrame.Angles(math.pi, 0, 0)
 					end
 				end
+	
 				task.wait()
-				distance = (endPosition - currentPos).Magnitude
+				distance = (targetPos - currentPos).Magnitude
 			end
 		end
-
-		local Target = (((math.abs(oldTarget.X - client.Character.HumanoidRootPart.CFrame.X) > 1) or (math.abs(oldTarget.Z - client.Character.HumanoidRootPart.CFrame.Z) > 1)) and Vector3.new(oldTarget.X, YPosition, oldTarget.Z)) or oldTarget
-		
-		local distance = (Target - client.Character.HumanoidRootPart.Position).Magnitude
-		local direction = (Target - client.Character.HumanoidRootPart.Position).Unit
-		currentPos = client.Character.HumanoidRootPart.Position
-
-		while distance > (increment / 10) do
-			currentPos = currentPos + direction * (increment / 10)
-			client.Character.HumanoidRootPart.CFrame = CFrame.new(currentPos)
-			if not upsidedown then
-				if client.Character and client.Character.HumanoidRootPart.Rotation.X < 10 and client.Character.HumanoidRootPart.Rotation.X > -10 then
-					client.Character.HumanoidRootPart.CFrame = client.Character.HumanoidRootPart.CFrame * CFrame.Angles(math.pi, 0, 0)
-				end
-			end
-			task.wait()
-			distance = (Target - currentPos).Magnitude
+	
+		if (math.abs(destinationPos.X - root.Position.X) > 1 or
+			math.abs(destinationPos.Z - root.Position.Z) > 1) and
+			not (root.Position.Y >= (targetY - 1) and root.Position.Y <= (targetY + 1)) then
+	
+			moveToTarget(Vector3.new(currentPos.X, targetY, currentPos.Z), 1.2)
 		end
-		currentlymoving = false
+	
+		local finalTarget = (math.abs(destinationPos.X - root.Position.X) > 1 or
+							 math.abs(destinationPos.Z - root.Position.Z) > 1)
+							 and Vector3.new(destinationPos.X, targetY, destinationPos.Z) or destinationPos
+	
+		moveToTarget(finalTarget, (math.abs(destinationPos.X - root.Position.X) > 1 or
+									math.abs(destinationPos.Z - root.Position.Z) > 1)
+									and 1.2 or increment)
+		currentlyMoving = false
 	end
-
-	local forceusetool = function(tool)
+	
+	forceusetool = function(tool)
 		local char = client.Character 
-		local root = char and char:FindFirstChild('HumanoidRootPart')
+		local root = char and char.PrimaryPart
 		local hum = char and char:FindFirstChild('Humanoid')
 
 		if not (char and root and hum) then return; end
@@ -137,12 +145,12 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		end
 	end
 
-	local get_floor = function()
+	get_floor = function()
 		local part = nil 
 		local dist = math.huge 
 
 		local char = client.Character 
-		local root = char and char:FindFirstChild('HumanoidRootPart')
+		local root = char and char.PrimaryPart
 
 		if (char and root) then 
 			if (clean_parts:FindFirstChild(client.Name)) then 
@@ -164,9 +172,9 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		return part
 	end
 
-	local fire_click = function()
+	fire_click = function()
 		local char = client.Character
-		local root = char and char:FindFirstChild('HumanoidRootPart')
+		local root = char and char.PrimaryPart
 
 		if (char and root) then 
 			local floor = get_floor() 
@@ -183,16 +191,16 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		end
 	end
 
-	local has_item = function(item)
+	has_item = function(item)
 		local char = client.Character 
 		local backpack = client.Backpack
 
 		return char and (char:FindFirstChild(item) or backpack:FindFirstChild(item))
 	end
 
-	local use_food = function(hunger)
+	use_food = function(hunger)
 		local char = client.Character 
-		local root = char and char:FindFirstChild('HumanoidRootPart')
+		local root = char and char.PrimaryPart
 		local hum = char and char:FindFirstChild('Humanoid')
 		if (not (char and root and hum)) then return end 
 
@@ -213,10 +221,10 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		end
 	end
 
-	local eatfood = function()
+	eatfood = function()
 		if (not flags.eating or not flags.autofood) then return end 
 		local char = client.Character 
-		local root = char and char:FindFirstChild('HumanoidRootPart')
+		local root = char and char.PrimaryPart
 		local hum = char and char:FindFirstChild('Humanoid')
 
 		if (char and root and hum) then
@@ -259,7 +267,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local dist = math.huge 
 
         local char = client.Character 
-        local root = char and char:FindFirstChild('HumanoidRootPart')
+        local root = char and char.PrimaryPart
 
         if (char and root) then 
             for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
@@ -282,7 +290,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local dist = math.huge 
 
         local char = client.Character 
-        local root = char and char:FindFirstChild('HumanoidRootPart')
+        local root = char and char.PrimaryPart
 
         if (char and root) then 
             for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
@@ -305,7 +313,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local dist = math.huge 
 
         local char = client.Character 
-        local root = char and char:FindFirstChild('HumanoidRootPart')
+        local root = char and char.PrimaryPart
 
         if (char and root) then 
             for _, v in pairs(workspace.Purchases.GYM:GetChildren()) do 
@@ -323,14 +331,14 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         return part
     end
 
-	local playerradiuscheck = function(radius)
-		local clientPosition = client.Character and client.Character:FindFirstChild('HumanoidRootPart') and client.Character.HumanoidRootPart.Position
+	playerradiuscheck = function(radius)
+		local clientPosition = client.Character and client.Character.PrimaryPart and client.Character.PrimaryPart.Position
 	
 		if not clientPosition then return end
 		for _, player in pairs(game.Players:GetPlayers()) do
 			if player ~= client and player.Character then
-				if player.Character:FindFirstChild('HumanoidRootPart') and player.Character.HumanoidRootPart.Position then
-					local distance = (Vector3.new(playerPosition.X, 0, playerPosition.Z) - Vector3.new(client.Character.HumanoidRootPart.Position.X, 0, client.Character.HumanoidRootPart.Position.Z)).magnitude
+				if player.Character.PrimaryPart and player.Character.PrimaryPart.Position then
+					local distance = (Vector3.new(playerPosition.X, 0, playerPosition.Z) - Vector3.new(client.Character.PrimaryPart.Position.X, 0, client.Character.PrimaryPart.Position.Z)).magnitude
 	
 					if distance <= radius then
 						return true
@@ -340,10 +348,10 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		end
 	end
 
-	local autowithdraw = function()
+	autowithdraw = function()
 		if (not flags.autowithdraw) then return end
 		local char = client.Character 
-		local root = char and char:FindFirstChild('HumanoidRootPart')
+		local root = char and char.PrimaryPart
 		local hum = char and char:FindFirstChild('Humanoid')
 	
 		if (char and root and hum) then
@@ -359,8 +367,8 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		end
 	end
 
-	local playernearobj = function(player, obj)
-		local playerposition = player.Character and player.Character:FindFirstChild('HumanoidRootPart') and player.Character.HumanoidRootPart.Position
+	playernearobj = function(player, obj)
+		local playerposition = player.Character and player.Character.PrimaryPart and player.Character.PrimaryPart.Position
 		local objposition = obj:FindFirstChildWhichIsA('BasePart') and obj:FindFirstChildWhichIsA('BasePart').Position
 	
 		if objposition and playerposition then
@@ -370,7 +378,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		end
 	end
 
-	local safestbag = function(players)
+	safestbag = function(players)
 		local closest, obj = math.huge, nil
 	
 		for _, v in pairs(workspace.Trainings:GetChildren()) do
@@ -388,7 +396,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 					end
 	
 					if not is_near then
-						local distance = (main.Position - client.Character.HumanoidRootPart.Position).magnitude
+						local distance = (main.Position - client.Character.PrimaryPart.Position).magnitude
 	
 						if distance < closest then
 							closest = distance
@@ -428,7 +436,7 @@ for i,v in pairs(workspace:GetChildren()) do
 end
 
 -- Meny
-local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do 
+local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone/78dc2d17017eb642fb42190d72741f7e/raw/681b721a045a8684899a161d469af1aebe22dd84/myasurauilib.lua", true))(); do 
 	local update_menu_name = function()
 		while (task.wait()) do 
 			local name, placeholder = 'made by @leadmarker and @afyzone | discord.gg/VudGqHwCHb', ''
@@ -479,7 +487,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 	end
 
 	local Settings = Menu.Container('Main', 'Settings', 'Right'); do 
-		Menu.Slider('Main', 'Settings', 'Tween Speed', 0, 10, 6, '', 1, function(self)
+		Menu.Slider('Main', 'Settings', 'Tween Speed', 0, 10, 2.25, '', 1, function(self)
 			flags.tween_speed = self
 		end)
 
@@ -509,7 +517,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 			task.spawn(function()
 				while (flags.job_farm and task.wait()) do 
 					local char = client.Character 
-					local root = char and char:FindFirstChild('HumanoidRootPart') 
+					local root = char and char.PrimaryPart
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root) then 
@@ -560,16 +568,22 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 									end
 								else
 									if (flags.jobtype == 'Both' or flags.jobtype == 'Delivery') then
-										moveto(CFrame.new(get_part.Position), flags.tween_speed, -10, -6)
+										local height = -5.5
+
+										if (char:FindFirstChild('Crate') and tonumber(playergui.Main.LabelJob2.Text) > 179) then
+											height = -23.7
+										end
+
+										moveto(CFrame.new(get_part.Position), flags.tween_speed, -10, height)
 										local part = nil 
 										local dist = math.huge 
 									
 										local char = client.Character 
-										local root = char and char:FindFirstChild('HumanoidRootPart')
+										local root = char and char.PrimaryPart
 									
 										if (char and root) then 
 											for _, v in pairs(workspace.Delivery:GetDescendants()) do 
-												if (v:IsA('TouchTransmitter') --[[and (v.Parent.Position - root.Position).magnitude < 20]]) then 
+												if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 5) then 
 													local crate = v.Parent
 													local mag = (crate.Position - root.Position).magnitude
 													
@@ -579,9 +593,11 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 													end
 												end
 											end
-											if not part then return; end
-											firetouchinterest(root, part, 1)
-											firetouchinterest(root, part, 0)
+
+											if (part) then 
+												firetouchinterest(root, part, 0)
+												firetouchinterest(root, part, 1)
+											end
 										end
 
 										moveto(CFrame.new(get_part.Position), flags.tween_speed, -10, -23.7)
@@ -589,7 +605,10 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 										moveto(CFrame.new(root.Position.X, -23.7, root.Position.Z), flags.tween_speed)
 										if (job_status.Text:find('crate')) then
 											replicatedstorage:FindFirstChild("Events"):FindFirstChild("EventCore"):FireServer("CancelJob") 
-											repeat task.wait() until job_status.Text == ''
+
+											while (job_status.Text ~= '' and task.wait()) do
+												moveto(CFrame.new(root.Position.X, -23.7, root.Position.Z), flags.tween_speed)
+											end
 										end
 									end
 								end
@@ -629,7 +648,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 
 			if (flags.autoroadwork) then 
 				local char = client.Character
-				local root = char and char:FindFirstChild('HumanoidRootPart')
+				local root = char and char.PrimaryPart
 
 				if (char and root and root.CFrame.Y > 0 and flags.farm_location == 'Senkaimon') then 
 					Menu.Notify('WARNING: Goto senkaimon area first')
@@ -640,7 +659,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 			task.spawn(function()
 				while (flags.autoroadwork and task.wait()) do 
 					local char = client.Character 
-					local root = char and char:FindFirstChild('HumanoidRootPart')
+					local root = char and char.PrimaryPart
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root and hum) then 
@@ -672,11 +691,11 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 							local dist = math.huge 
 						
 							local char = client.Character 
-							local root = char and char:FindFirstChild('HumanoidRootPart')
+							local root = char and char.PrimaryPart
 						
 							if (char and root) then 
 								for _, v in pairs(workspace.Roadworks:GetDescendants()) do 
-									if (v:IsA('TouchTransmitter') --[[and (v.Parent.Position - root.Position).magnitude < 20]]) then 
+									if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 5) then 
 										local thing = v.Parent
 										local mag = (thing.Position - root.Position).magnitude
 										
@@ -686,10 +705,12 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 										end
 									end
 								end
-								if not part then return; end
-								firetouchinterest(root, part, 1)
-								firetouchinterest(root, part, 0)
-							end						
+
+								if (part) then
+									firetouchinterest(root, part, 0)
+									firetouchinterest(root, part, 1)
+								end
+							end
 						elseif (has_item('Roadwork Training') and not billboard) then 
 							if (client.Backpack:FindFirstChild('Roadwork Training')) then 
 								hum:EquipTool(client.Backpack:FindFirstChild('Roadwork Training'))
@@ -727,7 +748,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 			task.spawn(function()
 				while (flags.autopunchingbag and task.wait()) do 
 					local char = client.Character 
-					local root = char and char:FindFirstChild('HumanoidRootPart')
+					local root = char and char.PrimaryPart
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root and hum) then
@@ -826,7 +847,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 			task.spawn(function()
 				while (flags.autocalisthenic and task.wait()) do 
 					local char = client.Character 
-					local root = char and char:FindFirstChild('HumanoidRootPart')
+					local root = char and char.PrimaryPart
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root and hum) then
@@ -864,7 +885,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 			task.spawn(function()
 				while (flags.autodura and initialdura and task.wait()) do 
 					local char = client.Character 
-					local root = char and char:FindFirstChild('HumanoidRootPart')
+					local root = char and char.PrimaryPart
 					local hum = char and char:FindFirstChild('Humanoid')
 			
 					if (char and root and hum) then
@@ -1002,7 +1023,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 			task.spawn(function()
 				while (flags.autofood and task.wait()) do 
 					local char = client.Character 
-					local root = char and char:FindFirstChild('HumanoidRootPart')
+					local root = char and char.PrimaryPart
 					local hum = char and char:FindFirstChild('Humanoid')
 
 					if (char and root and hum) then
@@ -1059,7 +1080,10 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
 				end
 			end
 
-			game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+			if (client.Character and client.Character.PrimaryPart) then
+				client.Character.PrimaryPart.Velocity = Vector3.new(0,0,0)
+			end
+
 			for i,v in pairs(client.Character.Humanoid:GetPlayingAnimationTracks()) do
 				v:Stop()
 			end
@@ -1104,48 +1128,51 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
     task.spawn(function()
         while task.wait() do
             if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic or flags.autodura) then
-        				client.Character.Humanoid:ChangeState(16)
-        				client.Character.HumanoidRootPart.Velocity = Vector3.new()
-        
-        				local char = client.Character 
-        				local spawnprotectionui = main_gui and main_gui:FindFirstChild('Protection')
-        
-        				if (spawnprotectionui and spawnprotectionui.Visible) then
-        					moveto(CFrame.new(client.Character.HumanoidRootPart.Position.X, -23.7, client.Character.HumanoidRootPart.Position.Z), flags.tween_speed)
-        			
-        					game:GetService("VirtualInputManager"):SendKeyEvent(true, "W", false, game)
-        					task.wait()
-        					game:GetService("VirtualInputManager"):SendKeyEvent(false, "W", false, game)
-        				end
-        
-        				if (char) then 
-        					for _, v in pairs(char:GetDescendants()) do 
-        						if (v:IsA('BasePart') and v.CanCollide == true) then 
-        							v.CanCollide = false 
-        						end
-        					end
-        				end
-        
-        				if flags.autopunchingbag then					
-        					if (tempadornee and not client.Character:FindFirstChild('Ragdoll') and (client.Character.Humanoid.Health / client.Character.Humanoid.MaxHealth) * 100 > 20 and client.Character:FindFirstChild('Gloves')) then
-        						if (playerradiuscheck(35)) then
-        							moveto(CFrame.new(client.Character.HumanoidRootPart.Position.X, -23.7, client.Character.HumanoidRootPart.Position.Z), flags.tween_speed)
-        						else
-        							if (tempadornee - client.Character.HumanoidRootPart.Position).magnitude <= 20 then
-        								if (not flags.downbool) then
-        									client.Character.HumanoidRootPart.CFrame = CFrame.new(tempadornee + Vector3.new(0, -5, 0), tempadornee) * CFrame.Angles(0, math.rad(--[[50]]25), math.rad(90))
-        								else
-        									client.Character.HumanoidRootPart.CFrame = CFrame.new(tempadornee + Vector3.new(0, -9, 0), tempadornee) * CFrame.Angles(0, math.rad(--[[50]]0), math.rad(90))
-        								end
-        							end
-        						end
-        					end
-        
-        				elseif flags.job_farm then
-        					if client.Character and client.Character.HumanoidRootPart.Rotation.X < 10 and client.Character.HumanoidRootPart.Rotation.X > -10 then
-        						client.Character.HumanoidRootPart.CFrame = client.Character.HumanoidRootPart.CFrame * CFrame.Angles(math.pi, 0, 0)
-        					end
-        				end
+				client.Character.Humanoid:ChangeState(16)
+
+				if (client.Character and client.Character.PrimaryPart) then
+					client.Character.PrimaryPart.Velocity = Vector3.new()
+				end
+
+				local char = client.Character 
+				local spawnprotectionui = main_gui and main_gui:FindFirstChild('Protection')
+
+				if (spawnprotectionui and spawnprotectionui.Visible) then
+					moveto(CFrame.new(client.Character.PrimaryPart.Position.X, -23.7, client.Character.PrimaryPart.Position.Z), flags.tween_speed)
+			
+					game:GetService("VirtualInputManager"):SendKeyEvent(true, "W", false, game)
+					task.wait()
+					game:GetService("VirtualInputManager"):SendKeyEvent(false, "W", false, game)
+				end
+
+				if (char) then 
+					for _, v in pairs(char:GetDescendants()) do 
+						if (v:IsA('BasePart') and v.CanCollide == true) then 
+							v.CanCollide = false 
+						end
+					end
+				end
+
+				if flags.autopunchingbag then					
+					if (tempadornee and not client.Character:FindFirstChild('Ragdoll') and (client.Character.Humanoid.Health / client.Character.Humanoid.MaxHealth) * 100 > 20 and client.Character:FindFirstChild('Gloves')) then
+						if (playerradiuscheck(35)) then
+							moveto(CFrame.new(client.Character.PrimaryPart.Position.X, -23.7, client.Character.PrimaryPart.Position.Z), flags.tween_speed)
+						else
+							if (tempadornee - client.Character.PrimaryPart.Position).magnitude <= 20 then
+								if (not flags.downbool) then
+									client.Character.PrimaryPart.CFrame = CFrame.new(tempadornee + Vector3.new(0, -5, 0), tempadornee) * CFrame.Angles(0, math.rad(--[[50]]25), math.rad(90))
+								else
+									client.Character.PrimaryPart.CFrame = CFrame.new(tempadornee + Vector3.new(0, -9, 0), tempadornee) * CFrame.Angles(0, math.rad(--[[50]]0), math.rad(90))
+								end
+							end
+						end
+					end
+
+				elseif flags.job_farm then
+					if client.Character and client.Character.PrimaryPart.Rotation.X < 10 and client.Character.PrimaryPart.Rotation.X > -10 then
+						client.Character.PrimaryPart.CFrame = client.Character.PrimaryPart.CFrame * CFrame.Angles(math.pi, 0, 0)
+					end
+				end
             end
         end
     end)
@@ -1155,7 +1182,7 @@ local Menu = loadstring(game:HttpGet("https://rentry.co/zs6vn/raw", true))(); do
             if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic) then
                 if flags.autopunchingbag then
                     if (client.Character:FindFirstChild('Ragdoll') or (client.Character.Humanoid.Health / client.Character.Humanoid.MaxHealth) * 100 <= 20) then
-                        moveto(CFrame.new(client.Character.HumanoidRootPart.Position.X, -23.7, client.Character.HumanoidRootPart.Position.Z), flags.tween_speed)
+                        moveto(CFrame.new(client.Character.PrimaryPart.Position.X, -23.7, client.Character.PrimaryPart.Position.Z), flags.tween_speed)
                     end
                 end
             end
