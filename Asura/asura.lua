@@ -596,7 +596,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										local height = -23.7
 
 										if (os.clock() - flags.got_crate > 12.5) then
-											height = -4.8
+											height = -4.7
 										end
 
 										moveto(CFrame.new(get_part.Position), flags.tween_speed, -10, height)
