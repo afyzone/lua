@@ -172,6 +172,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 	fire_click = function()
 		local char = client.Character
 		local root = char and char:FindFirstChild('HumanoidRootPart')
+		local hum = char and char:FindFirstChildWhichIsA('Humanoid')
 
 		if (char and root) then 
 			local floor = get_floor() 
@@ -179,6 +180,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 			if (floor ~= nil) then 
 				local mag = (floor.Position - root.Position).magnitude
 				local click = floor and floor:FindFirstChild('ClickDetector')
+				hum:UnequipTools()
 				
 				if (click and mag < 8) then 
 					fireclickdetector(click)
@@ -242,6 +244,8 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 				
 						if (mag < 12) then
 							for i = 1, 5 do
+								hum:UnequipTools()
+
 								if (selectedfood:FindFirstChildWhichIsA('ClickDetector')) then
 									fireclickdetector(selectedfood:FindFirstChildWhichIsA('ClickDetector'))
 									task.wait(.6)
@@ -691,8 +695,12 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 								local road_type = (flags.farm_location == 'Gym' and gym_road:FindFirstChildWhichIsA('ClickDetector')) or senkai_road:FindFirstChildWhichIsA('ClickDetector')
 
 								for i = 1, 3 do
-									fireclickdetector(road_type)
-									task.wait(.6)
+									hum:UnequipTools()
+
+									if (road_type) then
+										fireclickdetector(road_type)
+										task.wait(.6)
+									end
 								end
 
 							else
@@ -784,6 +792,8 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							
 							if (mag < 12) then
 								for i = 1, 3 do
+									hum:UnequipTools()
+									
 									if (item_type:FindFirstChildWhichIsA('ClickDetector')) then
 										fireclickdetector(item_type.ClickDetector)
 										task.wait(.6)
@@ -923,6 +933,8 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							
 							if (mag < 12) then
 								for i = 1, 3 do
+									hum:UnequipTools()
+
 									if (item_type:FindFirstChildWhichIsA('ClickDetector')) then
 										fireclickdetector(item_type.ClickDetector)
 										task.wait(.6)
