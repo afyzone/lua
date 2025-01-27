@@ -35,6 +35,7 @@ local flags = {
 	bobbing_speed = 1.2,
 	food_minimum = 20,
 	minstamina = 20,
+	stamina_waiting = false,
 	farm_location = 'Gym',
 	roadworktype = 'Speed',
 	punchingtype = 'Strike Power Training',
@@ -761,7 +762,6 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 					if (char and root and hum) then
 						local billboard = playergui and playergui:FindFirstChild('BillboardGui') and playergui:FindFirstChild('BillboardGui').Adornee ~= nil and playergui:FindFirstChild('BillboardGui')
 						local item_type = (flags.punchingtype == 'Strike Power Training' and get_strike_power()) or get_strike_speed()
-						local stamina = playergui and playergui:FindFirstChild('Main') and (playergui.Main.HUD.Stamina.Clipping.Size.X.Scale * 100) or 0
 
 						autowithdraw()
 						eatfood()
@@ -803,7 +803,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							end
 
 						elseif (char:FindFirstChild('Gloves') and billboard) then 
-							if (stamina > flags.minstamina) then
+							if (not flags.stamina_waiting) then
 								if (client.Backpack:FindFirstChild('Combat')) then 
 									-- client.Backpack:FindFirstChild('Combat').Parent = char
 									hum:EquipTool(client.Backpack:FindFirstChild('Combat'))
@@ -872,7 +872,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							moveto(CFrame.new(root.Position.X, -23.7, root.Position.Z), flags.tween_speed)
 						end
 
-						if (stamina > flags.minstamina) then
+						if (not flags.stamina_waiting) then
 							forceusetool(selectedtool)
 						end
 					end
@@ -971,7 +971,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							moveto(CFrame.new(item_type:FindFirstChildWhichIsA('BasePart').Position.X + 8, -23.7, item_type:FindFirstChildWhichIsA('BasePart').Position.Z + 5), flags.tween_speed)
 
 							if (players[flags.autoduraperson].Character and players[flags.autoduraperson].Character:FindFirstChild('Humanoid') and (players[flags.autoduraperson].Character.Humanoid.Health / players[flags.autoduraperson].Character.Humanoid.MaxHealth) * 100 > flags.healthmin) then
-								if (stamina > flags.minstamina) then
+								if (not flags.stamina_waiting) then
 									if client.Character:FindFirstChild('OnHit') then
 										if (client.Backpack:FindFirstChild('Body Conditioning')) then 
 											hum:EquipTool(client.Backpack:FindFirstChild('Body Conditioning'))
@@ -1075,13 +1075,24 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 	end
 
 	runservice.Heartbeat:Connect(function()
+		local char = client.Character 
+		local hum = char and char:FindFirstChild('Humanoid')
+		
+		local stamina = playergui and playergui:FindFirstChild('Main') and (playergui.Main.HUD.Stamina.Clipping.Size.X.Scale * 100) or 0
+
+		if (char and hum) then
+			if (stamina < flags.minstamina) then
+				flags.stamina_waiting = true
+			end
+
+			if (stamina > 90) then
+				flags.stamina_waiting = false
+			end
+		end
+
 		if (flags.autoroadwork or flags.job_farm or flags.autopunchingbag or flags.autocalisthenic) then 
-			if (flags.autoroadwork) then
-				local char = client.Character 
-				local hum = char and char:FindFirstChild('Humanoid')
-			
-				local stamina = playergui and playergui:FindFirstChild('Main') and playergui.Main.HUD.Stamina.Clipping.Size.X.Scale * 100
-				if (stamina <= flags.minstamina) then 
+			if (flags.autoroadwork) then			
+				if (flags.stamina_waiting) then 
 					replicatedstorage.Events.EventCore:FireServer('Run', 'Start', false)
 				end
 				
@@ -1098,7 +1109,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			end
 
 			if (client.Character and client.Character:FindFirstChild('HumanoidRootPart')) then
-				client.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+				client.Character.HumanoidRootPart.Velocity = Vector3.zero
 			end
 
 			for i,v in (client.Character.Humanoid:GetPlayingAnimationTracks()) do
