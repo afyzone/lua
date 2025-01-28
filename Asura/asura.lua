@@ -593,7 +593,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										local height = -23.7
 
 										if (os.clock() - flags.got_crate > 12.5) then
-											height = -4.7
+											height = -6
 										end
 
 										moveto(CFrame.new(get_part.Position), flags.tween_speed, -10, height)
@@ -603,7 +603,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 									
 										if (char and root) then 
 											for _, v in (workspace.Delivery:GetDescendants()) do 
-												if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 8) then 
+												if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 12) then 
 													firetouchinterest(root, v.Parent, 0)
 													firetouchinterest(root, v.Parent, 1)
 												end
@@ -701,14 +701,14 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							end
 							
 						elseif (billboard) then
-							moveto(CFrame.new(billboard.Adornee.Position), flags.tween_speed, -10, -5)
+							moveto(CFrame.new(billboard.Adornee.Position), flags.tween_speed, -10, -6)
 						
 							local char = client.Character 
 							local root = char and char:FindFirstChild('HumanoidRootPart')
 						
 							if (char and root) then 
 								for _, v in (workspace.Roadworks:GetDescendants()) do 
-									if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 8) then 
+									if (v:IsA('TouchTransmitter') and (v.Parent.Position - root.Position).magnitude < 12) then 
 										firetouchinterest(root, v.Parent, 0)
 										firetouchinterest(root, v.Parent, 1)
 									end
@@ -966,7 +966,6 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 									
 								end
 							end
-
 						else
 							moveto(CFrame.new(item_type:FindFirstChildWhichIsA('BasePart').Position.X + 8, -23.7, item_type:FindFirstChildWhichIsA('BasePart').Position.Z + 5), flags.tween_speed)
 
@@ -991,7 +990,6 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										end
 									end
 								end
-
 							else
 								initialdura = client
 								moveto(CFrame.new(item_type:FindFirstChildWhichIsA('BasePart').Position.X + 5, -23.7, item_type:FindFirstChildWhichIsA('BasePart').Position.Z + 5), flags.tween_speed)
