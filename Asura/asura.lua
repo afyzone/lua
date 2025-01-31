@@ -233,7 +233,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 		local hum = char and char:FindFirstChild('Humanoid')
 
 		if (char and root and hum) then
-			local selectedfood = (flags.foodtype == 'Chicken' and workspace.Purchases.Chicken.Chicken or flags.foodtype == 'Cheeseburger' and workspace.Purchases.Burger.Cheeseburger or flags.foodtype == 'Milkshake' and workspace.Purchases.Burger.Milkshake or flags.foodtype == 'Protein Shake' and workspace.Purchases["GYM Rats"]["Protein Shake"]) or workspace.Purchases.Sushi.Sushi
+			local selectedfood = (flags.foodtype == 'Chicken' and workspace.MapMisc.Purchases.Chicken.Chicken or flags.foodtype == 'Cheeseburger' and workspace.MapMisc.Purchases.Burger.Cheeseburger or flags.foodtype == 'Milkshake' and workspace.MapMisc.Purchases.Burger.Milkshake or flags.foodtype == 'Protein Shake' and workspace.MapMisc.Purchases["GYM Rats"]["Protein Shake"]) or workspace.MapMisc.Purchases.Sushi.Sushi
 			local foodpart = selectedfood:FindFirstChildWhichIsA('BasePart')
 			local hunger = playergui and playergui:FindFirstChild('Main') and playergui.Main.HUD.Hunger.Clipping.Size.X.Scale * 100
 
@@ -278,7 +278,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local root = char and char:FindFirstChild('HumanoidRootPart')
 
         if (char and root) then 
-            for _, v in (workspace.Purchases.GYM:GetChildren()) do 
+            for _, v in (workspace.MapMisc.Purchases.GYM:GetChildren()) do 
                 if (v:IsA('Model') and v.Name == 'Strike Power Training' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
                     local mag = (v:GetPivot().Position - root.Position).magnitude
                     
@@ -300,7 +300,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local root = char and char:FindFirstChild('HumanoidRootPart')
 
         if (char and root) then 
-            for _, v in (workspace.Purchases.GYM:GetChildren()) do 
+            for _, v in (workspace.MapMisc.Purchases.GYM:GetChildren()) do 
                 if (v:IsA('Model') and v.Name == 'Body Conditioning' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
                     local mag = (v:GetPivot().Position - root.Position).magnitude
                     
@@ -322,7 +322,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
         local root = char and char:FindFirstChild('HumanoidRootPart')
 
         if (char and root) then 
-            for _, v in (workspace.Purchases.GYM:GetChildren()) do 
+            for _, v in (workspace.MapMisc.Purchases.GYM:GetChildren()) do 
                 if (v:IsA('Model') and v.Name == 'Strike Speed Training' and v:FindFirstChildWhichIsA('BasePart').CFrame.Y <= 25 and (workspace.GangBase.GYM.Position - v:FindFirstChildWhichIsA('BasePart').Position).magnitude > 150) then 
                     local mag = (v:GetPivot().Position - root.Position).magnitude
                     
@@ -426,7 +426,7 @@ local moveto, forceusetool, get_floor, fire_click, eatfood, use_food, playernear
 end
 
 -- Preload
-for _, v in (workspace.Purchases.GYM:GetChildren()) do 
+for _, v in (workspace.MapMisc.Purchases.GYM:GetChildren()) do 
 	if (v:IsA('Model') and v.Name == 'Roadwork Training') then 
 		local part = v:FindFirstChild('Part')
 
@@ -901,7 +901,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 			
 					if (char and root and hum) then
 						local stamina = playergui and playergui:FindFirstChild('Main') and (playergui.Main.HUD.Stamina.Clipping.Size.X.Scale * 100) or 0
-						local selectedfood = (flags.foodtype == 'Chicken' and workspace.Purchases.Chicken.Chicken or flags.foodtype == 'Cheeseburger' and workspace.Purchases.Burger.Cheeseburger or flags.foodtype == 'Milkshake' and workspace.Purchases.Burger.Milkshake or flags.foodtype == 'Protein Shake' and workspace.Purchases["GYM Rats"]["Protein Shake"]) or workspace.Purchases.Sushi.Sushi
+						local selectedfood = (flags.foodtype == 'Chicken' and workspace.MapMisc.Purchases.Chicken.Chicken or flags.foodtype == 'Cheeseburger' and workspace.MapMisc.Purchases.Burger.Cheeseburger or flags.foodtype == 'Milkshake' and workspace.MapMisc.Purchases.Burger.Milkshake or flags.foodtype == 'Protein Shake' and workspace.MapMisc.Purchases["GYM Rats"]["Protein Shake"]) or workspace.MapMisc.Purchases.Sushi.Sushi
 						local item_type = get_bodycondition()
 
 						autowithdraw()
