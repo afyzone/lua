@@ -49,7 +49,8 @@ local flags = {
 	jobtype = 'Both',
 	got_crate = 0,
 	healthmin = 10,
-	downbool = false
+	downbool = false,
+	autoduraperson = '',
 }
 
 local highrank = {
@@ -450,7 +451,7 @@ for i,v in (workspace:GetChildren()) do
 end
 
 -- Meny
-local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone/78dc2d17017eb642fb42190d72741f7e/raw/", true))(); do 
+local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone/78dc2d17017eb642fb42190d72741f7e/raw/681b721a045a8684899a161d469af1aebe22dd84/myasurauilib.lua", true))(); do 
 	local update_menu_name = function()
 		while (task.wait()) do 
 			local name, placeholder = 'made by @leadmarker and @afyzone | discord.gg/VudGqHwCHb', ''
