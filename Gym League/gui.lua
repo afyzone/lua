@@ -20,10 +20,11 @@ local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local label_timer = workspace.Podium.entrance.billboard.billboard.labelTimer
 
-client.DevCameraOcclusionMode = "Invisicam"
-for i,v in getconnections(client.Idled) do
-    v:Disable()
-end
+-- client.DevCameraOcclusionMode = "Invisicam"
+-- for i,v in getconnections(client.Idled) do
+--     v:Disable()
+-- end
+-- this dont let the script even execute, maybe a roblox update
 
 local powerups, equipment_rewards, fast_mode = {}, {
     ['Stamina'] = 'treadmill',
@@ -299,7 +300,8 @@ local script_handler = {}; do
                     end
                 else
                     if (self.farmmode) then 
-                        self:call('EquipmentService', 'RF', 'AutoLoad')
+                        -- self:call('EquipmentService', 'RF', 'AutoLoad') pressing auto load in the current game version also enables Auto Train in game which can be bought for 10k
+                        -- and it disables this scripts fast clicking power then it caps the speed of the training to 1.00x because its the free version (10k in game money)
                         self:call('EquipmentService', 'RE', 'click')
                         
                         if (self.fast_mode and os.clock() - self.fast_mode_delay > 0.015) then
