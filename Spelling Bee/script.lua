@@ -1,10 +1,12 @@
 -- https://www.roblox.com/games/17590362521/
 
+local data_url = '' -- place ngrok forward url
 local anounce_words = false
 
 local textchatservice = game:GetService("TextChatService")
 local players = game:GetService("Players")
-local virtualinputmanager = Instance.new('VirtualInputManager')
+local httpservice = game:GetService("HttpService")
+local marketplaceservice = game:GetService("MarketplaceService")
 
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
@@ -537,54 +539,52 @@ end
 local last_word = nil
 local pretypewait = 0
 
-local max_wpm = 140
-local min_wpm = 100
-
-local function get_typing_delay()
-    local min_delay = 60 / (max_wpm * 5)
-    local max_delay = 60 / (min_wpm * 5)
-
-    return math.random() * (max_delay - min_delay) + min_delay
+local function send_data(data)
+    local newdata = httpservice:JSONEncode({message = data})
+    
+    local headers = {["content-type"] = "application/json"}
+    local webhook = {Url = data_url, Body = newdata, Method = "POST", Headers = headers}
+    
+    request(webhook)
 end
 
 local function autotypeword(word, skip_typing)
-    -- local constructor = ''
-
-    for letter in word:gmatch(".") do
-        -- constructor = `{constructor}{letter}`
-
-        -- game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("PlayerText"):FireServer(constructor:upper(), tick() + 28802, false, true)
-
-        if (not skip_typing) then
-            virtualinputmanager:SendKeyEvent(true, Enum.KeyCode[letter:upper()], false, nil)
-            virtualinputmanager:SendKeyEvent(false, Enum.KeyCode[letter:upper()], false, nil)
-        end
-        
-        task.wait(get_typing_delay(#word))
-    end
-
     if (skip_typing) then return end
 
-    -- game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("PlayerText"):FireServer(word:upper(), tick() + 28802, true, true)
-    virtualinputmanager:SendKeyEvent(true, Enum.KeyCode.Return, false, nil)
-    virtualinputmanager:SendKeyEvent(false, Enum.KeyCode.Return, false, nil)
+    send_data(word)
 end
 
 game.DescendantAdded:Connect(function(desc)
     if not (desc:IsA('Sound') and desc.Name == 'Sound') then return end
 
     if (not wordlist[desc.SoundId] and not prompts[desc.SoundId]) then
-        local cln = desc:Clone()
         local flag = false
         for i,v in (workspace.afy:GetChildren()) do
-          	if (v.SoundId == cln.SoundId) then
-          		  flag = true
+          	if (v.SoundId == desc.SoundId) then
+                flag = true
           	end
         end
         
         if not flag then
-        	  cln.Parent = workspace.afy
-    	  end
+            local success, assetInfo = pcall(function()
+                return marketplaceservice:GetProductInfo(tonumber(desc.SoundId:match("%d+")))
+            end)
+
+            local new_spelling = assetInfo.Name:split(' ')
+
+            if success and #new_spelling > 1 then
+                last_word = new_spelling[2]
+            else
+                local cln = desc:Clone()
+                cln.Parent = workspace.afy
+                last_word = nil
+            end
+            
+            print(`sound not in, assumed word: {new_spelling[2]}`)
+
+            local newcontent = `['{desc.SoundId}'] = '{new_spelling[2]}'`
+            writefile('afy.txt', `{readfile('afy.txt')}\n{newcontent}`)
+        end
     end
     
     if (wordlist[desc.SoundId]) then
@@ -593,7 +593,8 @@ game.DescendantAdded:Connect(function(desc)
 
         if (not anounce_words) then return end
 
-    	  task.wait(3)
+        task.wait(4)
+
         if (not playergui.Type.Enabled) then
             textchatservice.TextChannels.RBXGeneral:SendAsync(last_word)
         end
@@ -603,6 +604,6 @@ end)
 playergui.Type:GetPropertyChangedSignal('Enabled'):Connect(function()
     if (playergui.Type.Enabled) then
         task.wait(pretypewait)
-    	  autotypeword(last_word)
+        autotypeword(last_word)
     end
 end)
