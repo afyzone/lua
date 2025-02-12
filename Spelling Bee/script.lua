@@ -560,12 +560,12 @@ game.DescendantAdded:Connect(function(desc)
     if (not wordlist[desc.SoundId] and not prompts[desc.SoundId]) then
         local flag = false
         for i,v in (workspace.afy:GetChildren()) do
-          	if (v.SoundId == desc.SoundId) then
-                flag = true
-          	end
+          	if (v.SoundId ~= desc.SoundId) then continue end
+            
+            flag = true
         end
         
-        if not flag then
+        if (not flag) then
             local success, assetInfo = pcall(function()
                 return marketplaceservice:GetProductInfo(tonumber(desc.SoundId:match("%d+")))
             end)
