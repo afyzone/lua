@@ -86,7 +86,7 @@ local highrank = {
 	['Birb'] = true,
 	['Admin'] = true,
 	['Assets Uploader'] = true,
-  ['Moderator'] = true
+    ['Moderator'] = true
 }
 
 task.spawn(function()
@@ -104,7 +104,7 @@ for i, v in (getconnections(client.Idled)) do
 	v:Disable()
 end
 
-local moveto, movetochunks, get_char, get_hum, get_root, get_backpack, get_closest_job, get_closest_job_board, get_best_job, get_balance, get_bank_balance, deposit, withdraw, check_bed_available, has_item, use_item, get_new_server, shadow_exists, is_ragdolled, send_data, smart_wait; do
+local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_closest_job_board, get_best_job, get_balance, get_bank_balance, deposit, withdraw, check_bed_available, has_item, use_item, get_new_server, shadow_exists, is_ragdolled, send_data, smart_wait; do
 	moveto = function(destination, increment, targetY, postY)
 		if hidden_flags.currently_moving then return end
 		hidden_flags.currently_moving = true
@@ -134,7 +134,11 @@ local moveto, movetochunks, get_char, get_hum, get_root, get_backpack, get_close
             local directionY = (targetPos.Y > currentPos.Y) and 1 or -1
         
             while distanceXZ > (increment / 10) or distanceY > (flags.bobbing_speed / 10) do
-                if (root.Anchored) then break end
+                -- if (root.Anchored) then break end
+                while (root.Anchored) do
+                    smart_wait()
+                    task.wait()
+                end
 
                 if distanceXZ > (increment / 10) then
                     currentPos = currentPos + directionXZ * (increment / 10)
@@ -160,72 +164,6 @@ local moveto, movetochunks, get_char, get_hum, get_root, get_backpack, get_close
 			not (root.Position.Y >= ((workspace.FallenPartsDestroyHeight + 50) - 1) and root.Position.Y <= ((workspace.FallenPartsDestroyHeight + 50) + 1)) then
 	
 			moveToTarget(vector.create(root.Position.X, (workspace.FallenPartsDestroyHeight + 50), root.Position.Z))
-            -- root.CFrame = CFrame.new(root.Position.X, (workspace.FallenPartsDestroyHeight + 50), root.Position.Z)
-		end
-
-		local finalTarget = (math.abs(destinationPos.X - root.Position.X) > 1 or
-							 math.abs(destinationPos.Z - root.Position.Z) > 1)
-							 and vector.create(destinationPos.X, targetY, destinationPos.Z) or destinationPos
-             
-        moveToTarget(finalTarget)
-		hidden_flags.currently_moving = false
-	end
-
-    movetochunks = function(destination, increment, targetY, postY)
-		if hidden_flags.currently_moving then return end
-		hidden_flags.currently_moving = true
-	
-		local char = get_char(client)
-		local root = get_root(char)
-
-		if (not root) then
-			hidden_flags.currently_moving = false
-			return
-		end
-
-        local increment = increment or flags.tween_speed
-	
-		local currentPos = root.Position
-		local destinationPos = (typeof(destination) == "CFrame" and destination.Position or destination) + vector.create(0, postY or 0, 0)
-        destinationPos = vector.create(destinationPos.X, targetY or (workspace.FallenPartsDestroyHeight + 50), destinationPos.Z)
-
-		local targetY = targetY or (workspace.FallenPartsDestroyHeight + 50) -- 480
-
-        local function moveToTarget(targetPos)
-            local distanceXZ = vector.create(targetPos.X - currentPos.X, 0, targetPos.Z - currentPos.Z).magnitude
-            local directionXZ = vector.create(targetPos.X - currentPos.X, 0, targetPos.Z - currentPos.Z).Unit
-            
-            local distanceY = math.abs(targetPos.Y - currentPos.Y)
-            local directionY = (targetPos.Y > currentPos.Y) and 1 or -1
-        
-            while distanceXZ > (increment) or distanceY > (flags.bobbing_speed) do
-                if distanceXZ > (increment) then
-                    currentPos = currentPos + directionXZ * (increment)
-                end
-                
-                if distanceY > (flags.bobbing_speed / 10) then
-                    currentPos = currentPos + vector.create(0, directionY * (flags.bobbing_speed / 10), 0)
-                else
-                    currentPos = vector.create(currentPos.X, targetPos.Y, currentPos.Z)
-                end
-                
-                local start_time = os.clock()
-                while os.clock() - start_time <= 0.5 do
-                    root.CFrame = CFrame.new(currentPos)
-                    task.wait()
-                end
-                
-                distanceXZ = vector.create(targetPos.X - currentPos.X, 0, targetPos.Z - currentPos.Z).Magnitude
-                distanceY = math.abs(targetPos.Y - currentPos.Y)
-            end
-        end
-        
-        
-		if (math.abs(destinationPos.X - root.Position.X) > 1 or
-			math.abs(destinationPos.Z - root.Position.Z) > 1) and
-			not (root.Position.Y >= ((workspace.FallenPartsDestroyHeight + 50) - 1) and root.Position.Y <= ((workspace.FallenPartsDestroyHeight + 50) + 1)) then
-	
-			moveToTarget(vector.create(currentPos.X, (workspace.FallenPartsDestroyHeight + 50), currentPos.Z))
             -- root.CFrame = CFrame.new(root.Position.X, (workspace.FallenPartsDestroyHeight + 50), root.Position.Z)
 		end
 
@@ -517,7 +455,7 @@ local moveto, movetochunks, get_char, get_hum, get_root, get_backpack, get_close
         if (char and root) then
             local init_cframe = root.CFrame
 
-            while (char and root and not root.Anchored and (not flag_string or flags[flag_string]) and os.clock() - start_time <= wait_time) do
+            while (char and root and (not flag_string or flags[flag_string]) and os.clock() - start_time <= (wait_time or 0)) do
                 root.CFrame = init_cframe
                 task.wait()
             end
@@ -653,7 +591,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
                                 if (mag > 300) then
                                     moveto(deliver.Position, flags.tween_speed)
                                 elseif (mag > 10) then
-                                    movetochunks(deliver.Position, 80)
+                                    moveto(deliver.Position, flags.tween_speed)
                                     root.CFrame = CFrame.new(deliver.Position.X - 1, 487, deliver.Position.Z + 2)
                                 else
                                     root.CFrame = CFrame.new(deliver.Position.X - 1, 487, deliver.Position.Z + 2)
@@ -665,7 +603,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
                                 if (mag > 300) then
                                     moveto(prompter.Position, flags.tween_speed)
                                 elseif (mag > 10) then
-                                    movetochunks(prompter.Position, 80)
+                                    moveto(prompter.Position, flags.tween_speed)
                                     root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
                                 else
                                     root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
@@ -688,7 +626,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
                             if (mag > 300) then
                                 moveto(prompter.Position, flags.tween_speed)
                             elseif (mag > 10) then
-                                movetochunks(prompter.Position, 80)
+                                moveto(prompter.Position, flags.tween_speed)
                                 root.CFrame = CFrame.new(prompter.Position.X, 484, prompter.Position.Z)
                             else
                                 root.CFrame = CFrame.new(prompter.Position.X, 484, prompter.Position.Z)
@@ -1597,7 +1535,7 @@ client.OnTeleport:Connect(function()
     final_string = final_string .. '}'
 
     if (queue_on_teleport) then
-        queue_on_teleport(`{final_string}\nloadstring(game:HttpGet('https://gist.githubusercontent.com/afyzone/637078d12b5315ca3183c6050e14b422/raw/'))()`)
+        queue_on_teleport(`{final_string}\nloadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Ryujin/gui.lua'))()`)
     end
 end)
 
