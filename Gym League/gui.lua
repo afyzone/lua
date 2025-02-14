@@ -51,7 +51,7 @@ for i,v in (playergui.Frames.GymStore.PowerUps.CanvasGroup.List:GetChildren()) d
 end
 
 local get_char, get_backpack, get_root, get_hum; do 
-    get_char = function(player) 
+    get_char = function(player)
         return player.Character
     end
 
@@ -63,7 +63,7 @@ local get_char, get_backpack, get_root, get_hum; do
         return char and char:FindFirstChildWhichIsA('Humanoid')
     end
 
-    get_backpack = function(player: Player)
+    get_backpack = function(player)
         return player:FindFirstChildWhichIsA('Backpack')
     end
 end
@@ -82,10 +82,13 @@ local script_handler = {}; do
         self.manual_farm = nil
         self.farmmode = false
         self.autofarm = false
+
+        self.enable_fast_mode = false
         self.fast_mode = false
 
         self.manual = false
         
+        self.auto_click = false
         self.autocomp = false
         self.comp_yield = false
 
@@ -96,6 +99,7 @@ local script_handler = {}; do
 
         self.buy_powerup = false
         self.use_powerup = false
+        self.use_all_powerups = false
         self.selected_powerup = {}
         
         self.ui_funcs = {}; do
@@ -141,6 +145,7 @@ local script_handler = {}; do
             else
                 if (v:GetAttribute('occupied')) then continue end
             end
+
             local mag = (v:GetPivot().Position - root.Position).magnitude
 
             if (mag < dist) then
@@ -156,6 +161,7 @@ local script_handler = {}; do
     function script_handler:grab_stamina()
         local stamina = client:GetAttribute('stamina')
         local max_stamina = client:GetAttribute('maxStamina')
+
         return (stamina / max_stamina) * 100
     end
 
@@ -165,6 +171,7 @@ local script_handler = {}; do
         local root = get_root(char)
 
         if not (humanoid and root) then return end
+
         humanoid:MoveTo(pos)
     end
 
@@ -180,7 +187,8 @@ local script_handler = {}; do
                 hum.Sit = false
             end
     
-            local path = pathfindservice:CreatePath({AgentRadius = 3,AgentHeight = 5,WaypointSpacing = math.huge})
+            local path = pathfindservice:CreatePath({AgentRadius = 3, AgentHeight = 5, WaypointSpacing = math.huge})
+
             local success = pcall(function()
                 path:ComputeAsync(root.Position, pos)
                 local waypoints = path:GetWaypoints()
@@ -190,12 +198,16 @@ local script_handler = {}; do
                     self:move(waypointPosition)
     
                     local distance = (waypointPosition - root.Position).Magnitude
+
                     while (distance > 5) do
                         local char = get_char(client)
                         local hum = get_hum(char)
-                        if (not self.current_path or not hum or hum.MoveToPoint == Vector3.zero) then break end
+
+                        if (not self.current_path or not hum or hum.MoveToPoint == vector.zero) then break end
+
                         self:move(waypointPosition)
                         distance = (waypointPosition - root.Position).Magnitude
+
                         task.wait()
                     end
                     if (not self.current_path) then return end
@@ -261,7 +273,9 @@ local script_handler = {}; do
 
         if (self.buy_powerup or self.use_powerup) then
             for i,v in (self.selected_powerup) do
-                if (not v) then continue end
+                if (not self.use_all_powerups and not v) then continue end
+                if (self.use_all_powerups and i == 'Milk') then continue end
+
                 self:powerup_handler(i)
             end
         end
@@ -279,6 +293,7 @@ local script_handler = {}; do
 
             if (root.Anchored) then
                 local stamina = self:grab_stamina()
+
                 if (stamina > 90) then 
                     self.farmmode = true
                 elseif (stamina < 20) then 
@@ -288,7 +303,10 @@ local script_handler = {}; do
                 if (self.current_farming == 'treadmill') then 
                     if (self.farmmode) then
                         self:call('EquipmentService', 'RF', 'ChangeSpeed', true)
-                        self:call('EquipmentService', 'RE', 'click')
+                        
+                        if (self.auto_click) then
+                            self:call('EquipmentService', 'RE', 'click')
+                        end
                     else
                         self:call('EquipmentService', 'RF', 'ChangeSpeed', false)
                     end
@@ -297,9 +315,18 @@ local script_handler = {}; do
                         -- self:call('EquipmentService', 'RF', 'AutoLoad') pressing auto load in the current game version also enables Auto Train in game which can be bought for 10k
                         -- and it disables this scripts fast clicking power then it caps the speed of the training to 1.00x because its the free version (10k in game money)
                         
-                        self:call('EquipmentService', 'RE', 'click')
+                        if (not self.enable_fast_mode) then
+                            task.spawn(function()
+                                task.wait(0.1)
+                                self:call('EquipmentService', 'RE', 'autoTrain', false)
+                            end)
+                        end
+
+                        if (self.auto_click) then
+                            self:call('EquipmentService', 'RE', 'click')
+                        end
                         
-                        if (self.fast_mode and os.clock() - self.fast_mode_delay > 0.015) then
+                        if (self.enable_fast_mode and self.fast_mode and os.clock() - self.fast_mode_delay > 0.015) then
                             self:call('EquipmentService', 'RF', 'Leave')
 
                             local target, target_prompt = self:get_equipment(self.current_farming)
@@ -370,11 +397,11 @@ local script_handler = {}; do
         if (podium.Enabled) then
             replicatedstorage.common.minigames.Competition.comm:FireServer()
 
-            for i,v in (getconnections(playergui.Podium.RewardsFrame.CanvasGroup.Continue.MouseButton1Up)) do
+            for i,v in (getconnections(rewards.CanvasGroup.Continue.MouseButton1Up)) do
                 v:Function()
             end
             
-            for i,v in (getconnections(playergui.Podium.winners.ok.MouseButton1Up)) do
+            for i,v in (getconnections(podium.winners.ok.MouseButton1Up)) do
                 v:Function()
             end
         else
@@ -449,6 +476,15 @@ local main_tab = UI.New({Title = 'Main'}); do
         end,
         Menu = handler.ui_funcs
     })
+    
+    main_tab.Toggle({Text = 'Fast Mode (Blatant)', Enabled = false, Callback = function(self)
+        handler.enable_fast_mode = self
+    end, Menu = { Information = function(self) UI.Banner({Text = "Sometimes faster stat gain." }) end}})
+    
+    main_tab.Toggle({Text = 'Auto Clicker', Enabled = false, Callback = function(self)
+        handler.auto_click = self
+    end, Menu = { Information = function(self) UI.Banner({Text = "Auto clicks for you when needed." }) end}})
+
 end
 
 local powerup_tab = UI.New({Title = 'PowerUps'}); do
@@ -460,6 +496,10 @@ local powerup_tab = UI.New({Title = 'PowerUps'}); do
 
     powerup_tab.Toggle({Text = 'Auto Use Power-Up', Callback = function(self)
         handler.use_powerup = self
+    end})
+
+    powerup_tab.Toggle({Text = 'Choose All Power-Ups (Except Milk)', Callback = function(self)
+        handler.use_all_powerups = self
     end})
 
     powerup_tab.ChipSet({
@@ -492,7 +532,7 @@ local misc_tab = UI.New({Title = 'Misc'}); do
     end})
 
     misc_tab.Toggle({Text = 'Buy Aura Roll', Callback = function(self)
-        handler.buyaurarolls = self 
+        handler.buyaurarolls = self
     end})
 
     misc_tab.Label({Text = 'Pose'})
@@ -501,7 +541,7 @@ local misc_tab = UI.New({Title = 'Misc'}); do
     end})
 
     misc_tab.Toggle({Text = 'Buy Pose Roll', Callback = function(self)
-        handler.buyposerolls = self 
+        handler.buyposerolls = self
     end})
 end
 
