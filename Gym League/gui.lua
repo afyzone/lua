@@ -1,5 +1,9 @@
 -- https://www.roblox.com/games/17450551531 | Co-op coded with @Leadmarker
 
+-- TODO: Make a config system? I tried with copilot but hmm, the UI dont sync for shit and it glitches with some attempt to index nil with smth smth
+-- TODO: Fix getting stuck in spawn after leaving a competition (I tried everything but it just seems like luck)
+-- TODO: Fix (actually make) the scripts click at the Swim Race and Arm Wrestle Comps (I tried everything)
+
 local service = setmetatable({}, {
     __index = function(self, key)
         self[key] = cloneref(game.FindService(game, key) or game.GetService(game, key))
@@ -19,6 +23,7 @@ local UI = Material.Load({Title = "@cats - Gym League",Style = 1,SizeX = 500,Siz
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local label_timer = workspace.Podium.entrance.billboard.billboard.labelTimer
+local label_text = workspace.Podium.entrance.billboard.billboard.labelText
 
 local powerups, equipment_rewards, fast_mode = {}, {
     ['Stamina'] = 'treadmill',
@@ -68,22 +73,28 @@ local get_char, get_backpack, get_root, get_hum; do
     end
 end
 
+local virtualinputmanager = game:GetService("VirtualInputManager")
+
+local boostgui = playergui.Main.BottomCenter.Boosts.Scrolling
+boostgui.AutomaticSize = "XY"
+
 local script_handler = {}; do
     script_handler.__index = script_handler
 
     function script_handler.new() 
         local self = setmetatable({}, script_handler)
         self.debounces = {}
-        self.fast_mode_delay = 0
+        -- self.fast_mode_delay = 0 unused i think
         self.current_path = nil
         self.current_farming = nil
         self.current_farming_instance = nil
 
         self.manual_farm = nil
         self.farmmode = false
+        
+        self.autoclick = false
         self.autofarm = false
         self.fast_mode = false
-
         self.manual = false
         
         self.autocomp = false
@@ -111,7 +122,7 @@ local script_handler = {}; do
 
     function script_handler:update_farm(text: string)
         if (not self.manual and self.current_farming ~= text) then 
-            self:call('EquipmentService', 'RF', 'Leave')
+            -- self:call('EquipmentService', 'RF', 'Leave') i think this is glitching because its too fast
             self.current_farming_instance = nil
         end
 
@@ -165,6 +176,7 @@ local script_handler = {}; do
         local root = get_root(char)
 
         if not (humanoid and root) then return end
+
         humanoid:MoveTo(pos)
     end
 
@@ -179,7 +191,7 @@ local script_handler = {}; do
             if (hum.SeatPart) then
                 hum.Sit = false
             end
-    
+
             local path = pathfindservice:CreatePath({AgentRadius = 3,AgentHeight = 5,WaypointSpacing = math.huge})
             local success = pcall(function()
                 path:ComputeAsync(root.Position, pos)
@@ -230,7 +242,7 @@ local script_handler = {}; do
         if (remote:IsA('RemoteEvent') or remote:IsA('UnreliableRemoteEvent')) then
             return remote:FireServer(unpack(args))
         end
-        
+
         if (remote:IsA('RemoteFunction')) then
             return remote:InvokeServer(unpack(args))
         end
@@ -249,7 +261,7 @@ local script_handler = {}; do
         local root = get_root(char)
         local hum = get_hum(char)
 
-        if not (char and hum and root) then 
+        if not (char and hum and root) then
             self.current_path = nil
             return 
         end
@@ -260,7 +272,7 @@ local script_handler = {}; do
         end
 
         if (self.buy_powerup or self.use_powerup) then
-            for i,v in (self.selected_powerup) do
+            for i,v in pairs(self.selected_powerup) do
                 if (not v) then continue end
                 self:powerup_handler(i)
             end
@@ -274,47 +286,50 @@ local script_handler = {}; do
             self:roll('PoseService', self.buyposerolls)
         end
 
+        if (self.autoclick) then
+            if (root.Anchored) then
+                self:call('EquipmentService', 'RE', 'autoTrain', false)
+                local stamina = self:grab_stamina()
+                if (stamina == 100) then
+                    self.farmmode = true
+                elseif (stamina <= 10) then
+                    self.farmmode = false
+                end
+                self:call('EquipmentService', 'RE', 'click')
+            end
+        end
+
         if (self.autofarm or self.manual) then
             if (self.comp_yield) then return end
 
-            if (root.Anchored) then
+            if (root.Anchored) then -- if on equipment
+                self:call('EquipmentService', 'RE', 'autoTrain', false)
                 local stamina = self:grab_stamina()
-                if (stamina > 90) then 
+                if (stamina == 100) then
                     self.farmmode = true
-                elseif (stamina < 20) then 
-                    self.farmmode = false 
+                elseif (stamina <= 10) then
+                    self.farmmode = false
                 end
-                
-                if (self.current_farming == 'treadmill') then 
+
+                if (self.current_farming == 'treadmill') then
                     if (self.farmmode) then
                         self:call('EquipmentService', 'RF', 'ChangeSpeed', true)
                         self:call('EquipmentService', 'RE', 'click')
                     else
                         self:call('EquipmentService', 'RF', 'ChangeSpeed', false)
                     end
-                else
-                    if (self.farmmode) then 
-                        -- self:call('EquipmentService', 'RF', 'AutoLoad') pressing auto load in the current game version also enables Auto Train in game which can be bought for 10k
-                        -- and it disables this scripts fast clicking power then it caps the speed of the training to 1.00x because its the free version (10k in game money)
-                        
-                        self:call('EquipmentService', 'RE', 'click')
-                        
-                        if (self.fast_mode and os.clock() - self.fast_mode_delay > 0.015) then
-                            self:call('EquipmentService', 'RF', 'Leave')
-
-                            local target, target_prompt = self:get_equipment(self.current_farming)
-                            if (target and target_prompt) then 
-                                root.CFrame = target:FindFirstChildWhichIsA('Part').CFrame
-                                fireproximityprompt(target_prompt, 1, true)
-                            end
-
-                            self.fast_mode_delay = os.clock()
-                        end
-                    end
+                elseif (self.farmmode) then
+                    self:call('EquipmentService', 'RE', 'click')
                 end
-            else
+            elseif (self.fast_mode) then -- fast mode
                 local target, target_prompt = self:get_equipment(self.current_farming)
-                if (target and target_prompt) then 
+                if (target and target_prompt) then
+                    root.CFrame = (target:FindFirstChildWhichIsA('Part').CFrame)
+                    fireproximityprompt(target_prompt, 1, true)
+                end
+            else -- if not on equipment / path finding
+                local target, target_prompt = self:get_equipment(self.current_farming)
+                if (target and target_prompt) then
                     self:pathmove(target:GetPivot().Position)
                     if (root.Position - target:GetPivot().Position).magnitude < 10 then
                         fireproximityprompt(target_prompt, 1, true)
@@ -344,7 +359,7 @@ local script_handler = {}; do
                 local equipment = self:get_equipment(equipment_rewards[i])
                 if (not equipment) then continue end
 
-                self.fast_mode = fast_mode[i]
+                -- self.fast_mode = fast_mode[i] now i can literally toggle fast_mode finally
 
                 return equipment_rewards[i]
             end
@@ -353,9 +368,9 @@ local script_handler = {}; do
         if (all_stats_maxed and self.next_alter) then
             self:call('CharacterService', 'RF', 'NextAlter')
         end
-    
+
         if (self.manual and self.manual_farm) then
-            return self.manual_farm
+            return self.manual_farm -- what the fuck does this do
         end
 
         return selected_farm or equipment_rewards['Stamina']
@@ -367,8 +382,29 @@ local script_handler = {}; do
         local podium = playergui.Podium
         local rewards = podium.RewardsFrame
 
-        if (podium.Enabled) then
-            replicatedstorage.common.minigames.Competition.comm:FireServer()
+        if (podium.Enabled) then -- if in competition
+
+            if label_text.Text:lower():find('dragon') or label_text.Text:find('Dragon Competition') then
+                replicatedstorage.common.minigames.Competition.comm:FireServer() -- click in normal comp
+
+            elseif label_text.Text:lower():find('swim') or label_text.Text:find('Swim Race') then
+                print('found the swim race')
+                virtualinputmanager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+                task.wait(0.1)
+                virtualinputmanager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+                task.wait(0.1)
+                virtualinputmanager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+                task.wait(0.1)
+                virtualinputmanager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    
+            elseif label_text.Text:lower():find("arm") or label_text.Text:find('Arm Wrestle') then
+                print('found the arm wrestle')
+                self:call('CombatService', 'RF', 'M1')
+            end
+
+            -- why arm wrestle and swim dont work but dragon does? i am losing my mind i tried everything
+
+            -- i hate this fuction nothing makes sense about it, its been 3 days and i still dont understand it
 
             for i,v in (getconnections(playergui.Podium.RewardsFrame.CanvasGroup.Continue.MouseButton1Up)) do
                 v:Function()
@@ -377,7 +413,9 @@ local script_handler = {}; do
             for i,v in (getconnections(playergui.Podium.winners.ok.MouseButton1Up)) do
                 v:Function()
             end
-        else
+            -- then make something here to wait 1 second before trying to teleport back to the equipment and prevent training stuck at spawn
+            -- i tried everything
+        else -- if not in competition
             if (label_timer.Text:lower():find('starting')) then 
                 self.comp_yield = true
 
@@ -387,13 +425,13 @@ local script_handler = {}; do
                     self:call('EquipmentService', 'RF', 'Leave')
                     self:call('MiniPodiumService', 'RF', 'Teleport')
 
-                    self.debounces['competition'] = os.clock()
+                    self.debounces['competition'] = os.clock() -- i mean, what the fuck is debounces
                 end
             else
                 if (self.comp_yield) then
                     self.current_path = nil
                 end
-                self.comp_yield = false
+                self.comp_yield = false -- and what the fuck is comp yield
             end
         end
     end
@@ -428,39 +466,87 @@ local script_handler = {}; do
     end
 end
 
+
 local handler = script_handler.new()
 local main_tab = UI.New({Title = 'Main'}); do 
     main_tab.Label({Text = 'Farming'})
     
-    main_tab.Toggle({Text = 'Autofarm', Enabled = false, Callback = function(self)
+    main_tab.Toggle({Text = 'Auto Farm', Enabled = handler.autofarm, Callback = function(self)
         handler:toggle_autofarm(self)
     end, Menu = { Information = function(self) UI.Banner({Text = "Finds the best equipment to farm based on your stats." }) end}})
 
-    main_tab.Label({Text = 'Manual Farming'})
-    main_tab.Toggle({Text = 'Manual Farm', Enabled = false, Callback = function(self)
+    main_tab.Toggle({Text = 'Fast Mode (Blatant)', Enabled = handler.fast_mode, Callback = function(self)
+        handler.fast_mode = self
+    end, Menu = { Information = function(self) UI.Banner({Text = "Enable this hidden feature, why afy?" }) end}})
+
+    main_tab.Toggle({Text = 'Manual Farm', Enabled = handler.manual, Callback = function(self)
         handler.manual = self
     end, Menu = { Information = function(self) UI.Banner({Text = "Turning on manual mode wont auto complete your stats." }) end}})
 
     main_tab.TextField({
-        Text = "Manual Farms",
+        Text = "Select Equipment (Manual Farm)",
         Editable = false,
         Callback = function(Value)
             handler.manual_farm = Value
         end,
         Menu = handler.ui_funcs
     })
+
+    main_tab.Toggle({Text = 'Auto Clicker', Enabled = handler.autofarm, Callback = function(self)
+        handler.autoclick = self
+    end, Menu = { Information = function(self) UI.Banner({Text = "Only auto clicks for you." }) end}})
+
+    main_tab.Button({
+        Text = "Infinite Yield",
+        Callback = function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+        end
+    })
+
+    main_tab.Button({
+        Text = "Double Walk Speed",
+        Callback = function()
+            local char = get_char(client)
+            local hum = get_hum(char)
+            if hum then
+                hum.WalkSpeed = hum.WalkSpeed * 2
+            end
+        end
+    })
 end
 
 local powerup_tab = UI.New({Title = 'PowerUps'}); do
     powerup_tab.Label({Text = 'Auto PowerUp'})
 
-    powerup_tab.Toggle({Text = 'Auto Buy Power-Up', Callback = function(self)
+    powerup_tab.Toggle({Text = 'Auto Buy Power-Up', Enabled = handler.buy_powerup, Callback = function(self)
         handler.buy_powerup = self
     end})
 
-    powerup_tab.Toggle({Text = 'Auto Use Power-Up', Callback = function(self)
+    powerup_tab.Toggle({Text = 'Auto Use Power-Up', Enabled = handler.use_powerup, Callback = function(self)
         handler.use_powerup = self
     end})
+    
+-- this works but dont sync with the UI so it will confuse ppl but its a good idea if u can make it work
+
+    powerup_tab.Button({
+        Text = 'Select All Power-Ups (Except Milk) (Drains Your Money) (Dont Sync With GUI)',
+        Callback = function()
+            for powerup in pairs(powerups) do
+                if powerup ~= "Milk" then
+                    handler.selected_powerup[powerup] = true
+                end
+            end
+        end})
+
+    powerup_tab.Button({
+        Text = 'Buy n Use All PowerUps Once (Except Milk) (Toggle Auto Buy n Use To Work)',
+        Callback = function()
+            for i,v in pairs(powerups) do
+                if v ~= "Milk" then
+                    handler:powerup_handler(i)
+                end
+            end
+        end})
 
     powerup_tab.ChipSet({
         Text = "Choose Power-Ups",
@@ -473,8 +559,8 @@ end
 
 local misc_tab = UI.New({Title = 'Misc'}); do
     misc_tab.Label({Text = 'Misc'})
-    misc_tab.Toggle({Text = 'Auto Competition', Callback = function(self)
-        handler.autocomp = self 
+    misc_tab.Toggle({Text = 'Auto Competition', Enabled = handler.autocomp, Callback = function(self)
+        handler.autocomp = self
 
         if (not handler.autocomp) then
             handler.comp_yield = false
@@ -482,28 +568,30 @@ local misc_tab = UI.New({Title = 'Misc'}); do
         end
     end})
 
-    misc_tab.Toggle({Text = 'Next Alter (Upgrades body)', Callback = function(self)
+    misc_tab.Toggle({Text = 'Next Alter (Upgrades body)', Enabled = handler.next_alter, Callback = function(self)
         handler.next_alter = self
     end})
 
     misc_tab.Label({Text = 'Aura'})
-    misc_tab.Toggle({Text = 'Aura Roll', Callback = function(self)
+    misc_tab.Toggle({Text = 'Aura Roll', Enabled = handler.auraautoroll, Callback = function(self)
         handler.auraautoroll = self
     end})
 
-    misc_tab.Toggle({Text = 'Buy Aura Roll', Callback = function(self)
-        handler.buyaurarolls = self 
+    misc_tab.Toggle({Text = 'Buy Aura Roll', Enabled = handler.buyaurarolls, Callback = function(self)
+        handler.buyaurarolls = self
     end})
 
     misc_tab.Label({Text = 'Pose'})
-    misc_tab.Toggle({Text = 'Pose Roll', Callback = function(self)
+    misc_tab.Toggle({Text = 'Pose Roll', Enabled = handler.auraposeroll, Callback = function(self)
         handler.auraposeroll = self
     end})
 
-    misc_tab.Toggle({Text = 'Buy Pose Roll', Callback = function(self)
-        handler.buyposerolls = self 
+    misc_tab.Toggle({Text = 'Buy Pose Roll', Enabled = handler.buyposerolls, Callback = function(self)
+        handler.buyposerolls = self
     end})
 end
+
+-- remanents of the config system i tried to make with copilot but it was a mess
 
 runservice.Heartbeat:Connect(function()
     handler:update_farm(handler:grab_farm())
