@@ -5,8 +5,10 @@ shared.afy = not shared.afy
 
 local services = setmetatable({}, {
     __index = function(self, key)
-        self[key] = self[key] or cloneref(game:GetService(key))
-        return self[key]
+        service = cloneref(game:GetService(key))
+        rawset(self, key, service)
+        
+        return service
     end
 })
 
