@@ -5,17 +5,18 @@ shared.afy = not shared.afy
 
 local services = setmetatable({}, {
     __index = function(self, key)
-        service = cloneref(game:GetService(key))
+        local service = pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
         rawset(self, key, service)
-        
-        return service
+
+        return self[key]
     end
 })
 
 local players = services.Players
 local replicatedstorage = services.ReplicatedStorage
+local virtualinputmanager = services.VirtualInputManager
+
 local client = players.LocalPlayer
-local virtualinputmanager = Instance.new('VirtualInputManager')
 local random = Random.new()
 local firing = false
 
