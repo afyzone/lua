@@ -17,17 +17,13 @@ local client = players.LocalPlayer
 local random = Random.new()
 local firing = false
 
-local hoops = (function()
-    local tbl = {}
-
+local hoops = {}; do
     for i,v in (workspace.Courts:GetDescendants()) do
         if not (v:IsA('Model') and v.Name == 'Rim') then continue end
 
-        table.insert(tbl, v)
+        table.insert(hoops, v)
     end
-
-    return tbl
-end)()
+end
 
 shared.afy = not shared.afy
 
