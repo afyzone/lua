@@ -20,23 +20,19 @@ local client = players.LocalPlayer
 local random = Random.new()
 local firing = false
 
-local hoops = (function()
-    local tbl = {}
-
+local hoops = {}; do
     for i,v in (workspace.Courts:GetChildren()) do
         for i,v in (v:GetChildren()) do
             if (not v.Name:find('Hoop')) then continue end
 
-            table.insert(tbl, v)
+            table.insert(hoops, v)
         end
 
         if (not v.Name:find('Hoop')) then continue end
 
-        table.insert(tbl, v)
+        table.insert(hoops, v)
     end
-
-    return tbl
-end)()
+end
 
 local get_char, get_root, get_hum, position_between_two_points, get_closest_player, get_closest_in_table; do
     get_char = function(player)
