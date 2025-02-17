@@ -109,20 +109,16 @@ while (shared.afy and task.wait()) do
 
         local closest_hoop = get_closest_in_table(hoops)
         local blocking = root:FindFirstChild('BodyGyro')
-        local ball_holders = (function()
-            local tbl = {}
 
+        local ball_holders = {}; do
             for i,v in (workspace.Courts:GetDescendants()) do
-                if (v.Name ~= 'Basketball') then continue end
-                if (not v.Player) then continue end
+                if not (v.Name == 'Basketball' and v:FindFirstChild('Player')) then continue end
                 
                 if (v.Player.Value) then
-                    table.insert(tbl, v.Player.Value.Character)
+                    table.insert(ball_holders, v.Player.Value.Character)
                 end
             end
-
-            return tbl
-        end)()
+        end
         
         local closest_ball_holder = get_closest_in_table(ball_holders, 15)
 
