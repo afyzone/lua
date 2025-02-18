@@ -146,7 +146,7 @@ local script_handler = {}; do
                 if (v:GetAttribute('occupied')) then continue end
             end
 
-            local mag = (v:GetPivot().Position - root.Position).magnitude
+            local mag = vector.magnitude(v:GetPivot().Position - root.Position)
 
             if (mag < dist) then
                 dist = mag
@@ -172,7 +172,10 @@ local script_handler = {}; do
 
         if not (humanoid and root) then return end
 
-        humanoid:MoveTo(pos)
+        -- humanoid:MoveTo(pos)
+        if (vector.magnitude(pos - root.Position) > 0.2) then
+            humanoid.WalkToPoint = pos
+        end
     end
 
     function script_handler:pathmove(pos: Vector3)
@@ -187,7 +190,7 @@ local script_handler = {}; do
                 hum.Sit = false
             end
     
-            local path = pathfindservice:CreatePath({AgentRadius = 3, AgentHeight = 5, WaypointSpacing = math.huge})
+            local path = pathfindservice:CreatePath({AgentRadius = 3, AgentHeight = 5, AgentCanJump = true, AgentCanClimb = true, WaypointSpacing = 4})
 
             local success = pcall(function()
                 path:ComputeAsync(root.Position, pos)
@@ -197,7 +200,7 @@ local script_handler = {}; do
                     local waypointPosition = waypoint.Position
                     self:move(waypointPosition)
     
-                    local distance = (waypointPosition - root.Position).Magnitude
+                    local distance = vector.magnitude(waypointPosition - root.Position)
 
                     while (distance > 5) do
                         local char = get_char(client)
@@ -206,7 +209,7 @@ local script_handler = {}; do
                         if (not self.current_path or not hum or hum.MoveToPoint == vector.zero) then break end
 
                         self:move(waypointPosition)
-                        distance = (waypointPosition - root.Position).Magnitude
+                        distance = vector.magnitude(waypointPosition - root.Position)
 
                         task.wait()
                     end
@@ -214,9 +217,9 @@ local script_handler = {}; do
                 end
             end)
     
-            if (not success) then
-                self:move(pos)
-            end
+            -- if (not success) then
+            --     self:move(pos)
+            -- end
         end
         self.current_path = nil
     end
@@ -343,7 +346,8 @@ local script_handler = {}; do
                 local target, target_prompt = self:get_equipment(self.current_farming)
                 if (target and target_prompt) then 
                     self:pathmove(target:GetPivot().Position)
-                    if (root.Position - target:GetPivot().Position).magnitude < 10 then
+                    
+                    if vector.magnitude(root.Position - target:GetPivot().Position) < 10 then
                         fireproximityprompt(target_prompt, 1, true)
                         self.current_farming_instance = target
                     end
