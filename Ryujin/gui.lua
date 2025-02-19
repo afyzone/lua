@@ -3,13 +3,22 @@ while (not game:IsLoaded()) do task.wait() end
 if (getgenv().afy) then return end
 getgenv().afy = true
 
-local coregui = cloneref(game:GetService('CoreGui'))
-local players = game:GetService("Players")
-local runservice = game:GetService('RunService')
-local userinputservice = game:GetService('UserInputService')
-local teleportservice = game:GetService("TeleportService")
-local httpservice = game:GetService('HttpService')
-local virtualinputmanager = Instance.new('VirtualInputManager')
+local services = setmetatable({}, {
+    __index = function(self, key)
+        local service = pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
+        rawset(self, key, service)
+
+        return self[key]
+    end
+})
+
+local coregui = services.CoreGui
+local players = services.Players
+local runservice = services.RunService
+local userinputservice = services.UserInputService
+local teleportservice = services.TeleportService
+local httpservice = services.HttpService
+local virtualinputmanager = services.VirtualInputManager
 
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
