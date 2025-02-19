@@ -18,6 +18,7 @@ local runservice = services.RunService
 local userinputservice = services.UserInputService
 local teleportservice = services.TeleportService
 local httpservice = services.HttpService
+local replicatedstorage = services.ReplicatedStorage
 local virtualinputmanager = services.VirtualInputManager
 
 local client = players.LocalPlayer
@@ -48,6 +49,7 @@ getgenv().flags = getgenv().flags or {
 	auto_shadow_box = false,
 	auto_blindfold = false,
 	rejoin_low_player = false,
+	webhook = false,
 }
 
 getgenv().hidden_flags = {
@@ -101,6 +103,7 @@ local highrank = {
 task.spawn(function()
 	local start_wait = os.clock()
 	while (os.clock() - start_wait <= 45) do task.wait() end
+
 	if (playergui:FindFirstChild('LoadingScreen')) then
 		hidden_flags.kicked = true
 		client:Kick('took too long to load')
@@ -136,7 +139,7 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 
 		local function moveToTarget(targetPos)
 			currentPos = root.Position
-			local distanceXZ = vector.create(targetPos.X - currentPos.X, 0, targetPos.Z - currentPos.Z).magnitude
+			local distanceXZ = vector.magnitude(vector.create(targetPos.X - currentPos.X, 0, targetPos.Z - currentPos.Z))
 			local directionXZ = vector.create(targetPos.X - currentPos.X, 0, targetPos.Z - currentPos.Z).Unit
 			
 			local distanceY = math.abs(targetPos.Y - currentPos.Y)
@@ -162,7 +165,7 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 				root.CFrame = CFrame.new(currentPos)
 				smart_wait(1/60)
 				
-				distanceXZ = vector.create(targetPos.X - currentPos.X, 0, targetPos.Z - currentPos.Z).Magnitude
+				distanceXZ = vector.magnitude(vector.create(targetPos.X - currentPos.X, 0, targetPos.Z - currentPos.Z))
 				distanceY = math.abs(targetPos.Y - currentPos.Y)
 			end
 		end
@@ -209,7 +212,7 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 		if (root) then
 			for i,v in (workspace.Ignore.Interactables.JobsRelated:GetDescendants()) do
 				if (v:IsA('BillboardGui') and v.Adornee and v.Enabled) then
-					local mag = (v.Adornee.Position - root.Position).magnitude
+					local mag = vector.magnitude(v.Adornee.Position - root.Position)
 
 					if (mag < dist) then
 						dist = mag
@@ -222,7 +225,7 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 				local trashbag = v:FindFirstChildWhichIsA('BillboardGui')
 
 				if (trashbag and trashbag.Adornee and trashbag.Enabled) then
-					local mag = (trashbag.Adornee.Position - root.Position).magnitude
+					local mag = vector.magnitude(trashbag.Adornee.Position - root.Position)
 
 					if (mag < dist) then
 						dist = mag
@@ -246,7 +249,7 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 				if (not get_best_job(v)) then continue end
 				if (v:GetPivot().Position.Y > 500) then continue end
 
-				local mag = (v:GetPivot().Position - root.Position).magnitude
+				local mag = vector.magnitude(v:GetPivot().Position - root.Position)
 
 				if (mag < dist) then
 					dist = mag
@@ -269,7 +272,7 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 				if (v.SurfaceGui.Info.Text:lower():find('graffiti') or 
 					v.SurfaceGui.Info.Text:lower():find('posters') or 
 					v.SurfaceGui.Info.Text:lower():find('trashbags') or 
-					v.SurfaceGui.Info.Text:lower():find('dirt')) then continue end
+					v.SurfaceGui.Info.Text:lower():find('dirt')) then continue end -- These will be disabled from auto job
 
 				local price = v.SurfaceGui:FindFirstChild('Reward') and 
 								v.SurfaceGui.Reward.Text and 
@@ -287,16 +290,19 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 
 	get_balance = function()
 		local str_bal = playergui.HUD.Bars.MainHUD.Cash.Text:gsub("[^%d,]", ""):gsub(",", ""):gmatch("%d+")()
+
 		return str_bal and tonumber(str_bal)
 	end
 
 	get_bank_balance = function()
 		local str_bal = playergui.HUD.Tabs.ATM.Balance.ContentText:gsub("[^%d,]", ""):gsub(",", ""):gmatch("%d+")()
+
 		return str_bal and tonumber(str_bal)
 	end
 
 	deposit = function(amt)
 		if (os.clock() - hidden_flags.last_deposit <= 1) then return end
+
 		hidden_flags.last_deposit = os.clock()
 		playergui.HUD.Tabs.ATM.AmountBox.Text = tostring(amt)
 
@@ -308,6 +314,7 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 
 	withdraw = function(amt)
 		if (os.clock() - hidden_flags.last_withdraw <= 1) then return end
+
 		hidden_flags.last_withdraw = os.clock()
 		playergui.HUD.Tabs.ATM.AmountBox.Text = tostring(amt)
 
@@ -359,27 +366,36 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 		end
 
 		if (char and hum and item_name and backpack and (quick_delay or not char:FindFirstChildWhichIsA('Model'))) then
-			if (backpack:FindFirstChild(item_name)) then
+			local backpack_item = backpack:FindFirstChild(item_name)
+
+			if (backpack_item) then
 				hidden_flags.using_tool = true
-				hum:EquipTool(backpack:FindFirstChild(item_name))
+				hum:EquipTool(backpack_item)
+
 				task.wait()
 				hidden_flags.using_tool = false
 			end
 
-			if (not equip_only and char:FindFirstChild(item_name)) then
-				hidden_flags.using_tool = true
-				char:FindFirstChild(item_name):Activate()
-				task.wait(quick_delay and 0 or 1)
-				hidden_flags.using_tool = false
+			if (not equip_only) then
+				local char_item = char:FindFirstChild(item_name)
+
+				if (char_item) then
+					hidden_flags.using_tool = true
+					char_item:Activate()
+
+					task.wait(quick_delay and 0 or 1)
+					hidden_flags.using_tool = false
+				end
 			end
 		end
 	end
 
 	get_new_server = function()
 		local request = httprequest or request
+
 		if (request) then
 			local servers = {}
-			local req = request({Url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true", game.PlaceId)})
+			local req = request({Url = `https://games.roblox.com/v1/games/{game.PlaceId}/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true`})
 			local body = httpservice:JSONDecode(req.Body)
 	
 			if (body and body.data) then
@@ -453,6 +469,7 @@ local moveto, get_char, get_hum, get_root, get_backpack, get_closest_job, get_cl
 		local headers = {["content-type"] = "application/json"}
 		local webhook = {Url = flags.webhook, Body = newdata, Method = "POST", Headers = headers}
 		request = http_request or request or HttpPost or syn.request
+
 		request(webhook)
 	end
 
@@ -522,8 +539,8 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 		end)
 
 		Menu.Button('Main', 'Settings', 'Render Roblox', function()
-			runservice:Set3dRenderingEnabled(not hidden_flags.render_roblox)
 			hidden_flags.render_roblox = not hidden_flags.render_roblox
+			runservice:Set3dRenderingEnabled(hidden_flags.render_roblox)
 		end)
 
 		Menu.Button('Main', 'Settings', 'Show Stats', function()
@@ -596,24 +613,20 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 	
 						if (deliver and job_complete == false) then
 							if (char:FindFirstChild('CarriedBox')) then
-								local mag = (vector.create(deliver.Position.X, 0, deliver.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude
+								local mag = vector.magnitude(vector.create(deliver.Position.X, 0, deliver.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z))
+
 								if (mag > 300) then
 									moveto(deliver.Position, flags.tween_speed)
-								elseif (mag > 10) then
-									moveto(deliver.Position, flags.tween_speed)
-									root.CFrame = CFrame.new(deliver.Position.X - 1, 487, deliver.Position.Z + 2)
 								else
 									root.CFrame = CFrame.new(deliver.Position.X - 1, 487, deliver.Position.Z + 2)
 								end
 							else
 								local prompter = workspace.Ignore.Interactables.JobsRelated.Boxes.RecieveArea
 								
-								local mag = (vector.create(prompter.Position.X, 0, prompter.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude
+								local mag = vector.magnitude(vector.create(prompter.Position.X, 0, prompter.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z))
+
 								if (mag > 300) then
 									moveto(prompter.Position, flags.tween_speed)
-								elseif (mag > 10) then
-									moveto(prompter.Position, flags.tween_speed)
-									root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
 								else
 									root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
 								end
@@ -622,21 +635,19 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 		
 								if ((not playergui.HUD.Main.Dialogue.Visible or playergui.HUD.Main.Dialogue.Position.Y.Scale > 1) and prompter:FindFirstChildWhichIsA('ProximityPrompt')) then
 									root.CFrame = CFrame.new(prompter.Position.X, 484, prompter.Position.Z)
+
 									smart_wait(0.2, 'construction_farm')
-									root.CFrame = CFrame.new(prompter.Position.X, 484, prompter.Position.Z)
+
 									prompter:FindFirstChildWhichIsA('ProximityPrompt').Enabled = true
 									fireproximityprompt(prompter:FindFirstChildWhichIsA('ProximityPrompt'))
 								end
 							end
 						else
 							local prompter = workspace.Ignore.NPCs.Jobs["Construction Worker"].HumanoidRootPart
-							local mag = (vector.create(prompter.Position.X, 0, prompter.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude
+							local mag = vector.magnitude(vector.create(prompter.Position.X, 0, prompter.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z))
 
 							if (mag > 300) then
 								moveto(prompter.Position, flags.tween_speed)
-							elseif (mag > 10) then
-								moveto(prompter.Position, flags.tween_speed)
-								root.CFrame = CFrame.new(prompter.Position.X, 484, prompter.Position.Z)
 							else
 								root.CFrame = CFrame.new(prompter.Position.X, 484, prompter.Position.Z)
 							end
@@ -648,9 +659,10 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 
 								root.CFrame = CFrame.new(prompter.Position.X, 484, prompter.Position.Z)
 								smart_wait(0.2, 'construction_farm')
-								root.CFrame = CFrame.new(prompter.Position.X, 484, prompter.Position.Z)
+
 								prompter:FindFirstChildWhichIsA('ProximityPrompt').Enabled = true
 								fireproximityprompt(prompter:FindFirstChildWhichIsA('ProximityPrompt'))
+
 								hidden_flags.dialogue_opened = os.clock()
 							end
 	
@@ -691,7 +703,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 					if (job_part) then
 						local high_point = job_part.Name == 'cat'
 						
-						if ((vector.create(job_part.Position.X, 0, job_part.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+						if (vector.magnitude(vector.create(job_part.Position.X, 0, job_part.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 							moveto(job_part.Position, flags.tween_speed)
 						else
 							root.CFrame = CFrame.new(job_part.Position.X, high_point and job_part.Position.Y - 8 or 480, job_part.Position.Z)
@@ -699,9 +711,9 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 
 						smart_wait(0.3, 'job_farm')
 
-						if (job_part and (job_part:GetPivot().Position - root.Position).magnitude < 25) then
+						if (job_part and vector.magnitude(job_part:GetPivot().Position - root.Position) < 25) then
 							if (job_part:FindFirstChildWhichIsA('ClickDetector')) then
-								if ((vector.create(job_part.Position.X, 0, job_part.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+								if (vector.magnitude(vector.create(job_part.Position.X, 0, job_part.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 									moveto(job_part.Position + vector.create(0, -5, 0), flags.tween_speed)
 								else
 									root.CFrame = CFrame.new(job_part.Position.X, high_point and job_part.Position.Y - 5 or 483, job_part.Position.Z)
@@ -713,6 +725,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 								end
 							else
 								root.CFrame = CFrame.new(job_part.Position.X, high_point and job_part.Position.Y - 8 or 484, job_part.Position.Z)
+
 								firetouchinterest(root, job_part, 0)
 								task.wait()
 								firetouchinterest(root, job_part, 1)
@@ -722,15 +735,15 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 						local job_board = get_closest_job_board()
 	
 						if (job_board) then
-							if ((vector.create(job_board:GetPivot().Position.X, 0, job_board:GetPivot().Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+							if (vector.magnitude(vector.create(job_board:GetPivot().Position.X, 0, job_board:GetPivot().Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 								moveto(job_board:GetPivot().Position, flags.tween_speed)
 							else
 								root.CFrame = CFrame.new(job_board:GetPivot().Position.X, 480, job_board:GetPivot().Position.Z)
 							end
 	
-							smart_wait(.2, 'job_farm')
+							smart_wait(0.2, 'job_farm')
 	
-							if ((vector.create(job_board:GetPivot().Position.X, 0, job_board:GetPivot().Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+							if (vector.magnitude(vector.create(job_board:GetPivot().Position.X, 0, job_board:GetPivot().Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 								moveto(job_board:GetPivot().Position, flags.tween_speed)
 							else
 								root.CFrame = CFrame.new(job_board:GetPivot().Position.X, 483, job_board:GetPivot().Position.Z)
@@ -738,7 +751,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 	
 							local best_job = get_best_job(job_board)
 							
-							if (best_job and (best_job:GetPivot().Position - root.Position).magnitude < 20) then
+							if (best_job and vector.magnitude(best_job:GetPivot().Position - root.Position) < 20) then
 								if (best_job:FindFirstChildWhichIsA('ClickDetector')) then
 									root.CFrame = CFrame.new(job_board:GetPivot().Position.X, 483, job_board:GetPivot().Position.Z)
 									smart_wait(1, 'job_farm')
@@ -779,7 +792,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							moveto(consumable.Position, flags.tween_speed)
 		
 							for i = 1, 20 do
-								if ((vector.create(consumable.Position.X, 0, consumable.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+								if (vector.magnitude(vector.create(consumable.Position.X, 0, consumable.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 									moveto(consumable.Position, flags.tween_speed)
 								else
 									root.CFrame = CFrame.new(consumable.Position.X, 483, consumable.Position.Z)
@@ -788,6 +801,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 								smart_wait(0.2, 'auto_muscle_boost')
 								fireclickdetector(consumable:FindFirstChildWhichIsA('ClickDetector'))
 								smart_wait(0.2, 'auto_muscle_boost')
+
 								use_item(consumable.Name)
 							end
 	
@@ -822,7 +836,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							moveto(consumable.Position, flags.tween_speed)
 		
 							for i = 1, 20 do
-								if ((vector.create(consumable.Position.X, 0, consumable.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+								if (vector.magnitude(vector.create(consumable.Position.X, 0, consumable.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 									moveto(consumable.Position, flags.tween_speed)
 								else
 									root.CFrame = CFrame.new(consumable.Position.X, 483, consumable.Position.Z)
@@ -831,6 +845,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 								smart_wait(0.2, 'auto_workout_drink')
 								fireclickdetector(consumable:FindFirstChildWhichIsA('ClickDetector'))
 								smart_wait(0.2, 'auto_workout_drink')
+
 								use_item(consumable.Name)
 							end
 	
@@ -867,7 +882,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							else
 								moveto(consumable.Position, flags.tween_speed)
 								for i = 1, 20 do
-									if ((vector.create(consumable.Position.X, 0, consumable.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+									if (vector.magnitude(vector.create(consumable.Position.X, 0, consumable.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 										moveto(consumable.Position, flags.tween_speed)
 									else
 										root.CFrame = CFrame.new(consumable.Position.X, 483, consumable.Position.Z)
@@ -901,7 +916,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 					if (char and root and hidden_flags.fatigue_wait) then
 						local prompter = workspace.Ignore.NPCs["Important NPCs"].Shozuki.HumanoidRootPart
 						
-						if ((vector.create(prompter.Position.X, 0, prompter.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+						if (vector.magnitude(vector.create(prompter.Position.X, 0, prompter.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 							moveto(prompter.Position, flags.tween_speed)
 						else
 							root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
@@ -915,9 +930,10 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 
 								root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
 								smart_wait(0.2, 'auto_fatigue')
-								root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
+
 								prompter:FindFirstChildWhichIsA('ProximityPrompt').Enabled = true
 								fireproximityprompt(prompter:FindFirstChildWhichIsA('ProximityPrompt'))
+
 								hidden_flags.dialogue_opened = os.clock()
 							end
 	
@@ -974,7 +990,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 								hidden_flags.shadow_in_progress = true
 
 								if (not root.Anchored) then
-									if ((vector.create(item.Position.X, 0, item.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+									if (vector.magnitude(vector.create(item.Position.X, 0, item.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 										moveto(item.Position + vector.create(-10, 0, 0), flags.tween_speed)
 									else
 										root.CFrame = CFrame.new(item.Position.X, hidden_flags.shadow_farming_spot, item.Position.Z)
@@ -982,12 +998,13 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 
 									hidden_flags.shadow_farming = true
 									smart_wait(1, 'auto_shadow_box')
+
 									use_item('Shadow Boxing')
 								end
 							else
 								hidden_flags.shadow_in_progress = false
 
-								if ((vector.create(item.Position.X, 0, item.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+								if (vector.magnitude(vector.create(item.Position.X, 0, item.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 									moveto(item.Position + vector.create(-10, 0, 0), flags.tween_speed)
 								else
 									root.CFrame = CFrame.new(item.Position.X, hidden_flags.shadow_farming_spot, item.Position.Z)
@@ -1011,7 +1028,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 									end
 
 									if (os.clock() - hidden_flags.last_punch > 0.2) then
-										game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("imezx_warp@1.0.9"):WaitForChild("warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(buffer.fromstring("\23"),{{"M1"}})
+										replicatedstorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("imezx_warp@1.0.9"):WaitForChild("warp"):WaitForChild("Index"):WaitForChild("Event"):WaitForChild("Reliable"):FireServer(buffer.fromstring("\23"),{{"M1"}})
 										hidden_flags.last_punch = os.clock()
 									end
 								end
@@ -1021,7 +1038,9 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 
 							moveto(item.Position + vector.create(-10, 0, 0), flags.tween_speed)
 							root.CFrame = CFrame.new(item.Position + vector.create(-10, 0, 0))
+
 							smart_wait(0.3, 'auto_shadow_box')
+
 							fireclickdetector(item:FindFirstChildWhichIsA('ClickDetector'))
 						end
 					end
@@ -1053,7 +1072,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 										table.remove(hidden_flags.stamina_farm_cache, i)
 									end
 
-									if ((vector.create(v.Parent.Position.X, 0, v.Parent.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+									if (vector.magnitude(vector.create(v.Parent.Position.X, 0, v.Parent.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 										moveto(v.Parent.Position + vector.create(0, -8.2, 0), flags.tween_speed)
 									else
 										root.CFrame = CFrame.new(v.Parent.Position.X, 480, v.Parent.Position.Z)
@@ -1062,6 +1081,7 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 									if (v and v.Parent and (not hidden_flags.stamina_farm_cache[v] or os.clock() - hidden_flags.stamina_farm_cache[v] > 1)) then
 										root.CFrame = CFrame.new(v.Parent.Position.X, 485.8, v.Parent.Position.Z)
 										hidden_flags.stamina_farm_cache[v] = os.clock()
+
 										smart_wait(0.3, 'stamina_farm')
 									end
 	
@@ -1074,8 +1094,8 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 							end
 						else
 							local prompter = workspace.Ignore.NPCs["Important NPCs"].Saitama.HumanoidRootPart
-
-							if ((vector.create(prompter.Position.X, 0, prompter.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)).magnitude > 25) then
+							
+							if (vector.magnitude(vector.create(prompter.Position.X, 0, prompter.Position.Z) - vector.create(root.Position.X, 0, root.Position.Z)) > 25) then
 								moveto(prompter.Position, flags.tween_speed)
 							else
 								root.CFrame = CFrame.new(prompter.Position.X, 482, prompter.Position.Z)
@@ -1087,12 +1107,11 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 								end
 
 								root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
-								smart_wait(0.2, 'stamina_farm')
-								root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
-								smart_wait(0.2, 'stamina_farm')
-								root.CFrame = CFrame.new(prompter.Position.X, 483, prompter.Position.Z)
+								smart_wait(0.4, 'stamina_farm')
+
 								prompter:FindFirstChildWhichIsA('ProximityPrompt').Enabled = true
 								fireproximityprompt(prompter:FindFirstChildWhichIsA('ProximityPrompt'))
+
 								hidden_flags.dialogue_opened = os.clock()
 							end
 	
@@ -1303,6 +1322,10 @@ local Menu = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone
 end
 
 local AntiMod = Menu.Container('Main', 'Anonimity', 'Right'); do
+	Menu.TextBox('Main', 'Anonimity', 'Log Data to Webhook', flags.webhook, function(self)
+		flags.webhook = self
+	end)
+
 	Menu.CheckBox('Main', 'Anonimity', 'Auto Hidden Cap', flags.auto_hidden_cap, function(self)
 		flags.auto_hidden_cap = self
 
