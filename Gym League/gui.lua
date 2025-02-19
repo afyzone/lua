@@ -2,9 +2,10 @@
 
 local service = setmetatable({}, {
     __index = function(self, key)
-        self[key] = cloneref(game.FindService(game, key) or game.GetService(game, key))
-
-        return self[key]
+        local service = cloneref(game:GetService(key))
+        rawset(self, key, service)
+        
+        return rawget(self, key)
     end
 })
 
