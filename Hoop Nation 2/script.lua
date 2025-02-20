@@ -8,7 +8,7 @@ local services = setmetatable({}, {
         local service = pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
         rawset(self, key, service)
 
-        return self[key]
+        return rawget(self, key)
     end
 })
 
@@ -84,27 +84,16 @@ while (shared.afy and task.wait()) do
 
     if (char and hum and root) then
         local meter = char:FindFirstChild('Meter')
-        local meter2 = char:FindFirstChild('Meter2')
+        local uigradient = meter.Meter.Bar.UIGradient
+        local t = uigradient.Transparency.Keypoints
 
-        if (meter.Enabled or meter2.Enabled) then
-            if (not firing) then
-                firing = true
+        if (t) then 
+            local second_keypoint = t[2]
+            local third_keypoint = t[3]
 
-                task.spawn(function()
-                    local uigradient = meter.Enabled and meter.Meter.Bar.UIGradient or meter2.Enabled and meter2.Meter.Bar.UIGradient
-
-                    while (shared.afy and firing) do
-                        local t = uigradient.Transparency.Keypoints
-
-                        if t[2].Time > 0.95 and t[3].Time > 0.95 then break end
-                        task.wait()
-                    end
-
-                    virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
-                end)
+            if (second_keypoint and second_keypoint.Time > 0.95 and third_keypoint and third_keypoint.Time > 0.95) then
+                virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
             end
-        else
-            firing = false
         end
 
         local closest_hoop = get_closest_in_table(hoops)
@@ -121,11 +110,13 @@ while (shared.afy and task.wait()) do
         end
         
         local closest_ball_holder = get_closest_in_table(ball_holders, 15)
+        local closest_ball_holder_root = get_root(closest_ball_holder)
+        local is_shooting = closest_ball_holder_root and closest_ball_holder_root:FindFirstChild('BodyGyro')
 
         if (blocking and closest_ball_holder and closest_hoop) then
-            local move_pos = position_between_two_points(closest_ball_holder, closest_hoop, random:NextNumber(4.8, 5.2))
+            local move_pos = position_between_two_points(closest_ball_holder, closest_hoop, is_shooting and random:NextNumber(1.8, 2.2) or random:NextNumber(5.8, 6.2))
 
-            if move_pos and vector.magnitude(move_pos - root.Position) > 0.2 then
+            if (move_pos and vector.magnitude(move_pos - root.Position) > 0.2) then
                 hum.WalkToPoint = move_pos
             end
         end
