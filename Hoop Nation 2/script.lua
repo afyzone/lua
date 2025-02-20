@@ -114,7 +114,7 @@ while (shared.afy and task.wait()) do
         local is_shooting = closest_ball_holder_root and closest_ball_holder_root:FindFirstChild('BodyGyro')
 
         if (blocking and closest_ball_holder and closest_hoop) then
-            local move_pos = position_between_two_points(closest_ball_holder, closest_hoop, is_shooting and random:NextNumber(1.8, 2.2) or random:NextNumber(5.8, 6.2))
+            local move_pos = position_between_two_points(closest_ball_holder, closest_hoop, is_shooting and random:NextNumber(1.8, 2.2) or random:NextNumber(6.8, 7.2))
 
             if (move_pos and vector.magnitude(move_pos - root.Position) > 0.2) then
                 hum.WalkToPoint = move_pos
