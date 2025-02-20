@@ -6,7 +6,7 @@ local last_wheelset_time = 0
 shared.afy = not shared.afy
 
 local set_car = function(car, pos)
-    for i,v in pairs(car:GetDescendants()) do
+    for i,v in (car:GetDescendants()) do
         if (not v:IsA('BasePart')) then continue end
         
         v.CFrame = CFrame.new(v.CFrame.X, pos.Y, v.CFrame.Z)
