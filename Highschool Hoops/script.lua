@@ -12,6 +12,7 @@ local services = setmetatable({}, {
 
 local players = services.Players
 local runservice = services.RunService
+local statsservice = services.Stats
 local virtualinputmanager = services.VirtualInputManager
 
 local client = players.LocalPlayer
@@ -27,7 +28,7 @@ local hoops = {}; do
     end
 end
 
-local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table; do
+local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor; do
     get_char = function(player)
         return player.Character
     end
@@ -66,6 +67,14 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
         end
 
         return closest, dist
+    end
+
+    calculate_ping_factor = function()
+        local factor = -0.00005 * statsservice.Network.ServerStatsItem['Data Ping']:GetValue() + 0.9
+
+        factor = math.clamp(factor, 0.5, 1)
+
+        return factor
     end
 end
 
@@ -124,7 +133,7 @@ while (shared.afy and task.wait()) do
                 firing = true
 
                 task.spawn(function()
-                    while (client:GetAttribute('MeterActive') and client:GetAttribute('Meter') < 0.7) do task.wait() end
+                    while (client:GetAttribute('MeterActive') and client:GetAttribute('Meter') < calculate_ping_factor()) do task.wait() end
 
                     virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
                 end)
@@ -156,7 +165,7 @@ while (shared.afy and task.wait()) do
 
             if (closest_ball_holder and closest_hoop) then
                 local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
-                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 5 and 2 or 6)
+                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 10 and 2 or 6)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
