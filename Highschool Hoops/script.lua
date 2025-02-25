@@ -124,7 +124,7 @@ while (shared.afy and task.wait()) do
                 firing = true
 
                 task.spawn(function()
-                    while (client:GetAttribute('MeterActive') and client:GetAttribute('Meter') < 0.88) do task.wait() end
+                    while (client:GetAttribute('MeterActive') and client:GetAttribute('Meter') < 0.7) do task.wait() end
 
                     virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
                 end)
@@ -155,7 +155,8 @@ while (shared.afy and task.wait()) do
             local closest_hoop = get_closest_in_table(hoops)
 
             if (closest_ball_holder and closest_hoop) then
-                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + 1) and 2 or 6.5)
+                local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
+                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 5 and 2 or 6)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
