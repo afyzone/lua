@@ -17,8 +17,7 @@ local virtualinputmanager = services.VirtualInputManager
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
-local firing = false
-local target_position, body_velocity
+local firing, target_position, body_velocity = false
 
 local hoops = {}; do
     for i,v in (workspace.Hoops:GetDescendants()) do
@@ -28,7 +27,7 @@ local hoops = {}; do
     end
 end
 
-local get_char, get_root, get_hum, setup_shoot, position_between_two_instances, get_closest_in_table; do
+local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table; do
     get_char = function(player)
         return player.Character
     end
@@ -39,15 +38,6 @@ local get_char, get_root, get_hum, setup_shoot, position_between_two_instances, 
 
     get_hum = function(char)
         return char and char:FindFirstChildWhichIsA('Humanoid')
-    end
-
-    setup_shoot = function()
-        virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
-
-        if (connection) then
-            connection:Disconnect()
-            connection = nil
-        end
     end
 
     position_between_two_instances = function(instance, instance2, distance)
@@ -93,7 +83,7 @@ local con; con = runservice.Heartbeat:Connect(function()
     if (not body_velocity) then
         body_velocity = Instance.new("BodyVelocity")
         body_velocity.Parent = root
-        body_velocity.MaxForce = Vector3.new(math.huge, 0, math.huge)
+        body_velocity.MaxForce = vector.create(math.huge, 0, math.huge)
     end
     
     local guarding = char:GetAttribute('Guarding')
@@ -102,7 +92,7 @@ local con; con = runservice.Heartbeat:Connect(function()
         local current_pos = root.Position
         local direction_xz = vector.create(target_position.X - current_pos.X, 0, target_position.Z - current_pos.Z)
 
-        if direction_xz.magnitude < 2 then
+        if direction_xz.magnitude < 1 then
             body_velocity.Velocity = vector.zero
             body_velocity:Destroy()
             body_velocity = nil
@@ -134,7 +124,7 @@ while (shared.afy and task.wait()) do
                 firing = true
 
                 task.spawn(function()
-                    while (client:GetAttribute('MeterActive') and client:GetAttribute('Meter') < 0.8) do task.wait() end
+                    while (client:GetAttribute('MeterActive') and client:GetAttribute('Meter') < 0.88) do task.wait() end
 
                     virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
                 end)
@@ -161,16 +151,16 @@ while (shared.afy and task.wait()) do
                 end
             end
 
-            local closest_ball_holder = get_closest_in_table(balls, 15)
+            local closest_ball_holder = get_closest_in_table(balls, 20)
             local closest_hoop = get_closest_in_table(hoops)
 
             if (closest_ball_holder and closest_hoop) then
-                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + 1) and random:NextInteger(1.8, 2.2) or random:NextInteger(5.8, 6.2))
+                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + 1) and 2 or 6.5)
 
                 if (move_pos) then
-                    local direction = move_pos - root.Position
+                    local direction = (move_pos - root.Position)
 
-                    if (vector.magnitude(direction) > 0.2) then
+                    if (vector.magnitude(direction) > 1) then
                         target_position = move_pos
                     end
                 end
