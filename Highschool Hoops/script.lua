@@ -70,7 +70,7 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
     end
 
     calculate_ping_factor = function()
-        local factor = -0.002 * statsservice.Network.ServerStatsItem['Data Ping']:GetValue() + 0.9
+        local factor = -0.00175 * statsservice.Network.ServerStatsItem['Data Ping']:GetValue() + 0.9
 
         factor = math.clamp(factor, 0.5, 1)
 
@@ -165,7 +165,7 @@ while (shared.afy and task.wait()) do
 
             if (closest_ball_holder and closest_hoop) then
                 local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
-                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 15 and 2 or 6)
+                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 12 and 1 or 5)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
