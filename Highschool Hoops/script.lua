@@ -99,8 +99,8 @@ local con; con = runservice.Heartbeat:Connect(function()
     local guarding = char:GetAttribute('Guarding')
 
     if (guarding and target_position) then
-        local currentPos = root.Position
-        local direction_xz = vector.create(target_position.X - currentPos.X, 0, target_position.Z - currentPos.Z)
+        local current_pos = root.Position
+        local direction_xz = vector.create(target_position.X - current_pos.X, 0, target_position.Z - current_pos.Z)
 
         if direction_xz.magnitude < 2 then
             body_velocity.Velocity = vector.zero
@@ -127,22 +127,20 @@ while (shared.afy and task.wait()) do
     local hum = get_hum(char)
 
     if (char and root and hum) then
-        local meter = playergui:FindFirstChild('ShotMeter')
-
+        local meter = client:GetAttribute('MeterActive')
+        
         if (meter) then
-            if (meter.Enabled) then
-                if (not firing) then
-                    firing = true
+            if (not firing) then
+                firing = true
 
-                    task.spawn(function()
-                        while (meter.Enabled and meter.Base.Bar.UIGradient.Offset.Y > 0.2) do task.wait() end
+                task.spawn(function()
+                    while (client:GetAttribute('MeterActive') and client:GetAttribute('Meter') < 0.8) do task.wait() end
 
-                        virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
-                    end)
-                end
-            else
-                firing = false
+                    virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
+                end)
             end
+        else
+            firing = false
         end
 
         local guarding = char:GetAttribute('Guarding')
@@ -167,7 +165,7 @@ while (shared.afy and task.wait()) do
             local closest_hoop = get_closest_in_table(hoops)
 
             if (closest_ball_holder and closest_hoop) then
-                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + 1) and random:NextInteger(1.8, 2.2) or random:NextInteger(6.8, 7.2))
+                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + 1) and random:NextInteger(1.8, 2.2) or random:NextInteger(5.8, 6.2))
 
                 if (move_pos) then
                     local direction = move_pos - root.Position
