@@ -70,7 +70,7 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
     end
 
     calculate_ping_factor = function()
-        local factor = -0.00005 * statsservice.Network.ServerStatsItem['Data Ping']:GetValue() + 0.9
+        local factor = -0.001 * statsservice.Network.ServerStatsItem['Data Ping']:GetValue() + 0.9
 
         factor = math.clamp(factor, 0.5, 1)
 
