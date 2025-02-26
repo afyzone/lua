@@ -1,4 +1,4 @@
---https://www.roblox.com/games/13876564679
+-- https://www.roblox.com/games/13876564679
 -- Auto Guard, Auto Green
 
 local services = setmetatable({}, {
@@ -15,10 +15,11 @@ local runservice = services.RunService
 local statsservice = services.Stats
 local virtualinputmanager = services.VirtualInputManager
 
+local camera = workspace:FindFirstChildWhichIsA('Camera')
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
-local firing, target_position, body_velocity = false
+local firing, target_position, body_velocity, current_anims = false
 
 local hoops = {}; do
     for i,v in (workspace.Hoops:GetDescendants()) do
@@ -28,7 +29,7 @@ local hoops = {}; do
     end
 end
 
-local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor; do
+local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor, use_move_key; do
     get_char = function(player)
         return player.Character
     end
@@ -70,11 +71,19 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
     end
 
     calculate_ping_factor = function()
-        local factor = -0.00175 * statsservice.Network.ServerStatsItem['Data Ping']:GetValue() + 0.9
+        local factor = -0.00175 * statsservice.Network.ServerStatsItem['Data Ping']:GetValue() + 1
 
         factor = math.clamp(factor, 0.5, 1)
 
         return factor
+    end
+
+    use_move_key = function(key)
+        local keys = {'W', 'A', 'S', 'D'}
+
+        for i,v in (keys) do
+            virtualinputmanager:SendKeyEvent(v == key, v, false, nil)
+        end
     end
 end
 
@@ -107,12 +116,47 @@ local con; con = runservice.Heartbeat:Connect(function()
             body_velocity = nil
             target_position = nil
         else
+            root.Velocity = vector.zero
             body_velocity.Velocity = direction_xz.Unit * hum.WalkSpeed
+
+            local cam_look = vector.create(camera.CFrame.LookVector.X, 0, camera.CFrame.LookVector.Z)
+            local cam_right = vector.create(camera.CFrame.RightVector.X, 0, camera.CFrame.RightVector.Z)
+
+            if (vector.magnitude(cam_look) > 0) then
+                cam_look = cam_look.Unit
+            end
+
+            if (vector.magnitude(cam_right) > 0) then
+                cam_right = cam_right.Unit
+            end
+
+            local dir_unit = direction_xz.Unit
+            local dot_forward = dir_unit:Dot(cam_look)
+            local dot_right = dir_unit:Dot(cam_right)
+
+            if (math.abs(dot_right) > math.abs(dot_forward)) then
+                if (dot_right > 0) then
+                    if (current_anims ~= 'Right') then
+                        current_anims = 'Right'
+                        use_move_key('D')
+                    end
+                else
+                    if (current_anims ~= 'Left') then
+                        current_anims = 'Left'
+                        use_move_key('A')
+                    end
+                end
+            end
         end
     else
         if (body_velocity) then
             body_velocity:Destroy()
             body_velocity = nil
+
+            if (current_anims) then
+                current_anims = nil
+                use_move_key()
+            end
         end
     end
 end)
@@ -134,7 +178,6 @@ while (shared.afy and task.wait()) do
 
                 task.spawn(function()
                     while (client:GetAttribute('MeterActive') and client:GetAttribute('Meter') < calculate_ping_factor()) do task.wait() end
-
                     virtualinputmanager:SendKeyEvent(false, 'E', false, nil)
                 end)
             end
