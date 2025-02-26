@@ -20,7 +20,7 @@ local MenuVis = true
 local currentlymoving = false
 local tempadornee;
 local main_gui = playergui:WaitForChild('Main')
-local clean_parts = workspace.CleaningParts
+local clean_parts = workspace.MapMisc.Jobs.CleaningParts
 local smart_walk_tick = tick()
 local firetouchinterest = function(...)
 	local args = {...}
