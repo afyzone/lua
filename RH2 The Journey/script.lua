@@ -19,6 +19,14 @@ local color_rgb = Color3.fromRGB
 local white_color = color_rgb(200, 200, 200)
 local dark_brown = color_rgb(80, 63, 16)
 local firing, connection, body_gyro_con = false
+
+local forward_anim, backward_anim, left_anim, right_anim = Instance.new("Animation"), Instance.new("Animation"), Instance.new("Animation"), Instance.new("Animation"); do
+    forward_anim.AnimationId = "rbxassetid://10053690711"
+    backward_anim.AnimationId = "rbxassetid://10053509687"
+    left_anim.AnimationId = "rbxassetid://10048687356"
+    right_anim.AnimationId = "rbxassetid://10048696265"
+end
+
 local moves = {
     ['W'] = nil,
     ['A'] = nil,
@@ -87,47 +95,21 @@ end
 
 shared.afy = not shared.afy
 
-client.CharacterAdded:Connect(function(char)
-    local hum = char:WaitForChild('Humanoid')
+local function on_char(char)
+    if (char) then
+        local hum = get_hum(char)
 
-    local forward_anim = Instance.new("Animation")
-    forward_anim.AnimationId = "rbxassetid://10053690711"
-
-    local backward_anim = Instance.new("Animation")
-    backward_anim.AnimationId = "rbxassetid://10053509687"
-
-    local left_anim = Instance.new("Animation")
-    left_anim.AnimationId = "rbxassetid://10048687356"
-
-    local right_anim = Instance.new("Animation")
-    right_anim.AnimationId = "rbxassetid://10048696265"
-
-    moves['W'] = hum:LoadAnimation(forward_anim)
-    moves['A'] = hum:LoadAnimation(left_anim)
-    moves['S'] = hum:LoadAnimation(backward_anim)
-    moves['D'] = hum:LoadAnimation(right_anim)
-end)
-
-if (client.Character) then
-    local hum = client.Character:FindFirstChild('Humanoid')
-
-    local forward_anim = Instance.new("Animation")
-    forward_anim.AnimationId = "rbxassetid://10053690711"
-
-    local backward_anim = Instance.new("Animation")
-    backward_anim.AnimationId = "rbxassetid://10053509687"
-
-    local left_anim = Instance.new("Animation")
-    left_anim.AnimationId = "rbxassetid://10048687356"
-
-    local right_anim = Instance.new("Animation")
-    right_anim.AnimationId = "rbxassetid://10048696265"
-
-    moves['W'] = hum:LoadAnimation(forward_anim)
-    moves['A'] = hum:LoadAnimation(left_anim)
-    moves['S'] = hum:LoadAnimation(backward_anim)
-    moves['D'] = hum:LoadAnimation(right_anim)
+        if (hum) then
+            moves['W'] = hum:LoadAnimation(forward_anim)
+            moves['A'] = hum:LoadAnimation(left_anim)
+            moves['S'] = hum:LoadAnimation(backward_anim)
+            moves['D'] = hum:LoadAnimation(right_anim)
+        end
+    end
 end
+
+client.CharacterAdded:Connect(on_char)
+on_char(client.Character)
 
 print(shared.afy)
 while (shared.afy and task.wait()) do
@@ -217,7 +199,7 @@ while (shared.afy and task.wait()) do
             local closest_hoop = get_closest_in_table(hoops)
 
             if (closest_ball_holder and closest_hoop) then
-                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Ball.Position.Y > closest_ball_holder.Head.Position.Y and random:NextInteger(1.8, 2.2) or random:NextInteger(4.8, 5.2))
+                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Ball.Position.Y > closest_ball_holder.Head.Position.Y and random:NextInteger(1.8, 2.2) or random:NextInteger(5.8, 6.2))
 
                 if (move_pos) then
                     local direction = move_pos - root.Position
