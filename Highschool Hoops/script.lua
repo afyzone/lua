@@ -70,13 +70,39 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
     end
 
     calculate_ping_factor = function()
-        local factor = -0.00175 * statsservice.Network.ServerStatsItem['Data Ping']:GetValue() + 1
+        -- local ping = statsservice.Network.ServerStatsItem['Data Ping']:GetValue()
+        -- local factor = -0.00175 * ping + 1
+
+        local ping_text = playergui.TopbarStandard.Holders.Left.Widget.IconButton.Menu.IconSpot.Contents.IconLabelContainer.IconLabel.Text:gsub("[^%d%.]", "") -- Server delay
+        local ping = tonumber(ping_text)
+        local factor = -0.001 * ping + 0.9
 
         factor = math.clamp(factor, 0.5, 1)
 
         return factor
     end
 end
+
+shared.afy_id = (shared.afy_id or 0) + 1
+local client_id = shared.afy_id
+
+local old; old = hookmetamethod(game, '__namecall', function(...)
+    if (shared.afy_id ~= client_id) then return old(...) end
+
+    local method, self, args = getnamecallmethod(), select(1, ...), {select(2, ...)}
+
+    if (method == 'SetAttribute' and direction_anim) then
+        local char = get_char(client)
+
+        if (self == char) then
+            args[2] = direction_anim
+
+            return old(self, unpack(args))
+        end
+    end
+
+    return old(...)
+end)
 
 local con; con = runservice.Heartbeat:Connect(function()
     if (not shared.afy) then
@@ -138,20 +164,8 @@ local con; con = runservice.Heartbeat:Connect(function()
 end)
 
 shared.afy = not shared.afy
-
-task.spawn(function()
-    while (shared.afy) do
-        local char = get_char(client)
-
-        if (char and direction_anim) then
-            char:SetAttribute('Direction', direction_anim)
-        end
-
-        task.wait()
-    end
-end)
-
 print(shared.afy)
+
 while (shared.afy and task.wait()) do
     local char = get_char(client)
     local root = get_root(char)
@@ -192,11 +206,12 @@ while (shared.afy and task.wait()) do
             end
 
             local closest_ball_holder = get_closest_in_table(balls, 20)
+            local closest_ball_holder_root = closest_ball_holder and get_root(closest_ball_holder)
             local closest_hoop = get_closest_in_table(hoops)
 
-            if (closest_ball_holder and closest_hoop) then
+            if (closest_ball_holder_root and closest_hoop) then
                 local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
-                local move_pos = position_between_two_instances(closest_ball_holder, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 12 and 1 or 5)
+                local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 12 and 1 or 6)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
