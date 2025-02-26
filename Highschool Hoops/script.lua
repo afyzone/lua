@@ -15,11 +15,10 @@ local runservice = services.RunService
 local statsservice = services.Stats
 local virtualinputmanager = services.VirtualInputManager
 
-local camera = workspace:FindFirstChildWhichIsA('Camera')
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
-local firing, target_position, body_velocity, current_anims = false
+local firing, target_position, body_velocity, direction_anim = false
 
 local hoops = {}; do
     for i,v in (workspace.Hoops:GetDescendants()) do
@@ -29,7 +28,7 @@ local hoops = {}; do
     end
 end
 
-local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor, use_move_key; do
+local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor; do
     get_char = function(player)
         return player.Character
     end
@@ -77,14 +76,6 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
 
         return factor
     end
-
-    use_move_key = function(key)
-        local keys = {'W', 'A', 'S', 'D'}
-
-        for i,v in (keys) do
-            virtualinputmanager:SendKeyEvent(v == key, v, false, nil)
-        end
-    end
 end
 
 local con; con = runservice.Heartbeat:Connect(function()
@@ -116,35 +107,23 @@ local con; con = runservice.Heartbeat:Connect(function()
             body_velocity = nil
             target_position = nil
         else
-            root.Velocity = vector.zero
             body_velocity.Velocity = direction_xz.Unit * hum.WalkSpeed
 
-            local cam_look = vector.create(camera.CFrame.LookVector.X, 0, camera.CFrame.LookVector.Z)
-            local cam_right = vector.create(camera.CFrame.RightVector.X, 0, camera.CFrame.RightVector.Z)
-
-            if (vector.magnitude(cam_look) > 0) then
-                cam_look = cam_look.Unit
-            end
-
-            if (vector.magnitude(cam_right) > 0) then
-                cam_right = cam_right.Unit
-            end
-
             local dir_unit = direction_xz.Unit
-            local dot_forward = dir_unit:Dot(cam_look)
-            local dot_right = dir_unit:Dot(cam_right)
+            local dot_forward = vector.dot(dir_unit, root.CFrame.LookVector)
+            local dot_right = vector.dot(dir_unit, root.CFrame.RightVector)
 
             if (math.abs(dot_right) > math.abs(dot_forward)) then
                 if (dot_right > 0) then
-                    if (current_anims ~= 'Right') then
-                        current_anims = 'Right'
-                        use_move_key('D')
-                    end
+                    direction_anim = 'R'
                 else
-                    if (current_anims ~= 'Left') then
-                        current_anims = 'Left'
-                        use_move_key('A')
-                    end
+                    direction_anim = 'L'
+                end
+            else
+                if (dot_forward > 0) then
+                    direction_anim = 'F'
+                else
+                    direction_anim = 'B'
                 end
             end
         end
@@ -153,15 +132,24 @@ local con; con = runservice.Heartbeat:Connect(function()
             body_velocity:Destroy()
             body_velocity = nil
 
-            if (current_anims) then
-                current_anims = nil
-                use_move_key()
-            end
+            direction_anim = nil
         end
     end
 end)
 
 shared.afy = not shared.afy
+
+task.spawn(function()
+    while (shared.afy) do
+        local char = get_char(client)
+
+        if (char and direction_anim) then
+            char:SetAttribute('Direction', direction_anim)
+        end
+
+        task.wait()
+    end
+end)
 
 print(shared.afy)
 while (shared.afy and task.wait()) do
