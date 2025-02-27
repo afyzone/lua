@@ -249,7 +249,7 @@ while (shared.afy and task.wait()) do
             target_hold_player = target_hold_player or closest_player and get_root(closest_player)
 
             if (closest_ball and target_hold_player) then
-                local move_pos = position_between_two_instances(target_hold_player, closest_ball, 4)
+                local move_pos = position_between_two_instances(target_hold_player, closest_ball, 6)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
@@ -260,7 +260,7 @@ while (shared.afy and task.wait()) do
                 end
             end
         else
-            target_hold_player = nil 
+            target_hold_player = nil
         end
     end
 end
