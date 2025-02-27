@@ -14,11 +14,12 @@ local players = services.Players
 local runservice = services.RunService
 local statsservice = services.Stats
 local virtualinputmanager = services.VirtualInputManager
+local userinputservice = services.UserInputService
 
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
-local firing, target_position, body_velocity, direction_anim = false
+local firing, target_position, body_velocity, direction_anim, target_hold_player = false
 
 local hoops = {}; do
     for i,v in (workspace.Hoops:GetDescendants()) do
@@ -91,7 +92,7 @@ local old; old = hookmetamethod(game, '__namecall', function(...)
 
     local method, self, args = getnamecallmethod(), select(1, ...), {select(2, ...)}
 
-    if (method == 'SetAttribute' and direction_anim) then
+    if (method == 'SetAttribute' and args[1] == 'Direction' and direction_anim) then
         local char = get_char(client)
 
         if (self == char) then
@@ -99,6 +100,16 @@ local old; old = hookmetamethod(game, '__namecall', function(...)
 
             return old(self, unpack(args))
         end
+    end
+
+    if (method == 'FireServer' and tostring(self) == 'Actions') then
+        if (#args > 0 and args[1] and args[1].Action == 'StartMeter') then
+            args[1].Shift = false
+            args[1].ShotType = 'Normal'
+            args[1].ShotName = 'Reg'
+        end
+
+        return old(self, unpack(args))
     end
 
     return old(...)
@@ -221,6 +232,35 @@ while (shared.afy and task.wait()) do
                     end
                 end
             end
+        end
+
+        if (userinputservice:IsKeyDown(Enum.KeyCode['Q'])) then
+            local t_chars = {}; do
+                for i,v in (players:GetPlayers()) do
+                    if (v == client or not v.Character) then continue end
+
+                    table.insert(t_chars, v.Character)
+                end
+            end
+
+            local closest_ball = target_hold_player or get_closest_in_table(workspace.Balls:GetChildren())
+
+            local closest_player = get_closest_in_table(t_chars)
+            local closest_player_root = closest_player and get_root(closest_player)
+
+            if (closest_ball and closest_player_root) then
+                local move_pos = position_between_two_instances(closest_player_root, closest_ball, 4)
+
+                if (move_pos) then
+                    local direction = (move_pos - root.Position)
+
+                    if (vector.magnitude(direction) > 0.2) then
+                        hum.WalkToPoint = move_pos
+                    end
+                end
+            end
+        else
+            target_hold_player = nil 
         end
     end
 end
