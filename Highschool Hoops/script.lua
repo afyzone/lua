@@ -1,6 +1,9 @@
 -- https://www.roblox.com/games/13876564679
 -- Auto Guard, Auto Green
 
+-- Off Ball Move to Player (Hold Q)
+-- Easier guard and shoot
+
 local services = setmetatable({}, {
     __index = function(self, key)
         local service = pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
@@ -19,7 +22,7 @@ local userinputservice = services.UserInputService
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
-local firing, target_position, body_velocity, direction_anim, target_hold_player = false
+local last_e_release, firing, e_held, target_position, body_velocity, direction_anim, target_hold_player = 0, false
 
 local hoops = {}; do
     for i,v in (workspace.Hoops:GetDescendants()) do
@@ -103,7 +106,7 @@ local old; old = hookmetamethod(game, '__namecall', function(...)
     end
 
     if (method == 'FireServer' and tostring(self) == 'Actions') then
-        if (#args > 0 and args[1] and args[1].Action == 'StartMeter') then
+        if (args[1] and args[1].Action == 'StartMeter') then
             args[1].Shift = false
             args[1].ShotType = 'Normal'
             args[1].ShotName = 'Reg'
@@ -144,7 +147,7 @@ local con; con = runservice.Heartbeat:Connect(function()
             body_velocity = nil
             target_position = nil
         else
-            body_velocity.Velocity = direction_xz.Unit * hum.WalkSpeed
+            body_velocity.Velocity = direction_xz.Unit * (hum.WalkSpeed + 0.5)
 
             local dir_unit = direction_xz.Unit
             local dot_forward = vector.dot(dir_unit, root.CFrame.LookVector)
@@ -171,6 +174,43 @@ local con; con = runservice.Heartbeat:Connect(function()
 
             direction_anim = nil
         end
+    end
+end)
+
+local input_start_con; input_start_con = userinputservice.InputBegan:Connect(function(input, chat)
+    if (not shared.afy) then
+        input_start_con:Disconnect()
+    end
+
+    if (chat) then return end
+
+    if (input.KeyCode == Enum.KeyCode.G) then
+        for i,v in getconnections(playergui.MobileUi.Mobile.Def.Guard.MouseButton1Down) do
+            v:Function()
+        end
+    end
+
+    if (input.KeyCode == Enum.KeyCode.E and not e_held and os.clock() - last_e_release > 0.2) then
+        e_held = true
+    end
+end)
+
+local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(function(input, chat)
+    if (not shared.afy) then
+        input_ended_con:Disconnect()
+    end
+
+    if (chat) then return end
+
+    if (input.KeyCode == Enum.KeyCode.G) then
+        for i,v in getconnections(playergui.MobileUi.Mobile.Def.Guard.MouseButton1Up) do
+            v:Function()
+        end
+    end
+
+    if (input.KeyCode == Enum.KeyCode.E) then
+        last_e_release = os.clock()
+        e_held = false
     end
 end)
 
@@ -222,7 +262,26 @@ while (shared.afy and task.wait()) do
 
             if (closest_ball_holder_root and closest_hoop) then
                 local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
-                local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 12 and 1 or 6)
+
+                local target_dunking = closest_ball_holder:GetAttribute('Dunking')
+                local target_height = closest_ball_holder:GetAttribute('Height')
+                local target_layuping = closest_ball_holder_root:FindFirstChild('Movement') and closest_ball_holder_root.Movement.Velocity.Magnitude
+                local target_y = closest_ball_holder.Head.Position.Y
+                local client_y = char.Head.Position.Y
+
+                local close_in;
+
+                if (target_dunking) then
+                    close_in = false
+                else
+                    local first_condition = (hoop_dist < 20 and target_layuping and target_layuping > 7.5)
+                    local second_condition = (target_y > (client_y + target_height) and hoop_dist > 15)
+                    
+                    close_in = (first_condition or second_condition)
+                end
+
+                -- local close_in = not closest_ball_holder:GetAttribute('Dunking') or closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 15
+                local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and 1 or 6)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
@@ -261,6 +320,10 @@ while (shared.afy and task.wait()) do
             end
         else
             target_hold_player = nil
+        end
+
+        if (e_held) then
+            virtualinputmanager:SendKeyEvent(true, 'E', false, nil)
         end
     end
 end
