@@ -243,13 +243,13 @@ while (shared.afy and task.wait()) do
                 end
             end
 
-            local closest_ball = target_hold_player or get_closest_in_table(workspace.Balls:GetChildren())
+            local closest_ball = get_closest_in_table(workspace.Balls:GetChildren())
 
             local closest_player = get_closest_in_table(t_chars)
-            local closest_player_root = closest_player and get_root(closest_player)
+            target_hold_player = target_hold_player or closest_player and get_root(closest_player)
 
-            if (closest_ball and closest_player_root) then
-                local move_pos = position_between_two_instances(closest_player_root, closest_ball, 4)
+            if (closest_ball and target_hold_player) then
+                local move_pos = position_between_two_instances(target_hold_player, closest_ball, 4)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
