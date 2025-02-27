@@ -2,7 +2,7 @@
 -- Auto Guard, Auto Green
 
 -- Off Ball Move to Player (Hold Q)
--- Easier guard and shoot
+-- Hold to shoot
 
 local services = setmetatable({}, {
     __index = function(self, key)
@@ -184,12 +184,6 @@ local input_start_con; input_start_con = userinputservice.InputBegan:Connect(fun
 
     if (chat) then return end
 
-    if (input.KeyCode == Enum.KeyCode.G) then
-        for i,v in getconnections(playergui.MobileUi.Mobile.Def.Guard.MouseButton1Down) do
-            v:Function()
-        end
-    end
-
     if (input.KeyCode == Enum.KeyCode.E and not e_held and os.clock() - last_e_release > 0.2) then
         e_held = true
     end
@@ -201,12 +195,6 @@ local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(fun
     end
 
     if (chat) then return end
-
-    if (input.KeyCode == Enum.KeyCode.G) then
-        for i,v in getconnections(playergui.MobileUi.Mobile.Def.Guard.MouseButton1Up) do
-            v:Function()
-        end
-    end
 
     if (input.KeyCode == Enum.KeyCode.E) then
         last_e_release = os.clock()
@@ -280,7 +268,6 @@ while (shared.afy and task.wait()) do
                     close_in = (first_condition or second_condition)
                 end
 
-                -- local close_in = not closest_ball_holder:GetAttribute('Dunking') or closest_ball_holder.Head.Position.Y > (char.Head.Position.Y + closest_ball_holder:GetAttribute('Height')) and hoop_dist > 15
                 local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and 1 or 6)
 
                 if (move_pos) then
