@@ -22,7 +22,7 @@ local userinputservice = services.UserInputService
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
-local last_e_release, firing, e_held, target_position, body_velocity, direction_anim, target_hold_player = 0, false
+local additional_speed, last_e_release, firing, e_held, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
 
 local hoops = {}; do
     for i,v in (workspace.Hoops:GetDescendants()) do
@@ -74,10 +74,7 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
     end
 
     calculate_ping_factor = function()
-        -- local ping = statsservice.Network.ServerStatsItem['Data Ping']:GetValue()
-        -- local factor = -0.00175 * ping + 1
-
-        local ping_text = playergui.TopbarStandard.Holders.Left.Widget.IconButton.Menu.IconSpot.Contents.IconLabelContainer.IconLabel.Text:gsub("[^%d%.]", "") -- Server delay
+        local ping_text = playergui.TopbarStandard.Holders.Left.Widget.IconButton.Menu.IconSpot.Contents.IconLabelContainer.IconLabel.Text:gsub("[^%d%.]", "")
         local ping = tonumber(ping_text)
         local factor = -0.001 * ping + 0.9
 
@@ -147,11 +144,11 @@ local con; con = runservice.Heartbeat:Connect(function()
             body_velocity = nil
             target_position = nil
         else
-            body_velocity.Velocity = direction_xz.Unit * (hum.WalkSpeed + 0.5)
+            local normalized_dirxz = vector.normalize(direction_xz)
+            body_velocity.Velocity = normalized_dirxz * (hum.WalkSpeed + 0.5 + additional_speed)
 
-            local dir_unit = direction_xz.Unit
-            local dot_forward = vector.dot(dir_unit, root.CFrame.LookVector)
-            local dot_right = vector.dot(dir_unit, root.CFrame.RightVector)
+            local dot_forward = vector.dot(normalized_dirxz, root.CFrame.LookVector)
+            local dot_right = vector.dot(normalized_dirxz, root.CFrame.RightVector)
 
             if (math.abs(dot_right) > math.abs(dot_forward)) then
                 if (dot_right > 0) then
@@ -253,7 +250,7 @@ while (shared.afy and task.wait()) do
 
                 local target_dunking = closest_ball_holder:GetAttribute('Dunking')
                 local target_height = closest_ball_holder:GetAttribute('Height')
-                local target_layuping = closest_ball_holder_root:FindFirstChild('Movement') and closest_ball_holder_root.Movement.Velocity.Magnitude
+                local target_layuping = closest_ball_holder_root:FindFirstChild('Movement') and vector.magnitude(closest_ball_holder_root.Movement.Velocity)
                 local target_y = closest_ball_holder.Head.Position.Y
                 local client_y = char.Head.Position.Y
 
@@ -267,6 +264,8 @@ while (shared.afy and task.wait()) do
                     
                     close_in = (first_condition or second_condition)
                 end
+
+                additional_speed = close_in and 1.5 or 0
 
                 local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and 1 or 6)
 
@@ -295,7 +294,7 @@ while (shared.afy and task.wait()) do
             target_hold_player = target_hold_player or closest_player and get_root(closest_player)
 
             if (closest_ball and target_hold_player) then
-                local move_pos = position_between_two_instances(target_hold_player, closest_ball, 6)
+                local move_pos = position_between_two_instances(target_hold_player, closest_ball, 4)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
