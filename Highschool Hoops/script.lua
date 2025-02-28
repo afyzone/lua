@@ -201,7 +201,7 @@ end)
 
 local on_teleport = client.OnTeleport:Connect(function()
     if (queue_on_teleport) then
-        queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Highschool%20Hoops/script.lua'))()`)
+        queue_on_teleport(`shared.afy = {shared.afy}; loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Highschool%20Hoops/script.lua'))()`)
     end
 end)
 
