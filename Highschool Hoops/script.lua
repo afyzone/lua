@@ -199,8 +199,12 @@ local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(fun
     end
 end)
 
-local on_teleport = client.OnTeleport:Connect(function()
-    if (queue_on_teleport and shared.afy) then
+local on_teleport; on_teleport = client.OnTeleport:Connect(function()
+    if (not shared.afy) then
+        on_teleport:Disonnect()
+    end
+
+    if (queue_on_teleport) then
         queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Highschool%20Hoops/script.lua'))()`)
     end
 end)
