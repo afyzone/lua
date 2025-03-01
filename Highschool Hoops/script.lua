@@ -117,7 +117,7 @@ end)
 
 local con; con = runservice.Heartbeat:Connect(function()
     if (not shared.afy) then
-        con:Disconnect()
+        return con:Disconnect()
     end
 
     local char = get_char(client)
@@ -176,7 +176,7 @@ end)
 
 local input_start_con; input_start_con = userinputservice.InputBegan:Connect(function(input, chat)
     if (not shared.afy) then
-        input_start_con:Disconnect()
+        return input_start_con:Disconnect()
     end
 
     if (chat) then return end
@@ -188,7 +188,7 @@ end)
 
 local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(function(input, chat)
     if (not shared.afy) then
-        input_ended_con:Disconnect()
+        return input_ended_con:Disconnect()
     end
 
     if (chat) then return end
@@ -201,7 +201,7 @@ end)
 
 local on_teleport; on_teleport = client.OnTeleport:Connect(function()
     if (not shared.afy) then
-        on_teleport:Disonnect()
+        return on_teleport:Disonnect()
     end
 
     if (queue_on_teleport) then
