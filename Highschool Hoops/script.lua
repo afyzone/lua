@@ -144,6 +144,8 @@ local con; con = runservice.Heartbeat:Connect(function()
             body_velocity:Destroy()
             body_velocity = nil
             target_position = nil
+
+            direction_anim = nil
         else
             local normalized_dirxz = vector.normalize(direction_xz)
             body_velocity.Velocity = normalized_dirxz * (hum.WalkSpeed + additional_speed)
