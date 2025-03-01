@@ -24,10 +24,12 @@ local random = Random.new()
 local additional_speed, last_e_release, firing, e_held, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
 
 local hoops = {}; do
-    for i,v in (workspace.Hoops:GetDescendants()) do
-        if (not v.Name:find('Hoop')) then continue end
+    if (workspace:FindFirstChild('Hoops')) then
+        for i,v in (workspace.Hoops:GetDescendants()) do
+            if (not v.Name:find('Hoop')) then continue end
 
-        table.insert(hoops, v.Rim.Rim)
+            table.insert(hoops, v.Rim.Rim)
+        end
     end
 end
 
