@@ -21,7 +21,7 @@ local userinputservice = services.UserInputService
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
-local additional_speed, last_e_release, firing, e_held, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
+local additional_speed, last_e_release, firing, e_held, q_held, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
 
 local hoops = {}; do
     if (workspace:FindFirstChild('Hoops')) then
@@ -85,11 +85,14 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
     end
 end
 
-shared.afy_id = (shared.afy_id or 0) + 1
-local client_id = shared.afy_id
+if (not original_namecall) then
+    getgenv().original_namecall = hookmetamethod(game, '__namecall', function(...)
+        return old_namecall(...)
+    end)
+end
 
-local old; old = hookmetamethod(game, '__namecall', function(...)
-    if (shared.afy_id ~= client_id) then return old(...) end
+getgenv().old_namecall = function(...)
+    if (not shared.afy) then return original_namecall(...) end
 
     local method, self, args = getnamecallmethod(), select(1, ...), {select(2, ...)}
 
@@ -99,7 +102,7 @@ local old; old = hookmetamethod(game, '__namecall', function(...)
         if (self == char) then
             args[2] = direction_anim
 
-            return old(self, unpack(args))
+            return original_namecall(self, unpack(args))
         end
     end
 
@@ -110,11 +113,11 @@ local old; old = hookmetamethod(game, '__namecall', function(...)
             args[1].ShotName = 'Reg'
         end
 
-        return old(self, unpack(args))
+        return original_namecall(self, unpack(args))
     end
 
-    return old(...)
-end)
+    return original_namecall(...)
+end
 
 local con; con = runservice.Heartbeat:Connect(function()
     if (not shared.afy) then
@@ -187,6 +190,10 @@ local input_start_con; input_start_con = userinputservice.InputBegan:Connect(fun
     if (input.KeyCode == Enum.KeyCode.E and not e_held and os.clock() - last_e_release > 0.2) then
         e_held = true
     end
+
+    if (input.KeyCode == Enum.KeyCode.Q) then
+        q_held = true
+    end
 end)
 
 local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(function(input, chat)
@@ -199,6 +206,10 @@ local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(fun
     if (input.KeyCode == Enum.KeyCode.E) then
         last_e_release = os.clock()
         e_held = false
+    end
+
+    if (input.KeyCode == Enum.KeyCode.Q) then
+        q_held = false
     end
 end)
 
@@ -291,7 +302,7 @@ while (shared.afy and task.wait()) do
             end
         end
 
-        if (userinputservice:IsKeyDown(Enum.KeyCode['Q'])) then
+        if (q_held) then
             local t_chars = {}; do
                 for i,v in (players:GetPlayers()) do
                     if (v == client or not v.Character) then continue end
