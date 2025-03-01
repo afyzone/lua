@@ -15,7 +15,6 @@ local services = setmetatable({}, {
 
 local players = services.Players
 local runservice = services.RunService
-local statsservice = services.Stats
 local virtualinputmanager = services.VirtualInputManager
 local userinputservice = services.UserInputService
 
@@ -145,7 +144,7 @@ local con; con = runservice.Heartbeat:Connect(function()
             target_position = nil
         else
             local normalized_dirxz = vector.normalize(direction_xz)
-            body_velocity.Velocity = normalized_dirxz * (hum.WalkSpeed + 0.5 + additional_speed)
+            body_velocity.Velocity = normalized_dirxz * (hum.WalkSpeed + additional_speed)
 
             local dot_forward = vector.dot(normalized_dirxz, root.CFrame.LookVector)
             local dot_right = vector.dot(normalized_dirxz, root.CFrame.RightVector)
@@ -259,10 +258,8 @@ while (shared.afy and task.wait()) do
                 local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
 
                 local target_dunking = closest_ball_holder:GetAttribute('Dunking')
-                local target_height = closest_ball_holder:GetAttribute('Height')
                 local target_layuping = closest_ball_holder_root:FindFirstChild('Movement') and vector.magnitude(closest_ball_holder_root.Movement.Velocity)
-                local target_y = closest_ball_holder.Head.Position.Y
-                local client_y = char.Head.Position.Y
+                local target_shooting = closest_ball_holder:GetAttribute('Shooting')
 
                 local close_in;
 
@@ -270,14 +267,14 @@ while (shared.afy and task.wait()) do
                     close_in = false
                 else
                     local first_condition = (hoop_dist < 20 and target_layuping and target_layuping > 7.5)
-                    local second_condition = (target_y > (client_y + target_height) and hoop_dist > 15)
+                    local second_condition = (target_shooting and hoop_dist > 15)
                     
                     close_in = (first_condition or second_condition)
                 end
 
-                additional_speed = close_in and 1.5 or 0
+                additional_speed = close_in and 0 or 0
 
-                local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and 1 or 6)
+                local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and 2 or 6)
 
                 if (move_pos) then
                     local direction = (move_pos - root.Position)
