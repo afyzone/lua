@@ -156,18 +156,10 @@ local con; con = runservice.Heartbeat:Connect(function()
             local dot_forward = vector.dot(normalized_dirxz, root.CFrame.LookVector)
             local dot_right = vector.dot(normalized_dirxz, root.CFrame.RightVector)
 
-            if (math.abs(dot_right) > math.abs(dot_forward)) then
-                if (dot_right > 0) then
-                    direction_anim = 'R'
-                else
-                    direction_anim = 'L'
-                end
+            if (dot_right > 0) then
+                direction_anim = 'R'
             else
-                if (dot_forward > 0) then
-                    direction_anim = 'F'
-                else
-                    direction_anim = 'B'
-                end
+                direction_anim = 'L'
             end
         end
     else
