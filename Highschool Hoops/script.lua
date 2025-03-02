@@ -153,7 +153,6 @@ local con; con = runservice.Heartbeat:Connect(function()
             local normalized_dirxz = vector.normalize(direction_xz)
             body_velocity.Velocity = normalized_dirxz * (hum.WalkSpeed + additional_speed)
 
-            local dot_forward = vector.dot(normalized_dirxz, root.CFrame.LookVector)
             local dot_right = vector.dot(normalized_dirxz, root.CFrame.RightVector)
 
             if (dot_right > 0) then
@@ -289,6 +288,7 @@ while (shared.afy and task.wait()) do
 
                     if (vector.magnitude(direction) > 1) then
                         target_position = move_pos
+                        hum.WalkToPoint = move_pos
                     end
                 end
             end
