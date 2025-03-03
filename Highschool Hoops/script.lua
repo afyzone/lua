@@ -18,9 +18,6 @@ local runservice = services.RunService
 local virtualinputmanager = services.VirtualInputManager
 local userinputservice = services.UserInputService
 
-if (not afy_executed) then return end
-getgenv().afy_executed = true
-
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
