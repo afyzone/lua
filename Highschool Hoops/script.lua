@@ -291,7 +291,7 @@ while (shared.afy and task.wait()) do
                     if (vector.magnitude(direction) > 1) then
                         local holder_meter = closest_ball_holder_player:GetAttribute('Meter')
 
-                        if (holder_meter and holder_meter > 0.5 and holder_meter <= 0.9) then
+                        if (holder_meter and holder_meter > 0.5 and holder_meter < 0.9) then
                             virtualinputmanager:SendKeyEvent(true, 'Space', false, nil)
                             virtualinputmanager:SendKeyEvent(false, 'Space', false, nil)
                         end
