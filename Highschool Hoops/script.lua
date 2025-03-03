@@ -33,6 +33,24 @@ local hoops = {}; do
     end
 end
 
+--[[
+    for i,v in (workspace.Balls:GetChildren()) do
+        local cloned_ball = v:Clone(); do
+            cloned_ball.Parent = v
+            cloned_ball.Transparency = 0
+            v.Transparency = 1
+            v.Size = vector.create(5,5,5)
+
+            task.spawn(function()
+                while (v and cloned_ball) do
+                    cloned_ball.CFrame = v.CFrame
+                    task.wait()
+                end
+            end)
+        end
+    end
+]]
+
 local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor; do
     get_char = function(player)
         return player.Character
@@ -279,12 +297,11 @@ while (shared.afy and task.wait()) do
                 end
             end
 
-            local closest_ball_holder = get_closest_in_table(balls, 10)
-            local closest_ball_holder_player = players:GetPlayerFromCharacter(closest_ball_holder)
+            local closest_ball_holder = get_closest_in_table(balls, 15)
             local closest_ball_holder_root = closest_ball_holder and get_root(closest_ball_holder)
             local closest_hoop = get_closest_in_table(hoops)
 
-            if (closest_ball_holder_root and closest_hoop and closest_ball_holder_player) then
+            if (closest_ball_holder and closest_ball_holder_root and closest_hoop) then
                 local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
 
                 local target_dunking = closest_ball_holder:GetAttribute('Dunking')
@@ -304,7 +321,7 @@ while (shared.afy and task.wait()) do
                 end
 
                 additional_speed = close_in and 0 or 0
-                local distance = target_posting and 8 or 6
+                local distance = target_posting and 10 or 6
 
                 local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and 2 or distance)
 
@@ -312,10 +329,9 @@ while (shared.afy and task.wait()) do
                     local direction = (move_pos - root.Position)
 
                     if (vector.magnitude(direction) > 1) then
-                        local holder_meter = closest_ball_holder_player:GetAttribute('MeterActive')
-                        local holder_meter_value = closest_ball_holder_player:GetAttribute('Meter')
+                        local closest_ball = get_closest_in_table(workspace.Balls:GetChildren())
 
-                        if (holder_meter and holder_meter_value and holder_meter_value >= 0.5 and holder_meter_value <= 0.9) then
+                        if (closest_ball and closest_ball:GetAttribute('Blockable')) then
                             virtualinputmanager:SendKeyEvent(true, 'Space', false, nil)
                             virtualinputmanager:SendKeyEvent(false, 'Space', false, nil)
                         end
