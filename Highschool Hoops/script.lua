@@ -258,7 +258,7 @@ while (shared.afy and task.wait()) do
                 end
             end
 
-            local closest_ball_holder = get_closest_in_table(balls, 20)
+            local closest_ball_holder = get_closest_in_table(balls, 10)
             local closest_ball_holder_player = players:GetPlayerFromCharacter(closest_ball_holder)
             local closest_ball_holder_root = closest_ball_holder and get_root(closest_ball_holder)
             local closest_hoop = get_closest_in_table(hoops)
