@@ -152,6 +152,7 @@ local con; con = runservice.Heartbeat:Connect(function()
         else
             local normalized_dirxz = vector.normalize(direction_xz)
             body_velocity.Velocity = normalized_dirxz * (hum.WalkSpeed + additional_speed)
+            root.Velocity = normalized_dirxz * (hum.WalkSpeed + additional_speed)
 
             local dot_right = vector.dot(normalized_dirxz, root.CFrame.RightVector)
 
@@ -258,10 +259,11 @@ while (shared.afy and task.wait()) do
             end
 
             local closest_ball_holder = get_closest_in_table(balls, 20)
+            local closest_ball_holder_player = players:GetPlayerFromCharacter(closest_ball_holder)
             local closest_ball_holder_root = closest_ball_holder and get_root(closest_ball_holder)
             local closest_hoop = get_closest_in_table(hoops)
 
-            if (closest_ball_holder_root and closest_hoop) then
+            if (closest_ball_holder_root and closest_hoop and closest_ball_holder_player) then
                 local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
 
                 local target_dunking = closest_ball_holder:GetAttribute('Dunking')
@@ -274,7 +276,7 @@ while (shared.afy and task.wait()) do
                     close_in = false
                 else
                     local first_condition = (hoop_dist < 20 and target_layuping and target_layuping > 7.5)
-                    local second_condition = (target_shooting and hoop_dist > 15)
+                    local second_condition = (target_shooting and hoop_dist > 10)
                     
                     close_in = (first_condition or second_condition)
                 end
@@ -287,6 +289,13 @@ while (shared.afy and task.wait()) do
                     local direction = (move_pos - root.Position)
 
                     if (vector.magnitude(direction) > 1) then
+                        local holder_meter = closest_ball_holder_player:GetAttribute('Meter')
+
+                        if (holder_meter and holder_meter > 0.5 and holder_meter <= 0.9) then
+                            virtualinputmanager:SendKeyEvent(true, 'Space', false, nil)
+                            virtualinputmanager:SendKeyEvent(false, 'Space', false, nil)
+                        end
+
                         target_position = move_pos
                         hum.WalkToPoint = move_pos
                     end
