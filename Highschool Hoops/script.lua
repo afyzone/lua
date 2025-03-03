@@ -240,6 +240,27 @@ while (shared.afy and task.wait()) do
             firing = false
         end
 
+        local client_ball = char:GetAttribute('HasBall')
+
+        if (client_ball) then
+            for i,v in (players:GetPlayers()) do
+                local t_char = get_char(v)
+                local t_root = get_root(t_char)
+
+                if (v == client or not t_root) then continue end
+
+                local mag = vector.magnitude(t_root.Position - root.Position)
+                if (mag > 12) then continue end
+
+                local t_reaching = t_char:GetAttribute('Reach')
+
+                if (t_reaching) then
+                    virtualinputmanager:SendKeyEvent(true, 'Z', false, nil)
+                    virtualinputmanager:SendKeyEvent(false, 'Z', false, nil)
+                end
+            end
+        end
+
         local guarding = char:GetAttribute('Guarding')
 
         if (guarding) then
