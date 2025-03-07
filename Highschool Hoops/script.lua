@@ -26,7 +26,8 @@ local additional_speed, last_e_release, firing, e_held, q_held, target_position,
 shared.afy_flags = shared.afy_flags or {
     auto_block = false,
     auto_ankle_break = false,
-    ball_reach = true
+    ball_reach = true,
+    force_standing_shots = true,
 }
 
 local hoops = {}; do
@@ -136,7 +137,7 @@ getgenv().old_namecall = function(...)
         end
     end
 
-    if (method == 'FireServer' and tostring(self) == 'Actions') then
+    if (shared.afy_flags.force_standing_shots and method == 'FireServer' and tostring(self) == 'Actions') then
         if (args[1] and args[1].Action == 'StartMeter') then
             args[1].Shift = false
             args[1].ShotType = 'Normal'
