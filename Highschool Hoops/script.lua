@@ -318,10 +318,10 @@ while (shared.afy and task.wait()) do
             if (closest_ball_holder and closest_ball_holder_root and closest_hoop) then
                 local hoop_dist = vector.magnitude(closest_hoop.Position - root.Position)
 
-                local target_dunking = closest_ball_holder:GetAttribute('Dunking')
-                local target_posting = closest_ball_holder:GetAttribute('Posting')
                 local target_layuping = closest_ball_holder_root:FindFirstChild('Movement') and vector.magnitude(closest_ball_holder_root.Movement.Velocity)
                 local target_shooting = closest_ball_holder:GetAttribute('Shooting')
+                local target_dunking = closest_ball_holder:GetAttribute('Dunking')
+                local target_posting = closest_ball_holder:GetAttribute('Posting')
 
                 local close_in;
 
