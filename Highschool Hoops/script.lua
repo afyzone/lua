@@ -43,14 +43,14 @@ local ball_reach_handler = function(ball)
     local cloned_ball = ball:Clone(); do
         local og_size = ball.Size
         
-        cloned_ball.Parent = v
+        cloned_ball.Parent = ball
         cloned_ball.Transparency = 0
-        v.Transparency = 1
-        v.Size = shared.afy_flags.ball_reach and vector.create(5, 5, 5) or og_size
+        ball.Transparency = 1
+        ball.Size = shared.afy_flags.ball_reach and vector.create(5, 5, 5) or og_size
 
         task.spawn(function()
             while (ball and cloned_ball) do
-                v.Size = shared.afy_flags.ball_reach and vector.create(5, 5, 5) or og_size
+                ball.Size = shared.afy_flags.ball_reach and vector.create(5, 5, 5) or og_size
                 cloned_ball.CFrame = ball.CFrame
                 task.wait()
             end
