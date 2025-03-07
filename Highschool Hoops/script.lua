@@ -23,6 +23,12 @@ local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
 local additional_speed, last_e_release, firing, e_held, q_held, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
 
+shared.afy_flags = shared.afy_flags or {
+    auto_block = false,
+    auto_ankle_break = false,
+    ball_reach = true
+}
+
 local hoops = {}; do
     if (workspace:FindFirstChild('Hoops')) then
         for i,v in (workspace.Hoops:GetDescendants()) do
@@ -33,23 +39,29 @@ local hoops = {}; do
     end
 end
 
---[[
-    for i,v in (workspace.Balls:GetChildren()) do
-        local cloned_ball = v:Clone(); do
-            cloned_ball.Parent = v
-            cloned_ball.Transparency = 0
-            v.Transparency = 1
-            v.Size = vector.create(5,5,5)
+local ball_reach_handler = function(ball)
+    local cloned_ball = ball:Clone(); do
+        local og_size = v.Size
+        
+        cloned_ball.Parent = v
+        cloned_ball.Transparency = 0
+        v.Transparency = 1
+        v.Size = shared.afy_flags.ball_reach and vector.create(5, 5, 5) or og_size
 
-            task.spawn(function()
-                while (v and cloned_ball) do
-                    cloned_ball.CFrame = v.CFrame
-                    task.wait()
-                end
-            end)
-        end
+        task.spawn(function()
+            while (ball and cloned_ball) do
+                v.Size = shared.afy_flags.ball_reach and vector.create(5, 5, 5) or og_size
+                cloned_ball.CFrame = ball.CFrame
+                task.wait()
+            end
+        end)
     end
-]]
+end
+
+workspace.Balls.ChildAdded:Connect(ball_reach_handler)
+for i,v in (workspace.Balls:GetChildren()) do
+    ball_reach_handler(v)
+end
 
 local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor; do
     get_char = function(player)
@@ -230,7 +242,7 @@ local on_teleport, executed; on_teleport = client.OnTeleport:Connect(function()
 
     if (queue_on_teleport and not executed) then
         executed = true
-        queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Highschool%20Hoops/script.lua'))()`)
+        queue_on_teleport(`shared.afy_flags = {shared.afy_flags}; loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Highschool%20Hoops/script.lua'))()`)
     end
 end)
 
@@ -260,7 +272,7 @@ while (shared.afy and task.wait()) do
 
         local client_ball = char:GetAttribute('HasBall')
 
-        if (client_ball) then
+        if (shared.afy_flags.auto_ankle_break and client_ball) then
             for i,v in (players:GetPlayers()) do
                 local t_char = get_char(v)
                 local t_root = get_root(t_char)
@@ -273,7 +285,9 @@ while (shared.afy and task.wait()) do
                 local t_reaching = t_char:GetAttribute('Reach')
 
                 if (t_reaching) then
+                    virtualinputmanager:SendKeyEvent(true, 'A', false, nil)
                     virtualinputmanager:SendKeyEvent(true, 'Z', false, nil)
+                    virtualinputmanager:SendKeyEvent(false, 'A', false, nil)
                     virtualinputmanager:SendKeyEvent(false, 'Z', false, nil)
                 end
             end
@@ -329,11 +343,13 @@ while (shared.afy and task.wait()) do
                     local direction = (move_pos - root.Position)
 
                     if (vector.magnitude(direction) > 1) then
-                        local closest_ball = get_closest_in_table(workspace.Balls:GetChildren())
-
-                        if (closest_ball and closest_ball:GetAttribute('Blockable')) then
-                            virtualinputmanager:SendKeyEvent(true, 'Space', false, nil)
-                            virtualinputmanager:SendKeyEvent(false, 'Space', false, nil)
+                        if (shared.afy_flags.auto_block) then
+                            local closest_ball = get_closest_in_table(workspace.Balls:GetChildren())
+    
+                            if (closest_ball and closest_ball:GetAttribute('Blockable')) then
+                                virtualinputmanager:SendKeyEvent(true, 'Space', false, nil)
+                                virtualinputmanager:SendKeyEvent(false, 'Space', false, nil)
+                            end
                         end
 
                         target_position = move_pos
