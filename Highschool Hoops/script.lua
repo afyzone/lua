@@ -41,7 +41,7 @@ end
 
 local ball_reach_handler = function(ball)
     local cloned_ball = ball:Clone(); do
-        local og_size = v.Size
+        local og_size = ball.Size
         
         cloned_ball.Parent = v
         cloned_ball.Transparency = 0
