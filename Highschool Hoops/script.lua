@@ -28,8 +28,9 @@ shared.afy_flags = shared.afy_flags or {
 	auto_ankle_break = false,
 	ball_reach = true,
 	force_standing_shots = true,
-	spam_hold_shoot = true,
 	addition_close_in_speed = 0,
+
+	spam_hold_shoot_bind = 'E',
 
 	autoguard = {
 		enabled = true,
@@ -227,11 +228,11 @@ local input_start_con; input_start_con = userinputservice.InputBegan:Connect(fun
 
 	if (chat) then return end
 
-	if (input.KeyCode == Enum.KeyCode.E and not e_held and os.clock() - last_e_release > 0.2) then
+	if (input.KeyCode == Enum.KeyCode[afy_flags.spam_hold_shoot_bind] and not e_held and os.clock() - last_e_release > 0.2) then
 		e_held = true
 	end
 
-	if (input.KeyCode == Enum.KeyCode[afy_flags.off_ball_lock.keybind:upper()]) then
+	if (input.KeyCode == Enum.KeyCode[afy_flags.off_ball_lock.keybind]) then
 		off_ball = true
 	end
 end)
@@ -243,12 +244,12 @@ local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(fun
 
 	if (chat) then return end
 
-	if (input.KeyCode == Enum.KeyCode.E) then
+	if (input.KeyCode == Enum.KeyCode[afy_flags.spam_hold_shoot_bind]) then
 		last_e_release = os.clock()
 		e_held = false
 	end
 
-	if (input.KeyCode == Enum.KeyCode[afy_flags.off_ball_lock.keybind:upper()]) then
+	if (input.KeyCode == Enum.KeyCode[afy_flags.off_ball_lock.keybind]) then
 		off_ball = false
 	end
 end)
