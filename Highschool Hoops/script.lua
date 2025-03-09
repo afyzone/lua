@@ -228,11 +228,11 @@ local input_start_con; input_start_con = userinputservice.InputBegan:Connect(fun
 
 	if (chat) then return end
 
-	if (input.KeyCode == Enum.KeyCode[afy_flags.spam_hold_shoot_bind] and not e_held and os.clock() - last_e_release > 0.2) then
+	if (input.KeyCode == Enum.KeyCode[shared.afy_flags.spam_hold_shoot_bind] and not e_held and os.clock() - last_e_release > 0.2) then
 		e_held = true
 	end
 
-	if (input.KeyCode == Enum.KeyCode[afy_flags.off_ball_lock.keybind]) then
+	if (input.KeyCode == Enum.KeyCode[shared.afy_flags.off_ball_lock.keybind]) then
 		off_ball = true
 	end
 end)
@@ -244,12 +244,12 @@ local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(fun
 
 	if (chat) then return end
 
-	if (input.KeyCode == Enum.KeyCode[afy_flags.spam_hold_shoot_bind]) then
+	if (input.KeyCode == Enum.KeyCode[shared.afy_flags.spam_hold_shoot_bind]) then
 		last_e_release = os.clock()
 		e_held = false
 	end
 
-	if (input.KeyCode == Enum.KeyCode[afy_flags.off_ball_lock.keybind]) then
+	if (input.KeyCode == Enum.KeyCode[shared.afy_flags.off_ball_lock.keybind]) then
 		off_ball = false
 	end
 end)
@@ -314,7 +314,7 @@ while (shared.afy and task.wait()) do
 
 		local guarding = char:GetAttribute('Guarding')
 
-		if (guarding and afy_flags.auto_guard.enabled) then
+		if (guarding and shared.afy_flags.auto_guard.enabled) then
 			local balls = {}; do
 				for i,v in (workspace.Balls:GetChildren()) do
 					local ball_owner_name = v:GetAttribute('CurrentOwner')
@@ -353,10 +353,10 @@ while (shared.afy and task.wait()) do
 				
 				local close_in = check_close_in(target_layuping, target_shooting, target_dunking)
 
-				additional_speed = close_in and afy_flags.addition_close_in_speed or 0
-				local distance = target_posting and afy_flags.auto_guard.posted_guard_distance or afy_flags.auto_guard.guard_distance
+				additional_speed = close_in and shared.afy_flags.addition_close_in_speed or 0
+				local distance = target_posting and shared.afy_flags.auto_guard.posted_guard_distance or shared.afy_flags.auto_guard.guard_distance
 
-				local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and afy_flags.auto_guard.close_in_guard_distance or distance)
+				local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and shared.afy_flags.auto_guard.close_in_guard_distance or distance)
 
 				if (move_pos) then
 					local direction = (move_pos - root.Position)
@@ -378,7 +378,7 @@ while (shared.afy and task.wait()) do
 			end
 		end
 
-		if (off_ball and afy_flags.off_ball_lock.enabled) then
+		if (off_ball and shared.afy_flags.off_ball_lock.enabled) then
 			local t_chars = {}; do
 				for i,v in (players:GetPlayers()) do
 					if (v == client or not v.Character) then continue end
@@ -393,7 +393,7 @@ while (shared.afy and task.wait()) do
 			target_hold_player = target_hold_player or closest_player and get_root(closest_player)
 
 			if (closest_ball and target_hold_player) then
-				local move_pos = position_between_two_instances(target_hold_player, closest_ball, afy_flags.off_ball_lock.distance)
+				local move_pos = position_between_two_instances(target_hold_player, closest_ball, shared.afy_flags.off_ball_lock.distance)
 
 				if (move_pos) then
 					local direction = (move_pos - root.Position)
@@ -407,7 +407,7 @@ while (shared.afy and task.wait()) do
 			target_hold_player = nil
 		end
 
-		if (e_held and afy_flags.spam_hold_shoot) then
+		if (e_held and shared.afy_flags.spam_hold_shoot) then
 			virtualinputmanager:SendKeyEvent(true, 'E', false, nil)
 		end
 	end
