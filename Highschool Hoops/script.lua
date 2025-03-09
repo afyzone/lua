@@ -37,7 +37,7 @@ shared.afy_flags = shared.afy_flags or {
 		close_in_guard_distance = 2,
 		guard_distance = 6,
 		posted_guard_distance = 10,
-	}.
+	},
 
 	off_ball_lock = {
 		enabled = true,
