@@ -43,7 +43,7 @@ shared.afy_flags = shared.afy_flags or {
 		enabled = true,
 		keybind = 'Q',
 		distance = 4,
-	},
+	}
 }
 
 local hoops = {}; do
