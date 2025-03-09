@@ -28,6 +28,21 @@ shared.afy_flags = shared.afy_flags or {
 	auto_ankle_break = false,
 	ball_reach = true,
 	force_standing_shots = true,
+	spam_hold_shoot = true,
+	addition_close_in_speed = 0,
+
+	autoguard = {
+		enabled = true,
+		close_in_guard_distance = 2,
+		guard_distance = 6,
+		posted_guard_distance = 10,
+	}.
+
+	off_ball_lock = {
+		enabled = true,
+		keybind = 'Q',
+		distance = 4,
+	}
 }
 
 local hoops = {}; do
@@ -216,8 +231,8 @@ local input_start_con; input_start_con = userinputservice.InputBegan:Connect(fun
 		e_held = true
 	end
 
-	if (input.KeyCode == Enum.KeyCode.Q) then
-		q_held = true
+	if (input.KeyCode == Enum.KeyCode[afy_flags.off_ball_lock.keybind:upper()]) then
+		off_ball = true
 	end
 end)
 
@@ -233,8 +248,8 @@ local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(fun
 		e_held = false
 	end
 
-	if (input.KeyCode == Enum.KeyCode.Q) then
-		q_held = false
+	if (input.KeyCode == Enum.KeyCode[afy_flags.off_ball_lock.keybind:upper()]) then
+		off_ball = false
 	end
 end)
 
@@ -298,7 +313,7 @@ while (shared.afy and task.wait()) do
 
 		local guarding = char:GetAttribute('Guarding')
 
-		if (guarding) then
+		if (guarding and afy_flags.auto_guard.enabled) then
 			local balls = {}; do
 				for i,v in (workspace.Balls:GetChildren()) do
 					local ball_owner_name = v:GetAttribute('CurrentOwner')
@@ -326,21 +341,21 @@ while (shared.afy and task.wait()) do
 				local target_dunking = closest_ball_holder:GetAttribute('Dunking')
 				local target_posting = closest_ball_holder:GetAttribute('Posting')
 
-				local close_in;
-
-				if (target_dunking) then
-					close_in = false
-				else
+				local function check_close_in(target_layuping, target_shooting, target_dunking)
+					if (target_dunking) then return end
+					
 					local first_condition = (hoop_dist < 20 and target_layuping and target_layuping > 7.5)
 					local second_condition = (target_shooting and hoop_dist > 10)
 					
-					close_in = (first_condition or second_condition)
+					return (first_condition or second_condition)
 				end
+				
+				local close_in = check_close_in(target_layuping, target_shooting, target_dunking)
 
-				additional_speed = close_in and 0 or 0
-				local distance = target_posting and 10 or 6
+				additional_speed = close_in and afy_flags.addition_close_in_speed or 0
+				local distance = target_posting and afy_flags.auto_guard.posted_guard_distance or afy_flags.auto_guard.guard_distance
 
-				local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and 2 or distance)
+				local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and afy_flags.auto_guard.close_in_guard_distance or distance)
 
 				if (move_pos) then
 					local direction = (move_pos - root.Position)
@@ -362,7 +377,7 @@ while (shared.afy and task.wait()) do
 			end
 		end
 
-		if (q_held) then
+		if (off_ball and afy_flags.off_ball_lock.enabled) then
 			local t_chars = {}; do
 				for i,v in (players:GetPlayers()) do
 					if (v == client or not v.Character) then continue end
@@ -377,7 +392,7 @@ while (shared.afy and task.wait()) do
 			target_hold_player = target_hold_player or closest_player and get_root(closest_player)
 
 			if (closest_ball and target_hold_player) then
-				local move_pos = position_between_two_instances(target_hold_player, closest_ball, 4)
+				local move_pos = position_between_two_instances(target_hold_player, closest_ball, afy_flags.off_ball_lock.distance)
 
 				if (move_pos) then
 					local direction = (move_pos - root.Position)
@@ -391,7 +406,7 @@ while (shared.afy and task.wait()) do
 			target_hold_player = nil
 		end
 
-		if (e_held) then
+		if (e_held and afy_flags.spam_hold_shoot) then
 			virtualinputmanager:SendKeyEvent(true, 'E', false, nil)
 		end
 	end
