@@ -21,7 +21,7 @@ local userinputservice = services.UserInputService
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local random = Random.new()
-local additional_speed, last_e_release, firing, e_held, q_held, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
+local additional_speed, last_e_release, firing, e_held, off_ball, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
 
 shared.afy_flags = shared.afy_flags or {
 	auto_block = false,
