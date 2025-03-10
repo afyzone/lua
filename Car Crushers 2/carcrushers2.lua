@@ -17,7 +17,7 @@ local get_current_car, get_char, get_root, get_hum, retrieve_money, retrieve_bes
         local model = car and car:FindFirstChild('Car')
 
         local wheel_part = model and model:FindFirstChild('Wheels') and model.Wheels:FindFirstChildWhichIsA('Part')
-        local engine_part = model and model:FindFirstChild('Body') and model.Body:FindFirstChild('Engine') and model.Body.Engine:FindFirstChildWhichIsA('MeshPart')
+        local engine_part = model and model:FindFirstChild('Body') and model.Body:FindFirstChild('Engine') and model.Body.Engine:FindFirstChild('Engine')
 
         local broken_check = model and wheel_part and engine_part
 
@@ -29,23 +29,11 @@ local get_current_car, get_char, get_root, get_hum, retrieve_money, retrieve_bes
     end
 
     get_root = function(char)
-        if (char:IsA('Player')) then
-            local char = get_char(char)
-
-            return char:FindFirstChild('HumanoidRootPart')
-        end
-
-        return char:FindFirstChild('HumanoidRootPart')
+        return char and char:FindFirstChild('HumanoidRootPart')
     end
 
     get_hum = function(char)
-        if (char:IsA('Player')) then
-            local char = get_char(char)
-
-            return char:FindFirstChildWhichIsA('Humanoid')
-        end
-
-        return char:FindFirstChildWhichIsA('Humanoid')
+        return char and char:FindFirstChildWhichIsA('Humanoid')
     end
 
     retrieve_money = function()
@@ -66,18 +54,19 @@ local get_current_car, get_char, get_root, get_hum, retrieve_money, retrieve_bes
         local hum = get_hum(char)
         local root = get_root(char)
 
-        local car = get_current_car()
         local initial_spawn, spawn_time = os.clock(), os.clock()
 
-        if (char and hum and root and car) then
-            while (car and os.clock() - initial_spawn < 30 and task.wait()) do
-                car = get_current_car()
+        if (char and hum and root and get_current_car()) then
+            while (os.clock() - initial_spawn < 30 and task.wait()) do
+                local car = get_current_car()
                 
+                if (not car) then break end
+
                 if (car and os.clock() - spawn_time > 0.25) then
                     spawn_time = os.clock()
                     last_flip = not last_flip
 
-                    car.PrimaryPart.Velocity = Vector3.new(0, 250 * (not last_flip and 1 or -1), 0)
+                    car.PrimaryPart.Velocity = vector.create(0, 250 * (not last_flip and 1 or -1), 0)
                     car.PrimaryPart.CFrame *= CFrame.Angles(180, 0, 0)
                 end
             end
@@ -88,7 +77,10 @@ local get_current_car, get_char, get_root, get_hum, retrieve_money, retrieve_bes
 end
 
 -- Loop
-while (true) do
+shared.afy = not shared.afy
+
+print(shared.afy)
+while (shared.afy and task.wait()) do
     local char = get_char(client)
     local able_car = spawn_check()
 
@@ -96,6 +88,4 @@ while (true) do
         retrieve_best_car()
         destroy_car()
     end
-
-    task.wait()
 end
