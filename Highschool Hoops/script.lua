@@ -75,7 +75,7 @@ local ball_reach_handler = function(ball)
 	end
 end
 
-if (shared.afy == nil) then
+if (workspace:FindFirstChild('Balls') and shared.afy == nil) then
 	workspace.Balls.ChildAdded:Connect(ball_reach_handler)
 	for i,v in (workspace.Balls:GetChildren()) do
 		ball_reach_handler(v)
