@@ -17,7 +17,7 @@ local get_current_car, get_char, get_root, get_hum, retrieve_money, retrieve_bes
         local model = car and car:FindFirstChild('Car')
 
         local wheel_part = model and model:FindFirstChild('Wheels') and model.Wheels:FindFirstChildWhichIsA('Part')
-        local engine_part = model and model:FindFirstChild('Body') and model.Body:FindFirstChild('Engine') and model.Body.Engine:FindFirstChild('Engine')
+        local engine_part = model and model:FindFirstChild('Body') and model.Body:FindFirstChild('Engine') and (model.Body.Engine:FindFirstChildWhichIsA('Part') or model.Body.Engine:FindFirstChildWhichIsA('MeshPart'))
 
         local broken_check = model and wheel_part and engine_part
 
