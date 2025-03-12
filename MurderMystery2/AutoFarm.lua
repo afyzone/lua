@@ -228,15 +228,16 @@ while (shared.afy and task.wait()) do
 
 					if (tick() - HiddenFlags.GunDebounce > 3) then
 						if (Gun) then
-							Gun.Handle.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -1.5, 0), TargetRoot.Position)
+							Gun.Handle.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, 1, 0), TargetRoot.Position)
 
-							SmartWait(0.2)
+							SmartWait(0.1)
 
 							local GunRemote = SmartGet(Char, "Gun", "KnifeLocal", "CreateBeam", "RemoteFunction")
 
 							if (GunRemote) then
 								task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position + TargetRoot.AssemblyLinearVelocity * vector.create(0.1, 0, 0.1), "AH2")
 								HiddenFlags.GunDebounce = tick()
+								SmartWait(0.1)
 							end
 						end
 					else
