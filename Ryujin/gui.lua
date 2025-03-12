@@ -76,7 +76,7 @@ getgenv().hidden_flags = {
 	shadow_farming_spot = nil,
 	last_menu_init = 0,
 	last_punch = 0,
-	stamina_farm_cache = {},
+	stamina_farm_cache = setmetatable({}, { __mode = 'kv' }),
 	equip_checks = {
 		['50kgvest_equipped'] = 0,
 		['50kgleg_equipped'] = 0,
