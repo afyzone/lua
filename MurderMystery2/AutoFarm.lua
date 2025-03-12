@@ -15,7 +15,8 @@ local PlayerGui = Client:WaitForChild('PlayerGui')
 getconnections(Client.Idled)[1]:Disable()
 
 local Flags = {
-	AutoCoins = true
+	AutoCoins = true,
+	TweenSpeed = 0.5,
 }
 
 local HiddenFlags = {
@@ -86,6 +87,7 @@ local GetChar, GetHum, GetRoot, GetBackpack, GetRole, TeleportTo, MoveTo, SmartW
 
 			while (Char and Root and (not flags_key or Flags[flags_key]) and tick() - StartTime <= (_delay or 1/60)) do
 				task.wait(1/60)
+				
 				Root.CFrame = InitCFrame
 				Root.AssemblyLinearVelocity = vector.zero
 
@@ -253,7 +255,7 @@ while (shared.afy and task.wait()) do
 				end
 
 				if (Coin:FindFirstChildWhichIsA('TouchTransmitter')) then
-					MoveTo(vector.create(CoinPivot.X, CoinPivot.Y - 5, CoinPivot.Z), 0.5)
+					MoveTo(vector.create(CoinPivot.X, CoinPivot.Y - 5, CoinPivot.Z), Flags.TweenSpeed)
 
 					local Coins = GetClosestCoin(Map, 6)
 
