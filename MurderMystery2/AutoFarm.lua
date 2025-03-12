@@ -12,15 +12,18 @@ local Players = Services.Players
 local Client = Players.LocalPlayer
 local PlayerGui = Client:WaitForChild('PlayerGui')
 
+getconnections(Client.Idled)[1]:Disable()
+
 local Flags = {
 	AutoCoins = true
 }
 
 local HiddenFlags = {
 	GunDebounce = 0,
+	CachedCoins = setmetatable({}, { __mode = "kv" })
 }
 
-local GetChar, GetHum, GetRoot, GetBackpack, GetRole, MoveTo, SmartWait, GetMap, GetClosestCoin, IsBagFull; do
+local GetChar, GetHum, GetRoot, GetBackpack, GetRole, TeleportTo, MoveTo, SmartWait, GetMap, GetClosestCoin, IsBagFull; do
 	GetChar = function(player)
 		return player and player.Character
 	end
@@ -37,13 +40,40 @@ local GetChar, GetHum, GetRoot, GetBackpack, GetRole, MoveTo, SmartWait, GetMap,
 		return player and player:FindFirstChildWhichIsA('Backpack')
 	end
 
-	MoveTo = function(pos)
+	TeleportTo = function(pos)
 		local Char = GetChar(Client)
 		local Root = GetRoot(Char)
 
 		if (Char and Root) then
 			Root.CFrame = pos
 		end
+	end
+
+	MoveTo = function(pos, increment)
+		if (HiddenFlags.CurrentlyMoving) then return end
+		HiddenFlags.CurrentlyMoving = true
+
+		local Char = GetChar(Client)
+		local Root = GetRoot(Char)
+		local Increment = increment or 5
+
+		if (Char and Root) then
+			local Distance = vector.magnitude(pos - Root.Position)
+			local Direction = vector.normalize(pos - Root.Position)
+			local CurrentPos = Root.Position
+
+			while (Distance > Increment) do
+				CurrentPos += Direction * Increment
+				Root.CFrame = CFrame.new(CurrentPos)
+				Root.AssemblyLinearVelocity = vector.zero
+
+				SmartWait()
+				Distance = vector.magnitude(pos - CurrentPos)
+			end
+			Root.CFrame = CFrame.new(pos)
+		end
+
+		HiddenFlags.CurrentlyMoving = false
 	end
 
 	SmartWait = function(_delay, flags_key)
@@ -54,7 +84,7 @@ local GetChar, GetHum, GetRoot, GetBackpack, GetRole, MoveTo, SmartWait, GetMap,
 		if (Char and Root) then
 			local InitCFrame = Root.CFrame
 
-			while (Char and Root and (not flags_key or Flags[flags_key]) and tick() - StartTime <= (_delay or 0)) do
+			while (Char and Root and (not flags_key or Flags[flags_key]) and tick() - StartTime <= (_delay or 1/60)) do
 				task.wait(1/60)
 				Root.CFrame = InitCFrame
 				Root.AssemblyLinearVelocity = vector.zero
@@ -75,22 +105,31 @@ local GetChar, GetHum, GetRoot, GetBackpack, GetRole, MoveTo, SmartWait, GetMap,
 		end
 	end
 
-	GetClosestCoin = function(Map)
+	GetClosestCoin = function(Map, Range)
 		local Char = GetChar(Client)
 		local Root = GetRoot(Char)
 
-		if (not Root) then return end
+		local Dist, InRange, Closest = math.huge, {}
 
-		local Dist, Closest = math.huge
+		if (Char and Root) then
+			for i,v in (Map.CoinContainer:GetChildren()) do
+				if (not (v:FindFirstChildWhichIsA('TouchTransmitter') and v:FindFirstChild('CoinVisual'))) then continue end
+				local CoinMagnitude = vector.magnitude(Root.Position - v:GetPivot().Position)
+				local CoinY = v:GetPivot().Position.Y
 
-		for i,v in (Map.CoinContainer:GetChildren()) do
-			if (not (v:FindFirstChildWhichIsA('TouchTransmitter') and v:FindFirstChild('CoinVisual'))) then continue end
-			local CoinMagnitude = vector.magnitude(Root.Position - v:GetPivot().Position)
+				if (Range and CoinMagnitude < Range) then
+					table.insert(InRange, v)
+				end
 
-			if (CoinMagnitude < Dist) then
-				Dist = CoinMagnitude
-				Closest = v
+				if (CoinY < Dist and not HiddenFlags.CachedCoins[v]) then
+					Dist = CoinY
+					Closest = v
+				end
 			end
+		end
+
+		if (Range) then
+			return InRange
 		end
 
 		return Closest
@@ -174,13 +213,13 @@ while (shared.afy and task.wait()) do
 						Hum:EquipTool(ClientGun)
 					end
 
-					Root.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -2, 0), TargetRoot.Position)
+					Root.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -2.5, 0), TargetRoot.Position)
 
 					if (tick() - HiddenFlags.GunDebounce > 1) then
 						SmartWait(0.2)
 						local GunRemote = Char["Gun"]["KnifeLocal"]["CreateBeam"]["RemoteFunction"]
 
-						task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position + TargetRoot.AssemblyLinearVelocity * 0.1, "AH2")
+						task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position, "AH2")
 						HiddenFlags.GunDebounce = tick()
 					end
 				end
@@ -189,34 +228,42 @@ while (shared.afy and task.wait()) do
 
 				if (DroppedGun and DroppedGun:FindFirstChildWhichIsA('TouchTransmitter')) then
 					local GunPivot = DroppedGun:GetPivot()
-					MoveTo(CFrame.new(GunPivot.X, GunPivot.Y - 50, GunPivot.Z))
+					TeleportTo(CFrame.new(GunPivot.X, GunPivot.Y - 50, GunPivot.Z))
 
 					if (DroppedGun:FindFirstChildWhichIsA('TouchTransmitter')) then
-						SmartWait(1.5)
-						MoveTo(GunPivot)
+						SmartWait(1)
+						TeleportTo(GunPivot)
 					end
 
 				else
-					MoveTo(workspace.Lobby.Spawns.Spawn.CFrame + vector.create(0, 2.8, 0))
+					TeleportTo(workspace.Lobby.Spawns.Spawn.CFrame + vector.create(0, 2.8, 0))
 				end
 			end
+
 		elseif (Flags.AutoCoins) then
 			local Coin = GetClosestCoin(Map)
+			local Char = GetChar(Client)
+			local Root = GetRoot(Char)
 
-			if (Coin) then
+			if (Char and Root and Coin) then
 				local CoinPivot = Coin:GetPivot()
 
-				MoveTo(CFrame.new(CoinPivot.X, CoinPivot.Y - 50, CoinPivot.Z))
+				if (vector.magnitude(CoinPivot.Position - Root.Position) > 500) then
+					TeleportTo(CFrame.new(CoinPivot.X, CoinPivot.Y - 50, CoinPivot.Z))
+				end
 
 				if (Coin:FindFirstChildWhichIsA('TouchTransmitter')) then
-					SmartWait(1.5)
-					MoveTo(CoinPivot)
-					SmartWait(0.1)
-					MoveTo(CFrame.new(CoinPivot.X, CoinPivot.Y - 5, CoinPivot.Z))
-					SmartWait(0.1)
+					MoveTo(vector.create(CoinPivot.X, CoinPivot.Y - 5, CoinPivot.Z), 0.5)
+
+					local Coins = GetClosestCoin(Map, 6)
+
+					for i,v in (Coins) do
+						HiddenFlags.CachedCoins[v] = true
+						v:PivotTo(Root.CFrame)
+					end
 				end
 			else
-				MoveTo(workspace.Lobby.Spawns.Spawn.CFrame + vector.create(0, 2.8, 0))
+				TeleportTo(workspace.Lobby.Spawns.Spawn.CFrame + vector.create(0, 2.8, 0))
 			end
 		end
 	end
