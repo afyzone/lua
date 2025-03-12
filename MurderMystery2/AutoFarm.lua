@@ -7,6 +7,7 @@ local Services = setmetatable({}, {
 	end
 })
 
+local Stats = Services.Stats
 local Players = Services.Players
 
 local Client = Players.LocalPlayer
@@ -16,7 +17,7 @@ getconnections(Client.Idled)[1]:Disable()
 
 local Flags = {
 	AutoCoins = true,
-	TweenSpeed = 0.5,
+	TweenSpeed = 0.4,
 }
 
 local HiddenFlags = {
@@ -24,7 +25,7 @@ local HiddenFlags = {
 	CachedCoins = setmetatable({}, { __mode = "kv" })
 }
 
-local GetChar, GetHum, GetRoot, GetBackpack, GetRole, TeleportTo, MoveTo, SmartWait, GetMap, GetClosestCoin, IsBagFull; do
+local GetChar, GetHum, GetRoot, GetBackpack, GetRole, TeleportTo, MoveTo, SmartWait, GetMap, GetClosestCoin, SmartGet, IsBagFull; do
 	GetChar = function(player)
 		return player and player.Character
 	end
@@ -87,7 +88,7 @@ local GetChar, GetHum, GetRoot, GetBackpack, GetRole, TeleportTo, MoveTo, SmartW
 
 			while (Char and Root and (not flags_key or Flags[flags_key]) and tick() - StartTime <= (_delay or 1/60)) do
 				task.wait(1/60)
-				
+
 				Root.CFrame = InitCFrame
 				Root.AssemblyLinearVelocity = vector.zero
 
@@ -113,18 +114,18 @@ local GetChar, GetHum, GetRoot, GetBackpack, GetRole, TeleportTo, MoveTo, SmartW
 
 		local Dist, InRange, Closest = math.huge, {}
 
-		if (Char and Root) then
+		if (Char and Root and Map) then
 			for i,v in (Map.CoinContainer:GetChildren()) do
 				if (not (v:FindFirstChildWhichIsA('TouchTransmitter') and v:FindFirstChild('CoinVisual'))) then continue end
-				local CoinMagnitude = vector.magnitude(Root.Position - v:GetPivot().Position)
-				local CoinY = v:GetPivot().Position.Y
 
-				if (Range and CoinMagnitude < Range) then
+				local CoinMagnitude = vector.magnitude(Root.Position - v:GetPivot().Position)
+
+				if (Range and CoinMagnitude <= Range) then
 					table.insert(InRange, v)
 				end
 
-				if (CoinY < Dist and not HiddenFlags.CachedCoins[v]) then
-					Dist = CoinY
+				if (CoinMagnitude < Dist and not HiddenFlags.CachedCoins[v]) then
+					Dist = CoinMagnitude
 					Closest = v
 				end
 			end
@@ -158,14 +159,22 @@ local GetChar, GetHum, GetRoot, GetBackpack, GetRole, TeleportTo, MoveTo, SmartW
 		end
 	end
 
+	SmartGet = function(obj, ...)
+		local path = {...}
+
+		for i, v in (path) do
+			if (not obj) then return end
+
+			obj = obj:FindFirstChild(v)
+		end
+
+		return obj
+	end
+
 	IsBagFull = function()
-		return PlayerGui:FindFirstChild('MainGUI') and
-			PlayerGui.MainGUI:FindFirstChild('Game') and
-			PlayerGui.MainGUI.Game:FindFirstChild('CoinBags') and
-			PlayerGui.MainGUI.Game.CoinBags:FindFirstChild('Container') and
-			PlayerGui.MainGUI.Game.CoinBags.Container:FindFirstChild('Coin') and
-			PlayerGui.MainGUI.Game.CoinBags.Container.Coin:FindFirstChild('FullBagIcon') and
-			PlayerGui.MainGUI.Game.CoinBags.Container.Coin.FullBagIcon.Visible
+		local FullBagIcon = SmartGet(PlayerGui, 'MainGUI', 'Game', 'CoinBags', 'Container', 'Coin', 'FullBagIcon')
+
+		return FullBagIcon and FullBagIcon.Visible
 	end
 end
 
@@ -219,10 +228,12 @@ while (shared.afy and task.wait()) do
 
 					if (tick() - HiddenFlags.GunDebounce > 1) then
 						SmartWait(0.2)
-						local GunRemote = Char["Gun"]["KnifeLocal"]["CreateBeam"]["RemoteFunction"]
+						local GunRemote = SmartGet(Char, "Gun", "KnifeLocal", "CreateBeam", "RemoteFunction")
 
-						task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position, "AH2")
-						HiddenFlags.GunDebounce = tick()
+						if (GunRemote) then
+							task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position + TargetRoot.AssemblyLinearVelocity * Stats.Network.ServerStatsItem["Data Ping"]:GetValue(), "AH2")
+							HiddenFlags.GunDebounce = tick()
+						end
 					end
 				end
 			else
@@ -257,7 +268,7 @@ while (shared.afy and task.wait()) do
 				if (Coin:FindFirstChildWhichIsA('TouchTransmitter')) then
 					MoveTo(vector.create(CoinPivot.X, CoinPivot.Y - 5, CoinPivot.Z), Flags.TweenSpeed)
 
-					local Coins = GetClosestCoin(Map, 6)
+					local Coins = GetClosestCoin(Map, 5)
 
 					for i,v in (Coins) do
 						HiddenFlags.CachedCoins[v] = true
