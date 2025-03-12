@@ -224,15 +224,20 @@ while (shared.afy and task.wait()) do
 						Hum:EquipTool(ClientGun)
 					end
 
+					local Gun = Char:FindFirstChild('Gun')
+
 					if (tick() - HiddenFlags.GunDebounce > 3) then
-						Root.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -2.5, 0), TargetRoot.Position)
+						if (Gun) then
+							Gun.Handle.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -1.5, 0), TargetRoot.Position)
 
-						SmartWait(0.1)
-						local GunRemote = SmartGet(Char, "Gun", "KnifeLocal", "CreateBeam", "RemoteFunction")
+							SmartWait(0.2)
 
-						if (GunRemote) then
-							task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position + (TargetRoot.AssemblyLinearVelocity * vector.create(0.1, 0, 0.1)), "AH2")
-							HiddenFlags.GunDebounce = tick()
+							local GunRemote = SmartGet(Char, "Gun", "KnifeLocal", "CreateBeam", "RemoteFunction")
+
+							if (GunRemote) then
+								task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position + TargetRoot.AssemblyLinearVelocity * vector.create(0.1, 0, 0.1), "AH2")
+								HiddenFlags.GunDebounce = tick()
+							end
 						end
 					else
 						Root.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -50, 0), TargetRoot.Position)
