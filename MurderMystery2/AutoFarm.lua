@@ -224,16 +224,18 @@ while (shared.afy and task.wait()) do
 						Hum:EquipTool(ClientGun)
 					end
 
-					Root.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -2.5, 0), TargetRoot.Position)
+					if (tick() - HiddenFlags.GunDebounce > 3) then
+						Root.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -2.5, 0), TargetRoot.Position)
 
-					if (tick() - HiddenFlags.GunDebounce > 1) then
-						SmartWait(0.2)
+						SmartWait(0.1)
 						local GunRemote = SmartGet(Char, "Gun", "KnifeLocal", "CreateBeam", "RemoteFunction")
 
 						if (GunRemote) then
-							task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position + TargetRoot.AssemblyLinearVelocity * Stats.Network.ServerStatsItem["Data Ping"]:GetValue(), "AH2")
+							task.spawn(GunRemote.InvokeServer, GunRemote, 1, TargetRoot.Position + (TargetRoot.AssemblyLinearVelocity * vector.create(0.1, 0, 0.1)), "AH2")
 							HiddenFlags.GunDebounce = tick()
 						end
+					else
+						Root.CFrame = CFrame.new(TargetRoot.Position + vector.create(0, -50, 0), TargetRoot.Position)
 					end
 				end
 			else
@@ -268,11 +270,11 @@ while (shared.afy and task.wait()) do
 				if (Coin:FindFirstChildWhichIsA('TouchTransmitter')) then
 					MoveTo(vector.create(CoinPivot.X, CoinPivot.Y - 5, CoinPivot.Z), Flags.TweenSpeed)
 
-					local Coins = GetClosestCoin(Map, 5)
+					local Coins = GetClosestCoin(Map, 7)
 
 					for i,v in (Coins) do
 						HiddenFlags.CachedCoins[v] = true
-						v:PivotTo(Root.CFrame)
+						v:PivotTo(Char.Head.CFrame)
 					end
 				end
 			else
