@@ -32,7 +32,7 @@ shared.afy_flags = shared.afy_flags or {
 
 	spam_hold_shoot_bind = 'E',
 
-	autoguard = {
+	auto_guard = {
 		enabled = true,
 		close_in_guard_distance = 2,
 		guard_distance = 6,
