@@ -51,7 +51,8 @@ local GetChar, GetRoot, Block; do
 	end
 end
 
-local function CharacterAdded(player, target_char)
+local function CharacterAdded(target_char)
+	local player = Players:GetPlayerFromCharacter(target_char)
 	if player == Client then return end
 
 	local TargetRoot = target_char:WaitForChild("HumanoidRootPart")
@@ -73,12 +74,10 @@ local function CharacterAdded(player, target_char)
 						task.wait()
 					end
 
-					if (not anim.IsPlaying) then
-						return
-					end
+					if (not anim.IsPlaying) then return end
 
 					IsBlocking = true
-					Block(true)
+					Block(IsBlocking)
 				end
 
 				local Id = {}
@@ -86,13 +85,11 @@ local function CharacterAdded(player, target_char)
 
 				local InitialWait = tick()
 				
-				while tick() - InitialWait <= 0.2 do
-					task.wait()
-				end
+				while tick() - InitialWait <= 0.2 do task.wait() end
 
 				if BlockId == Id then
 					IsBlocking = false
-					Block(false)
+					Block(IsBlocking)
 				end
 			end
 		end
@@ -100,14 +97,12 @@ local function CharacterAdded(player, target_char)
 end
 
 local function PlayerAdded(player)
-	table.insert(Connections, player.CharacterAdded:Connect(function(char)
-		CharacterAdded(player, char)
-	end))
+	table.insert(Connections, player.CharacterAdded:Connect(CharacterAdded))
 
 	local TargetChar = GetChar(player)
 
 	if (TargetChar) then
-		task.spawn(CharacterAdded, player, TargetChar)
+		task.spawn(CharacterAdded, TargetChar)
 	end
 end
 
