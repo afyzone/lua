@@ -314,6 +314,15 @@ while (shared.afy and task.wait()) do
 
 		local guarding = char:GetAttribute('Guarding')
 
+		if (guarding and shared.afy_flags.auto_block) then
+			local closest_ball = get_closest_in_table(workspace.Balls:GetChildren())
+
+			if (closest_ball and closest_ball:GetAttribute('Blockable')) then
+				virtualinputmanager:SendKeyEvent(true, 'Space', false, nil)
+				virtualinputmanager:SendKeyEvent(false, 'Space', false, nil)
+			end
+		end
+
 		if (guarding and shared.afy_flags.auto_guard.enabled) then
 			local balls = {}; do
 				for i,v in (workspace.Balls:GetChildren()) do
@@ -362,15 +371,6 @@ while (shared.afy and task.wait()) do
 					local direction = (move_pos - root.Position)
 
 					if (vector.magnitude(direction) > 1) then
-						if (shared.afy_flags.auto_block) then
-							local closest_ball = get_closest_in_table(workspace.Balls:GetChildren())
-	
-							if (closest_ball and closest_ball:GetAttribute('Blockable')) then
-								virtualinputmanager:SendKeyEvent(true, 'Space', false, nil)
-								virtualinputmanager:SendKeyEvent(false, 'Space', false, nil)
-							end
-						end
-
 						target_position = move_pos
 						hum.WalkToPoint = move_pos
 					end
