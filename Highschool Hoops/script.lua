@@ -84,7 +84,7 @@ if (workspace:FindFirstChild('Balls') and shared.afy == nil) then
 	end
 end
 
-local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor; do
+local get_char, get_root, get_hum, position_between_two_instances, get_closest_in_table, calculate_ping_factor, check_close_in; do
 	get_char = function(player)
 		return player.Character
 	end
@@ -133,6 +133,15 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
 		factor = math.clamp(factor, 0.5, 1)
 
 		return factor
+	end
+
+	check_close_in = function(target_layuping, target_shooting, target_dunking)
+		if (target_dunking) then return end
+		
+		local first_condition = (hoop_dist < 20 and target_layuping and target_layuping > 7.5)
+		local second_condition = (target_shooting and hoop_dist > 10)
+		
+		return (first_condition or second_condition)
 	end
 end
 
@@ -352,15 +361,6 @@ while (shared.afy and task.wait()) do
 				local target_shooting = closest_ball_holder:GetAttribute('Shooting')
 				local target_dunking = closest_ball_holder:GetAttribute('Dunking')
 				local target_posting = closest_ball_holder:GetAttribute('Posting')
-
-				local function check_close_in(target_layuping, target_shooting, target_dunking)
-					if (target_dunking) then return end
-					
-					local first_condition = (hoop_dist < 20 and target_layuping and target_layuping > 7.5)
-					local second_condition = (target_shooting and hoop_dist > 10)
-					
-					return (first_condition or second_condition)
-				end
 				
 				local close_in = check_close_in(target_layuping, target_shooting, target_dunking)
 
