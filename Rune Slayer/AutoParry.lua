@@ -6,7 +6,7 @@ shared.afy = not shared.afy
 print(shared.afy)
 
 if not shared.afy then return end
-local Connections = {}
+local Connections = setmetatable({}, { __mode = 'kv' })
 
 local Services = setmetatable({}, {
 	__index = function(self, key)
@@ -18,20 +18,20 @@ local Services = setmetatable({}, {
 })
 
 local Players = Services.Players
+local ReplicatedStorage = Services.ReplicatedStorage
 local VirtualInputManager = Services.VirtualInputManager
 
 local Client = Players.LocalPlayer
 local IsBlocking, BlockId
+local AttackAnims = {}
 
-local AttackAnims = {
-	['rbxassetid://15257999438'] = 0.3,
-	['rbxassetid://10329452223'] = 0.3,
-	['rbxassetid://10329729708'] = 0.3,
-	['rbxassetid://10299384075'] = 0.3,
-	['rbxassetid://15257929575'] = 0.3,
-	['rbxassetid://10299357768'] = 0.3,
-	['rbxassetid://10299360808'] = 0.3,
-}
+for _, obj in (ReplicatedStorage.Storage.Animations:GetChildren()) do
+    if (not obj:IsA("Animation")) then continue end
+
+	if (obj.Name:match("%(%d+%)") or obj.Name:find('M2')) then
+		AttackAnims[obj.AnimationId] = true
+	end
+end
 
 local GetChar, GetRoot, Block; do
 	GetChar = function(player)
@@ -68,9 +68,7 @@ local function CharacterAdded(target_char)
 
 			if Combat and AnimId and AttackAnims[AnimId] then
 				if not IsBlocking then
-					local InitDelay = tick()
-					while (target_char:FindFirstChild('CanFeint')) do
-						if (InitDelay - tick() >= AttackAnims[AnimId]) then break end
+					while (anim.TimePosition / anim.Length * 100 < 50) do
 						task.wait()
 					end
 
