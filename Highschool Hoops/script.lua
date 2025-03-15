@@ -57,7 +57,7 @@ local hoops = {}; do
 end
 
 local ball_reach_handler = function(ball)
-	if (ball.Name ~= 'Ball') then continue end
+	if (ball.Name ~= 'Ball') then return end
 	
 	local cloned_ball = ball:Clone(); do
 		local og_size = ball.Size
