@@ -246,24 +246,22 @@ while shared.afy and task.wait() do
 		local MoneyText = MoneyTextLabel and MoneyTextLabel.Text
 		local MoneyNumber = tonumber(MoneyText:match("%d+"))
 
-		local UltimateTool = GetBuyTool('Ultimate Hack Tool')
-		local ProTool = GetBuyTool('Pro Hack Tool')
-		local BasicTool = GetBuyTool('Basic Hack Tool')
-
 		local function BuyTool(ToolType)
-			for i = 1, 5 do
-				local ConsumableBuyButton = SmartGet(ToolType, 'ConsumableBuyButton')
+			local ConsumableBuyButton = SmartGet(ToolType, 'ConsumableBuyButton')
 
-				if (ConsumableBuyButton) then
-					for i,v in getconnections(ConsumableBuyButton.MouseButton1Click) do
-						v:Function()
-					end
+			if (ConsumableBuyButton) then
+				for i,v in getconnections(ConsumableBuyButton.MouseButton1Click) do
+					v:Function()
 				end
-
-				task.wait()
 			end
 		end
 
-		BuyTool(UltimateTool and MoneyNumber > 350 and UltimateTool or ProTool and MoneyNumber >= 150 and ProTool or BasicTool)
+		for i = 1, 5 do -- Not updating MoneyNumber on purpose
+			local UltimateTool = GetBuyTool('Ultimate Hack Tool')
+			local ProTool = GetBuyTool('Pro Hack Tool')
+			local BasicTool = GetBuyTool('Basic Hack Tool')
+
+			BuyTool(UltimateTool and MoneyNumber > 350 and UltimateTool or ProTool and MoneyNumber >= 150 and ProTool or BasicTool)
+		end
 	end
 end
