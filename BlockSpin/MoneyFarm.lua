@@ -6,7 +6,7 @@ local Flags = {
 
 local Services = setmetatable({}, {
 	__index = function(self, key)
-		local Service = rawget(self, key) or pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
+		local Service = rawget(self, key) or pcall(game.FindService(game, key)) and game:GetService(key) or Instance.new(key)
 		rawset(self, key, Service)
 
 		return rawget(self, key)
