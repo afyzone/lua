@@ -186,7 +186,10 @@ while shared.afy and task.wait() do
 			if NeedleX >= (TargetX - TargetSize) and NeedleX <= (TargetX + TargetSize) then
 				VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, nil, 0)
 				VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, nil, 0)
-				SmartWait(0.1)
+
+				if (TargetSize <= 0.06) then
+					SmartWait(0.2)
+				end
 			end
 		else
 			local ATMHolder = SmartGet(PlayerGui, 'ATM.ATMHolder')
@@ -251,8 +254,10 @@ while shared.afy and task.wait() do
 			local ConsumableBuyButton = SmartGet(ToolType, 'ConsumableBuyButton')
 
 			if (ConsumableBuyButton) then
-				for i,v in getconnections(ConsumableBuyButton.MouseButton1Click) do
-					v:Function()
+				for i = 1, 5 do
+					for i,v in getconnections(ConsumableBuyButton.MouseButton1Click) do
+						v:Function()
+					end
 				end
 			end
 		end
