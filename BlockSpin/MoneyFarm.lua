@@ -257,6 +257,6 @@ while shared.afy and task.wait() do
 			end
 		end
 
-		BuyTool(UltimateTool and MoneyNumber > 1_000 and UltimateTool or ProTool and MoneyNumber >= 150 and ProTool or BasicTool)
+		BuyTool(UltimateTool and MoneyNumber > 350 and UltimateTool or ProTool and MoneyNumber >= 150 and ProTool or BasicTool)
 	end
 end
