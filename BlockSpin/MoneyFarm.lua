@@ -1,5 +1,9 @@
 -- https://www.roblox.com/games/104715542330896/BlockSpin
 
+local Flags = {
+	StaminaFarm = true,
+}
+
 local Services = setmetatable({}, {
 	__index = function(self, key)
 		local Service = rawget(self, key) or pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
@@ -39,18 +43,18 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool; do
 			for i,v in (workspace.Map.Props:GetChildren()) do
 				if (v.Name ~= 'ATM') then continue end
 				if (v:GetAttribute('disabled')) then continue end
-				if (v:GetAttribute('active_hack_tool') ~= (HasTool('HackToolPro') and 'HackToolPro' or 'HackToolBasic')) then continue end
+				-- if (v:GetAttribute('active_hack_tool') ~= (HasTool('HackToolPro') and 'HackToolPro' or 'HackToolBasic')) then continue end
 				if (v.hacker.Value) then continue end
 
 				for i,v2 in (v:GetChildren()) do
-					local prox = v2:FindFirstChildWhichIsA('ProximityPrompt')
-					if (not prox) then continue end
+					local ProximityPrompt = v2:FindFirstChildWhichIsA('ProximityPrompt')
+					if (not ProximityPrompt) then continue end
 
-					local mag = vector.magnitude(v2:GetPivot().Position - Root.Position)
+					local Magnitude = vector.magnitude(v2:GetPivot().Position - Root.Position)
 
-					if (mag < Dist) then
-						Closest = {v, prox}
-						Dist = mag
+					if (Magnitude < Dist) then
+						Closest = {v, ProximityPrompt}
+						Dist = Magnitude
 					end
 				end
 			end
@@ -109,17 +113,17 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool; do
 		end
 	end
 
-	SmartGet = function(Inst, Obj)
-		if (not Inst) then return end
-		
-		local Objects = Obj:split('.')
-		local Current = Inst 
+	SmartGet = function(inst, obj)
+		if (not inst) then return end
 
-		for i, v in Objects do 
+		local Objects = obj:split('.')
+		local Current = inst
+
+		for i, v in Objects do
 			if (not Current) then return end
 
 			Current = Current:FindFirstChild(v)
-		end 
+		end
 
 		return Current
 	end
@@ -161,14 +165,19 @@ while shared.afy and task.wait() do
 		end
 
 		Root.AssemblyLinearVelocity = vector.create(0, 0.5, 0)
+
+		if (Flags.StaminaFarm) then
+			VirtualInputManager:SendKeyEvent(true, 'W', false, nil)
+			VirtualInputManager:SendKeyEvent(true, 'LeftShift', false, nil)
+		end
 	end
 
-	if (HasTool('HackToolPro') or HasTool('HackToolBasic')) then
+	if (HasTool('HackToolUltimate') or HasTool('HackToolPro') or HasTool('HackToolBasic')) then
 		local SliderMinigameFrame = SmartGet(PlayerGui, 'SliderMinigame.SliderMinigameFrame')
 		local Bar = SmartGet(SliderMinigameFrame, 'Bar')
 		local Needle = SmartGet(Bar, 'Needle')
 		local Target = SmartGet(Bar, 'Target')
-	
+
 		if (SliderMinigameFrame and SliderMinigameFrame.Visible and Bar and Needle and Target) then
 			local NeedleX = Needle.Position.X.Scale
 			local TargetX = Target.Position.X.Scale
@@ -177,18 +186,32 @@ while shared.afy and task.wait() do
 			if NeedleX >= (TargetX - TargetSize) and NeedleX <= (TargetX + TargetSize) then
 				VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, nil, 0)
 				VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, nil, 0)
-				SmartWait(0.2)
+				SmartWait(0.1)
 			end
 		else
 			local ATMHolder = SmartGet(PlayerGui, 'ATM.ATMHolder')
 			local ATMHackButton = SmartGet(ATMHolder, 'ATMHomePage.Title.ATMHackButton')
+			local ChooseOptionsHolder = SmartGet(PlayerGui, 'SelectOption.ChooseOptionsHolder')
+			local ChooseOptionsScrollingFrame = SmartGet(ChooseOptionsHolder, 'ChooseOptionsScrollingFrame')
 
-			if (ATMHolder and ATMHolder.Visible and ATMHackButton) then
+			if (ChooseOptionsHolder and ChooseOptionsHolder.Visible and ChooseOptionsScrollingFrame) then
+				local ToolButton = ChooseOptionsScrollingFrame:FindFirstChild(HasTool('HackToolUltimate') and 'Ultimate Hack Tool' or HasTool('HackToolPro') and 'Pro Hack Tool' or 'Basic Hack Tool')
+
+				if (ToolButton) then
+					local TextButton = SmartGet(ToolButton, 'TextButton')
+
+					if (TextButton) then
+						for i,v in getconnections(TextButton.MouseButton1Click) do
+							v:Function()
+						end
+					end
+				end
+
+			elseif (ATMHolder and ATMHolder.Visible and ATMHackButton) then
 				for i,v in getconnections(ATMHackButton.MouseButton1Click) do
 					v:Function()
 				end
 
-				ATMHolder.Visible = false
 			else
 				local ATM, ATM_Prox = GetATM()
 
@@ -200,38 +223,40 @@ while shared.afy and task.wait() do
 		end
 	else
 		MoveTo(workspace.Map.NPCs.AlleyWayGuy:GetPivot().Position + vector.create(0, -10, 0))
-
 		fireproximityprompt(workspace.ConsumableShopZone_Illegal.ProximityPrompt)
 
-		local ConsumableOptionsScrollingFrame = SmartGet(PlayerGui, 'ConsumableBuy.ConsumableOptionsHolder.ConsumableOptionsScrollingFrame')
-
 		local function GetBuyTool(tool_name)
+			local ConsumableOptionsScrollingFrame = SmartGet(PlayerGui, 'ConsumableBuy.ConsumableOptionsHolder.ConsumableOptionsScrollingFrame')
+
 			for i,v in (ConsumableOptionsScrollingFrame:GetChildren()) do
 				local Options = SmartGet(v, 'Item.Options')
 				local ConsumableName = SmartGet(Options, 'ConsumableName')
+				local BuyButton = SmartGet(Options, 'ConsumableBuyButton')
 
-				if (ConsumableName and ConsumableName.Text == tool_name) then
+				if (ConsumableName and ConsumableName.Text == tool_name and BuyButton and BuyButton.Visible) then
 					return Options
 				end
 			end
 		end
-		
+
+		local MoneyTextLabel = SmartGet(PlayerGui, 'TopRightHud.Holder.Frame.MoneyTextLabel')
+		local MoneyText = MoneyTextLabel and MoneyTextLabel.Text
+		local MoneyNumber = tonumber(MoneyText:match("%d+"))
+
+		local UltimateTool = GetBuyTool('Ultimate Hack Tool')
 		local ProTool = GetBuyTool('Pro Hack Tool')
-		local ConsumableBuyButton = SmartGet(ProTool, 'ConsumableBuyButton')
-		
-		if (ConsumableBuyButton) then
-			for i,v in getconnections(ConsumableBuyButton.MouseButton1Click) do
-				v:Function()
-			end
-		end
-
 		local BasicTool = GetBuyTool('Basic Hack Tool')
-		local ConsumableBuyButton = SmartGet(BasicTool, 'ConsumableBuyButton')
 
-		if (ConsumableBuyButton) then
-			for i,v in getconnections(ConsumableBuyButton.MouseButton1Click) do
-				v:Function()
+		local function BuyTool(ToolType)
+			local ConsumableBuyButton = SmartGet(ToolType, 'ConsumableBuyButton')
+
+			if (ConsumableBuyButton) then
+				for i,v in getconnections(ConsumableBuyButton.MouseButton1Click) do
+					v:Function()
+				end
 			end
 		end
+
+		BuyTool(UltimateTool and MoneyNumber > 1_000 and UltimateTool or ProTool and MoneyNumber >= 150 and ProTool or BasicTool)
 	end
 end
