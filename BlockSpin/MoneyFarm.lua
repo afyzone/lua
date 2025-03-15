@@ -251,14 +251,16 @@ while shared.afy and task.wait() do
 		local BasicTool = GetBuyTool('Basic Hack Tool')
 
 		local function BuyTool(ToolType)
-			local ConsumableBuyButton = SmartGet(ToolType, 'ConsumableBuyButton')
+			for i = 1, 5 do
+				local ConsumableBuyButton = SmartGet(ToolType, 'ConsumableBuyButton')
 
-			if (ConsumableBuyButton) then
-				for i = 1, 5 do
+				if (ConsumableBuyButton) then
 					for i,v in getconnections(ConsumableBuyButton.MouseButton1Click) do
 						v:Function()
 					end
 				end
+
+				task.wait()
 			end
 		end
 
