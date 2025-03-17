@@ -4,9 +4,10 @@ local Flags = {
 
 shared.afy = not shared.afy
 print(shared.afy)
+if (not shared.afy) then return end
 
-if not shared.afy then return end
 local Connections = setmetatable({}, { __mode = 'kv' })
+local CharacterCons = setmetatable({}, { __mode = 'kv' })
 
 local Services = setmetatable({}, {
 	__index = function(self, key)
@@ -25,10 +26,10 @@ local Client = Players.LocalPlayer
 local IsBlocking, BlockId
 local AttackAnims = {}
 
-for _, obj in (ReplicatedStorage.Storage.Animations:GetChildren()) do
-    if (not obj:IsA("Animation")) then continue end
+for _, obj in (ReplicatedStorage.ReplicatedModules.ModuleListFei.EffectModuleMain.ClientAnimations:GetDescendants()) do
+	if (not obj:IsA("Animation")) then continue end
 
-	if (obj.Name:match("%(%d+%)") or obj.Name:find('M2')) then
+	if (obj.Name:find("Swing") or obj.Name:find('Attack') or obj.Name:find('Uppercut') or obj.Name:find('Critical')) then
 		AttackAnims[obj.AnimationId] = true
 	end
 end
@@ -44,7 +45,7 @@ local GetChar, GetRoot, Block; do
   
 	Block = function(enabled)
 		local Char = GetChar(Client)
-    
+	
 		if (Char) then
 			VirtualInputManager:SendKeyEvent(enabled, 'F', false, nil)
 		end
@@ -52,8 +53,11 @@ local GetChar, GetRoot, Block; do
 end
 
 local function CharacterAdded(target_char)
-	local player = Players:GetPlayerFromCharacter(target_char)
-	if player == Client then return end
+	if (CharacterCons[target_char]) then return end
+	CharacterCons[target_char] = true
+
+	local Player = Players:GetPlayerFromCharacter(target_char)
+	if (Player and Player == Client) then return end
 
 	local TargetRoot = target_char:WaitForChild("HumanoidRootPart")
 	local TargetHum = target_char:WaitForChild("Humanoid")
@@ -63,11 +67,11 @@ local function CharacterAdded(target_char)
 		local Root = GetRoot(Char)
 		local AnimId = anim.Animation.AnimationId
 
-		if Char and Root and vector.magnitude(Root.Position - TargetRoot.Position) <= Flags.Radius then
-			local Combat = Char:FindFirstChild('sword')
+		if (Char and Root and vector.magnitude(Root.Position - TargetRoot.Position) <= Flags.Radius) then
+			local Combat = true
 
-			if Combat and AnimId and AttackAnims[AnimId] then
-				if not IsBlocking then
+			if (Combat and AnimId and AttackAnims[AnimId]) then
+				if (not IsBlocking) then
 					while (anim.TimePosition / anim.Length * 100 < 50) do
 						task.wait()
 					end
@@ -81,17 +85,19 @@ local function CharacterAdded(target_char)
 				local Id = {}
 				BlockId = Id
 
-				local InitialWait = tick()
-				
-				while tick() - InitialWait <= 0.2 do task.wait() end
+				task.wait(0.2)
 
-				if BlockId == Id then
+				if (BlockId == Id) then
 					IsBlocking = false
 					Block(IsBlocking)
 				end
 			end
 		end
 	end))
+end
+
+local function CharacterRemoved(target_char)
+	CharacterCons[target_char] = nil
 end
 
 local function PlayerAdded(player)
@@ -105,6 +111,9 @@ local function PlayerAdded(player)
 end
 
 table.insert(Connections, Players.PlayerAdded:Connect(PlayerAdded))
+table.insert(Connections, workspace.Entities.ChildAdded:Connect(CharacterAdded))
+table.insert(Connections, workspace.Entities.ChildRemoved:Connect(CharacterRemoved))
+
 for i,v in (Players:GetPlayers()) do
 	task.spawn(PlayerAdded, v)
 end
@@ -113,5 +122,10 @@ while (shared.afy) do task.wait() end
 
 for i,v in (Connections) do
 	v:Disconnect()
+	v = nil
+end
+
+for i,v in (CharacterCons) do
+	i = nil
 	v = nil
 end
