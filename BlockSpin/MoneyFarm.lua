@@ -92,8 +92,8 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool; do
 
 		if (Char and Root) then
 			local CurrentPos = Root.Position
-			local DownPos = vector.create(CurrentPos.X, -50, CurrentPos.Z)
-			local AcrossPos = vector.create(pos.X, -50, pos.Z)
+			local DownPos = vector.create(CurrentPos.X, pos.Y, CurrentPos.Z)
+			local AcrossPos = vector.create(pos.X, pos.Y, pos.Z)
 			local FinalPos = pos
 
 			IncrementalMove(CurrentPos, DownPos)
