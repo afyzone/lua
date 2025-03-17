@@ -245,7 +245,10 @@ while shared.afy and task.wait() do
 			end
 		end
 	else
-		MoveTo(workspace.Map.NPCs.AlleyWayGuy:GetPivot().Position + vector.create(0, -10, 0))
+		local AlleyWayGuy = SmartGet(workspace, 'Map.NPCs.AlleyWayGuy')
+		if (not AlleyWayGuy) then continue end
+
+		MoveTo(AlleyWayGuy:GetPivot().Position + vector.create(0, -10, 0))
 		fireproximityprompt(workspace.ConsumableShopZone_Illegal.ProximityPrompt)
 
 		local function GetBuyTool(tool_name)
