@@ -69,22 +69,36 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool; do
 
 		local Char = GetChar(Client)
 		local Root = GetRoot(Char)
-		local Increment = increment or 0.5
+		local Increment = increment or 1
 
-		if (Char and Root) then
-			local Distance = vector.magnitude(pos - Root.Position)
-			local Direction = vector.normalize(pos - Root.Position)
-			local CurrentPos = Root.Position
+		local function IncrementalMove(start_pos, end_pos)
+			local Offset = end_pos - start_pos
+			local Distance = vector.magnitude(Offset)
+			local Direction = vector.normalize(Offset)
+			local CurrentPos = start_pos
 
-			while (Distance > Increment) do
+			while shared.afy and Distance > Increment do
 				CurrentPos += Direction * Increment
 				Root.CFrame = CFrame.new(CurrentPos)
 				Root.AssemblyLinearVelocity = vector.zero
-
 				SmartWait()
-				Distance = vector.magnitude(pos - CurrentPos)
+				Offset = end_pos - CurrentPos
+				Distance = vector.magnitude(Offset)
 			end
-			Root.CFrame = CFrame.new(pos)
+
+			if (not shared.afy) then return end
+			Root.CFrame = CFrame.new(end_pos)
+		end
+
+		if (Char and Root) then
+			local CurrentPos = Root.Position
+			local DownPos = vector.create(CurrentPos.X, -50, CurrentPos.Z)
+			local AcrossPos = vector.create(pos.X, -50, pos.Z)
+			local FinalPos = pos
+
+			IncrementalMove(CurrentPos, DownPos)
+			IncrementalMove(DownPos, AcrossPos)
+			IncrementalMove(AcrossPos, FinalPos)
 		end
 
 		HiddenFlags.CurrentlyMoving = false
@@ -98,17 +112,23 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool; do
 		if (Char and Root) then
 			local InitCFrame = Root.CFrame
 
+			task.spawn(function()
+				while (shared.afy and Char and Root and (not flags_key or Flags[flags_key]) and tick() - StartTime <= (_delay or 1/60)) do
+					for _, v in (Char:GetDescendants()) do
+						if (v:IsA('BasePart') or v:IsA('MeshPart')) then
+							v.CanCollide = false
+						end
+					end
+
+					Root.CFrame = InitCFrame
+					Root.AssemblyLinearVelocity = vector.zero
+
+					task.wait()
+				end
+			end)
+
 			while (shared.afy and Char and Root and (not flags_key or Flags[flags_key]) and tick() - StartTime <= (_delay or 1/60)) do
 				task.wait(1/60)
-
-				Root.CFrame = InitCFrame
-				Root.AssemblyLinearVelocity = vector.zero
-
-				for _, v in (Char:GetDescendants()) do
-					if (v:IsA('BasePart')) then
-						v.CanCollide = false
-					end
-				end
 			end
 		end
 	end
