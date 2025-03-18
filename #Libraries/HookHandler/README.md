@@ -59,7 +59,9 @@ This lets you check which method (e.g. `"FireServer"` or `"InvokeServer"`) was m
 You can override the public `namecall` function to see or modify arguments. For instance:
 
 ```lua
-namecall = function(method, ...)
+namecall = function(...)
+    local method = HookHandler.getnamecallmethod()
+
     if method == "FireServer" then
         print("FireServer called on:", select(1, ...):GetFullName())
         print("Additional args:", unpack({select(2, ...)}))
@@ -88,9 +90,11 @@ Below is a minimal usage example you might drop into your script after loading `
 
 ```lua
 -- Example: track all 'FireServer' events
-namecall = function (method, ...)
+namecall = function (...)
+    -- Example: Retrieve the last method used via HookHandler
+    local method = HookHandler.getnamecallmethod()
+
     if (method == 'FireServer') then
-        -- The first argument to FireServer is the RemoteEvent instance
         local remote = select(1, ...)
         local args = { select(2, ...) }
 
@@ -103,8 +107,6 @@ namecall = function (method, ...)
     return ...
 end
 
--- Example: Retrieve the last method used via HookHandler
-print("Last namecall method was:", HookHandler.getnamecallmethod() or "None yet")
 ```
 
 ---
