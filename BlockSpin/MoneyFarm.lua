@@ -1,3 +1,4 @@
+
 -- https://www.roblox.com/games/104715542330896/BlockSpin
 
 local Flags = {
@@ -301,6 +302,7 @@ while shared.afy and task.wait() do
 			local BasicTool = GetBuyTool('Basic Hack Tool')
 
 			BuyTool(UltimateTool and MoneyNumber > 350 and UltimateTool or ProTool and MoneyNumber >= 150 and ProTool or BasicTool)
+			MoveTo(AlleyWayGuy:GetPivot().Position + vector.create(0, -10, 0))
 		end
 	end
 end
