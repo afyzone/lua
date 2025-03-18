@@ -1,12 +1,13 @@
-**HookHandler**  
+# HookHandler
+
 A simple library to intercept and detour Roblox remote calls without breaking other methods. It hooks:
 
 - `__namecall` (for any method called with the `:` operator, like `object:ClientLog(...)`)
 - `RemoteEvent:FireServer`
 - `UnreliableRemoteEvent:FireServer` (if your environment supports them)
-- `RemoteFunction:InvokeServer`  
+- `RemoteFunction:InvokeServer`
 
-Thanks to a special hook on `Instance.new('RemoteFunction').InvokeServer`, the library also catches direct calls such as  
+The library also catches direct calls such as  
 ```lua
 Instance.new('RemoteFunction').InvokeServer(remote, ...)
 ```  
@@ -20,7 +21,7 @@ In other words, **any** usage of `RemoteFunction:InvokeServer` can be intercepte
 
 ## Installation
 
-1. Place [`HookHandler.lua`](./HookHandler.lua) in your lua code:  
+1. Place [`HookHandler.lua`](./HookHandler.lua) in your Lua code:  
    **`lua/#Libraries/HookHandler/HookHandler.lua`**  
 
 2. Load it in your script or exploit environment. For example:
@@ -40,6 +41,16 @@ That’s it! Once loaded, all the hooked functions are automatically replaced.
 - **`MetaMethods.OriginalUnreliableFireServer`**: Hooks “unreliable” remote events.  
 
 A custom function `MetaMethods.NameCall` decides how to handle each method. The variable `getgenv().namecall` is exposed so you can override how the varargs are processed before going back to the original calls.
+
+### Getting the NameCall Method
+
+Inside the NameCall hook, we store the current name call method in `HookHandler.CurrentMethod`. To retrieve it outside of the hook, you can call:
+
+```lua
+local Method = HookHandler.getnamecallmethod()
+```
+
+This lets you check which method (e.g. `"FireServer"` or `"InvokeServer"`) was most recently intercepted.
 
 ---
 
@@ -91,6 +102,9 @@ namecall = function (method, ...)
     -- Return all arguments so the original function can proceed
     return ...
 end
+
+-- Example: Retrieve the last method used via HookHandler
+print("Last namecall method was:", HookHandler.getnamecallmethod() or "None yet")
 ```
 
 ---
