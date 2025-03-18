@@ -279,7 +279,7 @@ while shared.afy and task.wait() do
 			end
 		end
 
-		for i = 1, 5 do -- Not updating MoneyNumber on purpose
+		for i = 1, 15 do -- Not updating MoneyNumber on purpose
 			local UltimateTool = GetBuyTool('Ultimate Hack Tool')
 			local ProTool = GetBuyTool('Pro Hack Tool')
 			local BasicTool = GetBuyTool('Basic Hack Tool')
