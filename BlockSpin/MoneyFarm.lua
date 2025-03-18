@@ -1,8 +1,9 @@
 
 -- https://www.roblox.com/games/104715542330896/BlockSpin
 
-local Flags = {
+local Flags = Flags or {
 	StaminaFarm = true,
+	TweenSpeed = 0.6,
 }
 
 local Services = setmetatable({}, {
@@ -20,15 +21,15 @@ local ReplicatedStorage = Services.ReplicatedStorage
 
 local Client = Players.LocalPlayer
 local PlayerGui = Client:WaitForChild('PlayerGui')
-local CounterTable = nil
-
-for _, Obj in getgc and getgc(true) or {} do
-	if typeof(Obj) == 'table' and rawget(Obj, "event") and rawget(Obj, "func") then
-		CounterTable = Obj
-		-- RemoteFunction (InvokeServer); Obj.func += 1
-		-- RemoteEvent (FireServer); Obj.event += 1
+local CounterTable = (function()
+	for _, Obj in getgc and getgc(true) or {} do
+		if typeof(Obj) == 'table' and rawget(Obj, "event") and rawget(Obj, "func") then
+			return Obj
+			-- RemoteFunction (InvokeServer); Obj.func += 1
+			-- RemoteEvent (FireServer); Obj.event += 1
+		end
 	end
-end
+end)()
 
 local HiddenFlags = {}
 
@@ -80,7 +81,7 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool; do
 
 		local Char = GetChar(Client)
 		local Root = GetRoot(Char)
-		local Increment = increment or 1
+		local Increment = increment or Flags.TweenSpeed
 
 		local function IncrementalMove(start_pos, end_pos)
 			local Offset = end_pos - start_pos
@@ -198,8 +199,8 @@ while shared.afy and task.wait() do
 		Root.AssemblyLinearVelocity = vector.create(0, 0.5, 0)
 
 		if (Flags.StaminaFarm) then
-			VirtualInputManager:SendKeyEvent(true, 'W', false, nil)
-			VirtualInputManager:SendKeyEvent(true, 'LeftShift', false, nil)
+			VirtualInputManager:SendKeyEvent(true, 'W', false, game)
+			VirtualInputManager:SendKeyEvent(true, 'LeftShift', false, game)
 		end
 	end
 
@@ -219,8 +220,8 @@ while shared.afy and task.wait() do
 				local TargetSize = Target.Size.X.Scale / 2
 
 				if NeedleX >= (TargetX - TargetSize) and NeedleX <= (TargetX + TargetSize) then
-					VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, nil, 0)
-					VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, nil, 0)
+					VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+					VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
 					if (TargetSize <= 0.06) then
 						SmartWait(0.2)
@@ -296,7 +297,7 @@ while shared.afy and task.wait() do
 			end
 		end
 
-		for i = 1, 15 do -- Not updating MoneyNumber on purpose
+		for i = 1, 15 do
 			local UltimateTool = GetBuyTool('Ultimate Hack Tool')
 			local ProTool = GetBuyTool('Pro Hack Tool')
 			local BasicTool = GetBuyTool('Basic Hack Tool')
