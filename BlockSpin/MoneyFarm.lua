@@ -22,11 +22,11 @@ local PlayerGui = Client:WaitForChild('PlayerGui')
 local CounterTable = nil
 
 for _, Obj in getgc and getgc(true) or {} do
-    if typeof(Obj) == 'table' and rawget(Obj, "event") and rawget(Obj, "func") then
+	if typeof(Obj) == 'table' and rawget(Obj, "event") and rawget(Obj, "func") then
 		CounterTable = Obj
 		-- RemoteFunction (InvokeServer); Obj.func += 1
 		-- RemoteEvent (FireServer); Obj.event += 1
-    end
+	end
 end
 
 local HiddenFlags = {}
