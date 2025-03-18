@@ -1,4 +1,4 @@
-getgenv().MetaMethods = MetaMethods or {
+getgenv().HookHandler = HookHandler or {
 	['OriginalNameCall'] = nil,
 	['OriginalFireServer'] = nil,
 	['OriginalInvokeServer'] = nil,
@@ -6,34 +6,34 @@ getgenv().MetaMethods = MetaMethods or {
 	['NameCall'] = nil,
 }
 
-MetaMethods.OriginalNameCall = MetaMethods.OriginalNameCall or hookfunction(getrawmetatable(game).__namecall, clonefunction(newcclosure(function(...)
-	return MetaMethods.NameCall(getnamecallmethod(), ...)
+HookHandler.OriginalNameCall = HookHandler.OriginalNameCall or hookfunction(getrawmetatable(game).__namecall, clonefunction(newcclosure(function(...)
+	return HookHandler.NameCall(getnamecallmethod(), ...)
 end)))
 
-MetaMethods.OriginalFireServer = MetaMethods.OriginalFireServer or hookfunction(Instance.new('RemoteEvent').FireServer, clonefunction(newcclosure(function(...)
-	return MetaMethods.NameCall('FireServer', ...)
+HookHandler.OriginalFireServer = HookHandler.OriginalFireServer or hookfunction(Instance.new('RemoteEvent').FireServer, clonefunction(newcclosure(function(...)
+	return HookHandler.NameCall('FireServer', ...)
 end)))
 
-MetaMethods.OriginalUnreliableFireServer = MetaMethods.OriginalUnreliableFireServer or hookfunction(Instance.new('UnreliableRemoteEvent').FireServer, clonefunction(newcclosure(function(...)
-	return MetaMethods.NameCall('FireServer', ...)
+HookHandler.OriginalUnreliableFireServer = HookHandler.OriginalUnreliableFireServer or hookfunction(Instance.new('UnreliableRemoteEvent').FireServer, clonefunction(newcclosure(function(...)
+	return HookHandler.NameCall('FireServer', ...)
 end)))
 
-MetaMethods.OriginalInvokeServer = MetaMethods.OriginalInvokeServer or hookfunction(Instance.new('RemoteFunction').InvokeServer, clonefunction(newcclosure(function(...)
-	return MetaMethods.NameCall('InvokeServer', ...)
+HookHandler.OriginalInvokeServer = HookHandler.OriginalInvokeServer or hookfunction(Instance.new('RemoteFunction').InvokeServer, clonefunction(newcclosure(function(...)
+	return HookHandler.NameCall('InvokeServer', ...)
 end)))
 
-MetaMethods.NameCall = MetaMethods.NameCall or clonefunction(newcclosure(function(Method, ...)
+HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(function(Method, ...)
 	local Bridged = {namecall(Method, ...)}
 
 	if (Method == 'FireServer') then
-		return MetaMethods.OriginalFireServer(unpack(Bridged))
+		return HookHandler.OriginalFireServer(unpack(Bridged))
 	end
 	
 	if (Method == 'InvokeServer') then
-		return MetaMethods.OriginalInvokeServer(unpack(Bridged))
+		return HookHandler.OriginalInvokeServer(unpack(Bridged))
 	end
 
-	return MetaMethods.OriginalNameCall(unpack(Bridged))
+	return HookHandler.OriginalNameCall(unpack(Bridged))
 end))
 
 getgenv().namecall = clonefunction(newcclosure(function(Method, ...)
