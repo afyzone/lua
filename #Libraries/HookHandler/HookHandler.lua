@@ -4,28 +4,48 @@ getgenv().HookHandler = HookHandler or {
 	['OriginalInvokeServer'] = nil,
 	['OriginalUnreliableFireServer'] = nil,
 	['NameCall'] = nil,
+	['CurrentMethod'] = nil
 }
 
+function HookHandler.getnamecallmethod()
+	return HookHandler.CurrentMethod
+end
+
 HookHandler.OriginalNameCall = HookHandler.OriginalNameCall or hookfunction(getrawmetatable(game).__namecall, clonefunction(newcclosure(function(...)
-	return HookHandler.NameCall(getnamecallmethod(), ...)
+	local method = getnamecallmethod()
+	HookHandler.CurrentMethod = method
+
+	return HookHandler.NameCall(...)
 end)))
 
 HookHandler.OriginalFireServer = HookHandler.OriginalFireServer or hookfunction(Instance.new('RemoteEvent').FireServer, clonefunction(newcclosure(function(...)
-	return HookHandler.NameCall('FireServer', ...)
+	HookHandler.CurrentMethod = 'FireServer'
+
+	return HookHandler.NameCall(...)
 end)))
 
 HookHandler.OriginalUnreliableFireServer = HookHandler.OriginalUnreliableFireServer or hookfunction(Instance.new('UnreliableRemoteEvent').FireServer, clonefunction(newcclosure(function(...)
-	return HookHandler.NameCall('FireServer', ...)
+	HookHandler.CurrentMethod = 'FireServer'
+	HookHandler.RemoteType = 'UnreliableRemoteEvent'
+
+	return HookHandler.NameCall(...)
 end)))
 
 HookHandler.OriginalInvokeServer = HookHandler.OriginalInvokeServer or hookfunction(Instance.new('RemoteFunction').InvokeServer, clonefunction(newcclosure(function(...)
-	return HookHandler.NameCall('InvokeServer', ...)
+	HookHandler.CurrentMethod = 'InvokeServer'
+
+	return HookHandler.NameCall(...)
 end)))
 
-HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(function(Method, ...)
-	local Bridged = {namecall(Method, ...)}
+HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(function(self, ...)
+	local Method = HookHandler.getnamecallmethod()
+	local Bridged = {namecall(self, ...)}
 
 	if (Method == 'FireServer') then
+		if (HookHandler.RemoteType == 'UnreliableRemoteEvent') then
+			return HookHandler.OriginalUnreliableFireServer(unpack(Bridged))
+		end
+
 		return HookHandler.OriginalFireServer(unpack(Bridged))
 	end
 	
@@ -36,6 +56,8 @@ HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(functio
 	return HookHandler.OriginalNameCall(unpack(Bridged))
 end))
 
-getgenv().namecall = clonefunction(newcclosure(function(Method, ...)
+getgenv().namecall = clonefunction(newcclosure(function(...)
 	return ...
 end))
+
+return HookHandler;
