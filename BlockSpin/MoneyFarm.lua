@@ -15,9 +15,19 @@ local Services = setmetatable({}, {
 
 local Players = Services.Players
 local VirtualInputManager = Services.VirtualInputManager
+local ReplicatedStorage = Services.ReplicatedStorage
 
 local Client = Players.LocalPlayer
 local PlayerGui = Client:WaitForChild('PlayerGui')
+local CounterTable = nil
+
+for _, Obj in getgc and getgc(true) or {} do
+    if typeof(Obj) == 'table' and rawget(Obj, "event") and rawget(Obj, "func") then
+		CounterTable = Obj
+		-- RemoteFunction (InvokeServer); Obj.func += 1
+		-- RemoteEvent (FireServer); Obj.event += 1
+    end
+end
 
 local HiddenFlags = {}
 
@@ -198,17 +208,22 @@ while shared.afy and task.wait() do
 		local Needle = SmartGet(Bar, 'Needle')
 		local Target = SmartGet(Bar, 'Target')
 
-		if (SliderMinigameFrame and SliderMinigameFrame.Visible and Bar and Needle and Target) then
-			local NeedleX = Needle.Position.X.Scale
-			local TargetX = Target.Position.X.Scale
-			local TargetSize = Target.Size.X.Scale / 2
+		if (SliderMinigameFrame and SliderMinigameFrame.Visible and Bar and Needle and Target) then	
+			if (CounterTable) then	
+				CounterTable.event += 1
+				ReplicatedStorage.Remotes.Send:FireServer(CounterTable.event, "minigame_win", HiddenFlags.LastATM)
+			else
+				local NeedleX = Needle.Position.X.Scale
+				local TargetX = Target.Position.X.Scale
+				local TargetSize = Target.Size.X.Scale / 2
 
-			if NeedleX >= (TargetX - TargetSize) and NeedleX <= (TargetX + TargetSize) then
-				VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, nil, 0)
-				VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, nil, 0)
+				if NeedleX >= (TargetX - TargetSize) and NeedleX <= (TargetX + TargetSize) then
+					VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, nil, 0)
+					VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, nil, 0)
 
-				if (TargetSize <= 0.06) then
-					SmartWait(0.2)
+					if (TargetSize <= 0.06) then
+						SmartWait(0.2)
+					end
 				end
 			end
 		else
@@ -241,6 +256,7 @@ while shared.afy and task.wait() do
 				if (ATM and ATM_Prox) then
 					MoveTo(ATM:GetPivot().Position + vector.create(0, -10, 0))
 					fireproximityprompt(ATM_Prox)
+					HiddenFlags.LastATM = ATM
 				end
 			end
 		end
