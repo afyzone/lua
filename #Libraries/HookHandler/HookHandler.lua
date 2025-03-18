@@ -14,28 +14,28 @@ end
 HookHandler.OriginalNameCall = HookHandler.OriginalNameCall or hookfunction(getrawmetatable(game).__namecall, clonefunction(newcclosure(function(...)
 	local method = getnamecallmethod()
 	HookHandler.CurrentMethod = method
-	HookHandler.InstanceClass = nil
+	HookHandler.RemoteType = nil
 
 	return HookHandler.NameCall(...)
 end)))
 
 HookHandler.OriginalFireServer = HookHandler.OriginalFireServer or hookfunction(Instance.new('RemoteEvent').FireServer, clonefunction(newcclosure(function(...)
 	HookHandler.CurrentMethod = 'FireServer'
-	HookHandler.InstanceClass = 'RemoteEvent'
+	HookHandler.RemoteType = 'RemoteEvent'
 
 	return HookHandler.NameCall(...)
 end)))
 
 HookHandler.OriginalUnreliableFireServer = HookHandler.OriginalUnreliableFireServer or hookfunction(Instance.new('UnreliableRemoteEvent').FireServer, clonefunction(newcclosure(function(...)
 	HookHandler.CurrentMethod = 'FireServer'
-	HookHandler.InstanceClass = 'UnreliableRemoteEvent'
+	HookHandler.RemoteType = 'UnreliableRemoteEvent'
 
 	return HookHandler.NameCall(...)
 end)))
 
 HookHandler.OriginalInvokeServer = HookHandler.OriginalInvokeServer or hookfunction(Instance.new('RemoteFunction').InvokeServer, clonefunction(newcclosure(function(...)
 	HookHandler.CurrentMethod = 'InvokeServer'
-	HookHandler.InstanceClass = 'RemoteFunction'
+	HookHandler.RemoteType = 'RemoteFunction'
 
 	return HookHandler.NameCall(...)
 end)))
@@ -45,7 +45,7 @@ HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(functio
 	local Bridged = {namecall(...)}
 
 	if (Method == 'FireServer') then
-		if (HookHandler.InstanceClass == 'UnreliableRemoteEvent') then
+		if (HookHandler.RemoteType == 'UnreliableRemoteEvent') then
 			return HookHandler.OriginalUnreliableFireServer(unpack(Bridged))
 		end
 
