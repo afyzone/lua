@@ -59,6 +59,9 @@ This lets you check which method (e.g. `"FireServer"` or `"InvokeServer"`) was m
 You can override the public `namecall` function to see or modify arguments. For instance:
 
 ```lua
+-- Load the handler
+local hooks = loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/%23Libraries/HookHandler/HookHandler.lua'))()
+
 namecall = function(...)
     local method = HookHandler.getnamecallmethod()
 
@@ -89,6 +92,9 @@ so you can reliably intercept *any* usage pattern of `RemoteFunction`.
 Below is a minimal usage example you might drop into your script after loading `HookHandler`:
 
 ```lua
+-- Load the handler
+local hooks = loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/%23Libraries/HookHandler/HookHandler.lua'))()
+
 -- Example: track all 'FireServer' events
 namecall = function (...)
     -- Example: Retrieve the last method used via HookHandler
