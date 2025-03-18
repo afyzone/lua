@@ -40,9 +40,9 @@ HookHandler.OriginalInvokeServer = HookHandler.OriginalInvokeServer or hookfunct
 	return HookHandler.NameCall(...)
 end)))
 
-HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(function(self, ...)
+HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(function(...)
 	local Method = HookHandler.getnamecallmethod()
-	local Bridged = {namecall(self, ...)}
+	local Bridged = {namecall(...)}
 
 	if (Method == 'FireServer') then
 		if (HookHandler.InstanceClass == 'UnreliableRemoteEvent') then
