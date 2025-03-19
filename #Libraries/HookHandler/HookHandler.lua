@@ -1,8 +1,11 @@
+local HookHandler, hookfunction, clonefunction, newcclosure, getnamecallmethod, namecall
+
 getgenv().HookHandler = HookHandler or {
 	['OriginalNameCall'] = nil,
 	['OriginalFireServer'] = nil,
 	['OriginalInvokeServer'] = nil,
 	['OriginalUnreliableFireServer'] = nil,
+	['OriginalKick'] = nil,
 	['NameCall'] = nil,
 	['CurrentMethod'] = nil
 }
@@ -12,8 +15,8 @@ function HookHandler.getnamecallmethod()
 end
 
 HookHandler.OriginalNameCall = HookHandler.OriginalNameCall or hookfunction(getrawmetatable(game).__namecall, clonefunction(newcclosure(function(...)
-	local method = getnamecallmethod()
-	HookHandler.CurrentMethod = method
+	local Method = getnamecallmethod()
+	HookHandler.CurrentMethod = Method
 
 	return HookHandler.NameCall(...)
 end)))
@@ -36,13 +39,19 @@ HookHandler.OriginalInvokeServer = HookHandler.OriginalInvokeServer or hookfunct
 	return HookHandler.NameCall(...)
 end)))
 
+HookHandler.OriginalKick = HookHandler.OriginalKick or hookfunction(Instance.new('Player').Kick, clonefunction(newcclosure(function(...)
+	HookHandler.CurrentMethod = 'Kick'
+
+	return HookHandler.NameCall(...)
+end)))
+
 HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(function(...)
 	local Obj = select(1, ...)
 	local Method = HookHandler.getnamecallmethod()
 	local Bridged = {namecall(...)}
 
 	if (Method == 'FireServer') then
-		if (Obj and Obj.ClassName == 'UnreliableRemoteEvent') then
+		if (Obj.ClassName == 'UnreliableRemoteEvent') then
 			return HookHandler.OriginalUnreliableFireServer(unpack(Bridged))
 		end
 
@@ -51,6 +60,10 @@ HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(functio
 	
 	if (Method == 'InvokeServer') then
 		return HookHandler.OriginalInvokeServer(unpack(Bridged))
+	end
+
+	if (Method == 'Kick') then
+		return HookHandler.OriginalKick(unpack(Bridged))
 	end
 
 	return HookHandler.OriginalNameCall(unpack(Bridged))
