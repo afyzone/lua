@@ -63,7 +63,7 @@ You can override the public `namecall` function to see or modify arguments. For 
 local hooks = loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/%23Libraries/HookHandler/HookHandler.lua'))()
 
 namecall = function(...)
-    local method = HookHandler.getnamecallmethod()
+    local method = hooks.getnamecallmethod()
 
     if method == "FireServer" then
         print("FireServer called on:", select(1, ...):GetFullName())
@@ -98,7 +98,7 @@ local hooks = loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone
 -- Example: track all 'FireServer' events
 namecall = function (...)
     -- Example: Retrieve the last method used via HookHandler
-    local method = HookHandler.getnamecallmethod()
+    local method = hooks.getnamecallmethod()
 
     if (method == 'FireServer') then
         local remote = select(1, ...)
