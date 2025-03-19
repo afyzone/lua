@@ -2,10 +2,10 @@
 
 A simple library to intercept and detour Roblox remote calls without breaking other methods. It hooks:
 
-- `__namecall` (for any method called with the `:` operator, like `object:ClientLog(...)`)
-- `RemoteEvent:FireServer`
-- `UnreliableRemoteEvent:FireServer` (if your environment supports them)
-- `RemoteFunction:InvokeServer`
+- `__namecall` (for any method called with the `:` operator, like `object:FireServer(...)`)
+- `RemoteEvent.FireServer`
+- `UnreliableRemoteEvent.FireServer`
+- `RemoteFunction.InvokeServer`
 
 The library also catches direct calls such as  
 ```lua
