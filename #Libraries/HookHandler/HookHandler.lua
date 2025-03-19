@@ -51,7 +51,7 @@ HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(functio
 	local Bridged = {namecall(...)}
 
 	if (Method == 'FireServer') then
-		if (Obj.ClassName == 'UnreliableRemoteEvent') then
+		if (Obj and Obj.ClassName == 'UnreliableRemoteEvent') then
 			return HookHandler.OriginalUnreliableFireServer(unpack(Bridged))
 		end
 
