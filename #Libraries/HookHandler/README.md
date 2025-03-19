@@ -6,6 +6,7 @@ A simple library to intercept and detour Roblox remote calls without breaking ot
 - `RemoteEvent.FireServer`
 - `UnreliableRemoteEvent.FireServer`
 - `RemoteFunction.InvokeServer`
+- `Player.Kick`
 
 The library also catches direct calls such as  
 ```lua
@@ -39,6 +40,7 @@ That’s it! Once loaded, all the hooked functions are automatically replaced.
 - **`MetaMethods.OriginalFireServer`**: Hooks remote event calls.  
 - **`MetaMethods.OriginalInvokeServer`**: Hooks remote function calls, including unusual calls such as `Instance.new('RemoteFunction').InvokeServer(remote, ...)`.  
 - **`MetaMethods.OriginalUnreliableFireServer`**: Hooks “unreliable” remote events.  
+- **`MetaMethods.OriginalKick`**: Hooks kick function.  
 
 A custom function `MetaMethods.NameCall` decides how to handle each method. The variable `getgenv().namecall` is exposed so you can override how the varargs are processed before going back to the original calls.
 
