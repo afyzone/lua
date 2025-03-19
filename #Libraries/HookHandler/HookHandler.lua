@@ -1,5 +1,3 @@
-local HookHandler, hookfunction, clonefunction, newcclosure, getnamecallmethod, namecall
-
 getgenv().HookHandler = HookHandler or {
 	['OriginalNameCall'] = nil,
 	['OriginalFireServer'] = nil,
