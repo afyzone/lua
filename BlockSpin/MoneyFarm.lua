@@ -196,7 +196,7 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote
 		if (remote.ClassName == 'RemoteFunction') then
 			CounterTable.func += 1
 
-			print(remote:InvokeServer(CounterTable.func, ...))
+			remote:InvokeServer(CounterTable.func, ...)
 		end
 	end
 
