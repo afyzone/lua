@@ -1,9 +1,11 @@
-
 -- https://www.roblox.com/games/104715542330896/BlockSpin
 
 local Flags = Flags or {
 	StaminaFarm = true,
 	TweenSpeed = 0.6,
+	
+	DepositAt = 10_000,
+	DepositAmount = 5_000,
 }
 
 local Services = setmetatable({}, {
@@ -23,17 +25,17 @@ local Client = Players.LocalPlayer
 local PlayerGui = Client:WaitForChild('PlayerGui')
 local CounterTable = (function()
 	for _, Obj in getgc and getgc(true) or {} do
-		if typeof(Obj) == 'table' and rawget(Obj, "event") and rawget(Obj, "func") then
+		if (typeof(Obj) == 'table' and rawget(Obj, "event") and rawget(Obj, "func")) then
 			return Obj
-			-- RemoteFunction (InvokeServer); Obj.func += 1
-			-- RemoteEvent (FireServer); Obj.event += 1
 		end
 	end
 end)()
 
-local HiddenFlags = {}
+local HiddenFlags = {
+	MoneyDebounce = 0
+}
 
-local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool; do
+local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote, Deposit, Withdraw; do
 	GetChar = function(player)
 		return player and player.Character
 	end
@@ -181,12 +183,36 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool; do
 			end
 		end
 	end
+
+	CallRemote = function(remote, ...)
+		if (not CounterTable) then return end
+
+		if (remote.ClassName == 'RemoteEvent') then
+			CounterTable.event += 1
+
+			remote:FireServer(CounterTable.event, ...)
+		end
+
+		if (remote.ClassName == 'RemoteFunction') then
+			CounterTable.func += 1
+
+			print(remote:InvokeServer(CounterTable.func, ...))
+		end
+	end
+
+	Deposit = function(amount)
+		CallRemote(ReplicatedStorage.Remotes.Get, "transfer_funds", "hand", "bank", amount)
+	end
+
+	Withdraw = function(amount)
+		CallRemote(ReplicatedStorage.Remotes.Get, "transfer_funds", "bank", "hand", amount)
+	end
 end
 
 shared.afy = not shared.afy
 print(shared.afy)
 
-while shared.afy and task.wait() do
+while ((Flags.Enabled or shared.afy) and task.wait()) do
 	local Char = GetChar(Client)
 	local Hum = GetHum(Char)
 	local Root = GetRoot(Char)
@@ -204,6 +230,17 @@ while shared.afy and task.wait() do
 		end
 	end
 
+	local MoneyTextLabel = SmartGet(PlayerGui, 'TopRightHud.Holder.Frame.MoneyTextLabel')
+	local MoneyText = MoneyTextLabel and MoneyTextLabel.Text
+	local MoneyNumber = tonumber(MoneyText:match("%d+"))
+
+	if (MoneyNumber and MoneyNumber >= (Flags.DepositAt or 10_000) and tick() - HiddenFlags.MoneyDebounce > 1) then
+		Deposit(Flags.DepositAmount or 5_000)
+		HiddenFlags.MoneyDebounce = tick()
+	end
+
+	if true then continue end
+
 	if (HasTool('HackToolUltimate') or HasTool('HackToolPro') or HasTool('HackToolBasic')) then
 		local SliderMinigameFrame = SmartGet(PlayerGui, 'SliderMinigame.SliderMinigameFrame')
 		local Bar = SmartGet(SliderMinigameFrame, 'Bar')
@@ -212,8 +249,7 @@ while shared.afy and task.wait() do
 
 		if (SliderMinigameFrame and SliderMinigameFrame.Visible and Bar and Needle and Target) then	
 			if (CounterTable) then	
-				CounterTable.event += 1
-				ReplicatedStorage.Remotes.Send:FireServer(CounterTable.event, "minigame_win", HiddenFlags.LastATM)
+				CallRemote(ReplicatedStorage.Remotes.Send, "minigame_win", HiddenFlags.LastATM)
 			else
 				local NeedleX = Needle.Position.X.Scale
 				local TargetX = Target.Position.X.Scale
@@ -282,10 +318,6 @@ while shared.afy and task.wait() do
 				end
 			end
 		end
-
-		local MoneyTextLabel = SmartGet(PlayerGui, 'TopRightHud.Holder.Frame.MoneyTextLabel')
-		local MoneyText = MoneyTextLabel and MoneyTextLabel.Text
-		local MoneyNumber = tonumber(MoneyText:match("%d+"))
 
 		local function BuyTool(ToolType)
 			local ConsumableBuyButton = SmartGet(ToolType, 'ConsumableBuyButton')
