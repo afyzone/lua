@@ -2,7 +2,7 @@
 
 local Flags = Flags or {
 	StaminaFarm = true,
-	TweenSpeed = 0.6,
+	TweenSpeed = 0.5,
 	
 	DepositAt = 10_000,
 	DepositAmount = 5_000,
@@ -56,10 +56,13 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote
 		if (Char and Root) then
 			for i,v in (workspace.Map.Props:GetChildren()) do
 				if (v.Name ~= 'ATM') then continue end
-				if (v:GetAttribute('disabled') or v:GetAttribute('171801550909')) then continue end
+
+				local disabled = v:GetAttribute('disabled') or v:GetAttribute('171801550909') or v:GetAttribute('921801550909')
+				if (disabled) then continue end
+				
 				-- if (v:GetAttribute('active_hack_tool') ~= (HasTool('HackToolPro') and 'HackToolPro' or 'HackToolBasic')) then continue end
 				
-				local hacker = v:FindFirstChild('hacker') or v:FindFirstChild('1725881907')
+				local hacker = v:FindFirstChildWhichIsA('ObjectValue') or v:FindFirstChild('hacker') or v:FindFirstChild('1725881907') or v:FindFirstChild('9225881907')
 				if (hackere and hacker.Value) then continue end
 
 				for i,v2 in (v:GetChildren()) do
@@ -87,11 +90,13 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote
 		local Root = GetRoot(Char)
 		local Increment = increment or Flags.TweenSpeed
 
-		local function IncrementalMove(start_pos, end_pos)
+		local function IncrementalMove(start_pos, end_pos, bobbing)
 			local Offset = end_pos - start_pos
 			local Distance = vector.magnitude(Offset)
 			local Direction = vector.normalize(Offset)
 			local CurrentPos = start_pos
+
+			Increment = bobbing and 9e9 or Increment
 
 			while shared.afy and Distance > Increment do
 				CurrentPos += Direction * Increment
@@ -112,9 +117,9 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote
 			local AcrossPos = vector.create(pos.X, pos.Y, pos.Z)
 			local FinalPos = pos
 
-			IncrementalMove(CurrentPos, DownPos)
+			IncrementalMove(CurrentPos, DownPos, bobbing)
 			IncrementalMove(DownPos, AcrossPos)
-			IncrementalMove(AcrossPos, FinalPos)
+			IncrementalMove(AcrossPos, FinalPos, bobbing)
 		end
 
 		HiddenFlags.CurrentlyMoving = false
@@ -253,18 +258,25 @@ while ((Flags.Enabled or shared.afy) and task.wait()) do
 
 		if (SliderMinigameFrame and SliderMinigameFrame.Visible and Bar and Needle and Target) then	
 			if (CounterTable) then	
+				MoveTo(HiddenFlags.LastATM:GetPivot().Position + vector.create(0, -2, 0))
 				CallRemote(ReplicatedStorage.Remotes.Send, "minigame_win", HiddenFlags.LastATM)
+				MoveTo(HiddenFlags.LastATM:GetPivot().Position + vector.create(0, -10, 0))
 			else
 				local NeedleX = Needle.Position.X.Scale
 				local TargetX = Target.Position.X.Scale
 				local TargetSize = Target.Size.X.Scale / 2
 
 				if NeedleX >= (TargetX - TargetSize) and NeedleX <= (TargetX + TargetSize) then
+					if (TargetSize <= 0.06) then
+						MoveTo(HiddenFlags.LastATM:GetPivot().Position + vector.create(0, -2, 0))
+					end
+
 					VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
 					VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 
 					if (TargetSize <= 0.06) then
 						SmartWait(0.2)
+						MoveTo(HiddenFlags.LastATM:GetPivot().Position + vector.create(0, -10, 0))
 					end
 				end
 			end
