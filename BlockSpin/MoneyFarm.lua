@@ -56,11 +56,11 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote
 		if (Char and Root) then
 			for i,v in (workspace.Map.Props:GetChildren()) do
 				if (v.Name ~= 'ATM') then continue end
-				if (v:GetAttribute('disabled')) then continue end
+				if (v:GetAttribute('disabled') or v:GetAttribute('171801550909')) then continue end
 				-- if (v:GetAttribute('active_hack_tool') ~= (HasTool('HackToolPro') and 'HackToolPro' or 'HackToolBasic')) then continue end
 				
-				local hacker = v:FindFirstChild('hacker')
-				if (hacker and hacker.Value) then continue end
+				local hacker = v:FindFirstChild('hacker') or v:FindFirstChild('1725881907')
+				if (hackere and hacker.Value) then continue end
 
 				for i,v2 in (v:GetChildren()) do
 					local ProximityPrompt = v2:FindFirstChildWhichIsA('ProximityPrompt')
