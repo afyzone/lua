@@ -58,7 +58,9 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote
 				if (v.Name ~= 'ATM') then continue end
 				if (v:GetAttribute('disabled')) then continue end
 				-- if (v:GetAttribute('active_hack_tool') ~= (HasTool('HackToolPro') and 'HackToolPro' or 'HackToolBasic')) then continue end
-				if (v.hacker.Value) then continue end
+				
+				local hacker = v:FindFirstChild('hacker')
+				if (hacker and hacker.Value) then continue end
 
 				for i,v2 in (v:GetChildren()) do
 					local ProximityPrompt = v2:FindFirstChildWhichIsA('ProximityPrompt')
