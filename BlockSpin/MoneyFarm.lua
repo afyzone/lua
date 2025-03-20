@@ -228,6 +228,10 @@ while ((Flags.Enabled or shared.afy) and task.wait()) do
 			VirtualInputManager:SendKeyEvent(true, 'W', false, game)
 			VirtualInputManager:SendKeyEvent(true, 'LeftShift', false, game)
 		end
+
+		if (Hum.Health / Hum.MaxHealth * 100 < 10) then
+			CallRemote(ReplicatedStorage.Remotes.Send, "death_screen_request_respawn")
+		end
 	end
 
 	local MoneyTextLabel = SmartGet(PlayerGui, 'TopRightHud.Holder.Frame.MoneyTextLabel')
