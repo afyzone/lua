@@ -57,12 +57,17 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote
 			for i,v in (workspace.Map.Props:GetChildren()) do
 				if (v.Name ~= 'ATM') then continue end
 
-				local disabled = v:GetAttribute('disabled') or v:GetAttribute('171801550909') or v:GetAttribute('921801550909')
+				local disabled = (function()
+					for i,v in v:GetAttributes() do
+						if (typeof(v) == 'boolean') then
+							return v
+						end
+					end
+				end)()
+
 				if (disabled) then continue end
 				
-				-- if (v:GetAttribute('active_hack_tool') ~= (HasTool('HackToolPro') and 'HackToolPro' or 'HackToolBasic')) then continue end
-				
-				local hacker = v:FindFirstChildWhichIsA('ObjectValue') or v:FindFirstChild('hacker') or v:FindFirstChild('1725881907') or v:FindFirstChild('9225881907')
+				local hacker = v:FindFirstChildWhichIsA('ObjectValue')
 				if (hackere and hacker.Value) then continue end
 
 				for i,v2 in (v:GetChildren()) do
