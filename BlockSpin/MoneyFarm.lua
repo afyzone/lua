@@ -239,8 +239,6 @@ while ((Flags.Enabled or shared.afy) and task.wait()) do
 		HiddenFlags.MoneyDebounce = tick()
 	end
 
-	if true then continue end
-
 	if (HasTool('HackToolUltimate') or HasTool('HackToolPro') or HasTool('HackToolBasic')) then
 		local SliderMinigameFrame = SmartGet(PlayerGui, 'SliderMinigame.SliderMinigameFrame')
 		local Bar = SmartGet(SliderMinigameFrame, 'Bar')
