@@ -243,7 +243,7 @@ while ((Flags.Enabled or shared.afy) and task.wait()) do
 		HiddenFlags.MoneyDebounce = tick()
 	end
 
-	if (HasTool('HackToolUltimate') or HasTool('HackToolPro') or HasTool('HackToolBasic')) then
+	if (HasTool('HackToolQuantum') or HasTool('HackToolUltimate') or HasTool('HackToolPro') or HasTool('HackToolBasic')) then
 		local SliderMinigameFrame = SmartGet(PlayerGui, 'SliderMinigame.SliderMinigameFrame')
 		local Bar = SmartGet(SliderMinigameFrame, 'Bar')
 		local Needle = SmartGet(Bar, 'Needle')
@@ -273,7 +273,7 @@ while ((Flags.Enabled or shared.afy) and task.wait()) do
 			local ChooseOptionsScrollingFrame = SmartGet(ChooseOptionsHolder, 'ChooseOptionsScrollingFrame')
 
 			if (ChooseOptionsHolder and ChooseOptionsHolder.Visible and ChooseOptionsScrollingFrame) then
-				local ToolButton = ChooseOptionsScrollingFrame:FindFirstChild(HasTool('HackToolUltimate') and 'Ultimate Hack Tool' or HasTool('HackToolPro') and 'Pro Hack Tool' or 'Basic Hack Tool')
+				local ToolButton = ChooseOptionsScrollingFrame:FindFirstChild(HasTool('HackToolQuantum') and 'Quantum Hack Tool' or HasTool('HackToolUltimate') and 'Ultimate Hack Tool' or HasTool('HackToolPro') and 'Pro Hack Tool' or 'Basic Hack Tool')
 
 				if (ToolButton) then
 					local TextButton = SmartGet(ToolButton, 'TextButton')
@@ -332,11 +332,12 @@ while ((Flags.Enabled or shared.afy) and task.wait()) do
 		end
 
 		for i = 1, 15 do
+			local QuantumTool = GetBuyTool('Quantum Hack Tool')
 			local UltimateTool = GetBuyTool('Ultimate Hack Tool')
 			local ProTool = GetBuyTool('Pro Hack Tool')
 			local BasicTool = GetBuyTool('Basic Hack Tool')
 
-			BuyTool(UltimateTool and MoneyNumber > 350 and UltimateTool or ProTool and MoneyNumber >= 150 and ProTool or BasicTool)
+			BuyTool(QuantumTool and MoneyNumber >= 550 and QuantumTool or UltimateTool and MoneyNumber >= 350 and UltimateTool or ProTool and MoneyNumber >= 150 and ProTool or BasicTool)
 			MoveTo(AlleyWayGuy:GetPivot().Position + vector.create(0, -10, 0))
 		end
 	end
