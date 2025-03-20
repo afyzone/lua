@@ -43,32 +43,42 @@ HookHandler.OriginalKick = HookHandler.OriginalKick or hookfunction(Instance.new
 	return HookHandler.NameCall(...)
 end)))
 
+HookHandler.OriginalFire = HookHandler.OriginalFire or hookfunction(Instance.new('BindableEvent').Fire, clonefunction(newcclosure(function(...)
+	HookHandler.CurrentMethod = 'Fire'
+
+	return HookHandler.NameCall(...)
+end)))
+
 HookHandler.NameCall = HookHandler.NameCall or clonefunction(newcclosure(function(...)
 	local Obj = select(1, ...)
 	local Method = HookHandler.getnamecallmethod()
 	local Bridged = {namecall(...)}
 
-	if (Method == 'FireServer') then
-		if (Obj and Obj.ClassName == 'UnreliableRemoteEvent') then
-			return HookHandler.OriginalUnreliableFireServer(unpack(Bridged))
+	if (Obj and typeof(Obj) == 'Instance') then
+		if (Method == 'FireServer') then
+			if (Obj.ClassName == 'UnreliableRemoteEvent') then
+				return HookHandler.OriginalUnreliableFireServer(unpack(Bridged))
+			end
+
+			return HookHandler.OriginalFireServer(unpack(Bridged))
+		end
+		
+		if (Method == 'InvokeServer') then
+			return HookHandler.OriginalInvokeServer(unpack(Bridged))
 		end
 
-		return HookHandler.OriginalFireServer(unpack(Bridged))
+		if (Method == 'Kick') then
+			return HookHandler.OriginalKick(unpack(Bridged))
+		end
+
+		if (Method == 'Fire') then
+			return HookHandler.OriginalFire(unpack(Bridged))
+		end
 	end
 	
-	if (Method == 'InvokeServer') then
-		return HookHandler.OriginalInvokeServer(unpack(Bridged))
-	end
-
-	if (Method == 'Kick') then
-		return HookHandler.OriginalKick(unpack(Bridged))
-	end
-
 	return HookHandler.OriginalNameCall(unpack(Bridged))
 end))
 
 getgenv().namecall = clonefunction(newcclosure(function(...)
 	return ...
 end))
-
-return HookHandler;
