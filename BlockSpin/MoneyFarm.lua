@@ -1,3 +1,4 @@
+
 -- https://www.roblox.com/games/104715542330896/BlockSpin
 
 local Flags = Flags or {
@@ -35,7 +36,7 @@ local HiddenFlags = {
 	MoneyDebounce = 0
 }
 
-local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote, Deposit, Withdraw; do
+local GetChar, GetRoot, GetHum, GetATM, MoveTo, SmartWait, SmartGet, HasTool, CallRemote, Deposit, Withdraw; do
 	GetChar = function(player)
 		return player and player.Character
 	end
@@ -68,7 +69,7 @@ local GetChar, GetRoot, GetHum, MoveTo, SmartWait, SmartGet, HasTool, CallRemote
 				if (disabled) then continue end
 				
 				local hacker = v:FindFirstChildWhichIsA('ObjectValue')
-				if (hackere and hacker.Value) then continue end
+				if (hacker and hacker.Value) then continue end
 
 				for i,v2 in (v:GetChildren()) do
 					local ProximityPrompt = v2:FindFirstChildWhichIsA('ProximityPrompt')
