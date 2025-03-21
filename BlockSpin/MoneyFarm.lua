@@ -1,4 +1,3 @@
-
 -- https://www.roblox.com/games/104715542330896/BlockSpin
 
 local Flags = Flags or {
@@ -96,13 +95,12 @@ local GetChar, GetRoot, GetHum, GetATM, MoveTo, SmartWait, SmartGet, HasTool, Ca
 		local Root = GetRoot(Char)
 		local Increment = increment or Flags.TweenSpeed
 
-		local function IncrementalMove(start_pos, end_pos, bobbing)
+		local function IncrementalMove(start_pos, end_pos)
 			local Offset = end_pos - start_pos
 			local Distance = vector.magnitude(Offset)
 			local Direction = vector.normalize(Offset)
 			local CurrentPos = start_pos
 
-			Increment = bobbing and 9e9 or Increment
 
 			while shared.afy and Distance > Increment do
 				CurrentPos += Direction * Increment
@@ -123,9 +121,9 @@ local GetChar, GetRoot, GetHum, GetATM, MoveTo, SmartWait, SmartGet, HasTool, Ca
 			local AcrossPos = vector.create(pos.X, pos.Y, pos.Z)
 			local FinalPos = pos
 
-			IncrementalMove(CurrentPos, DownPos, bobbing)
+			IncrementalMove(CurrentPos, DownPos)
 			IncrementalMove(DownPos, AcrossPos)
-			IncrementalMove(AcrossPos, FinalPos, bobbing)
+			IncrementalMove(AcrossPos, FinalPos)
 		end
 
 		HiddenFlags.CurrentlyMoving = false
