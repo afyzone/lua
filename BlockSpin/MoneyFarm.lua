@@ -3,6 +3,7 @@
 local Flags = Flags or {
 	StaminaFarm = true,
 	TweenSpeed = 0.5,
+	BuyAmount = 15,
 	
 	DepositAt = 10_000,
 	DepositAmount = 5_000,
@@ -349,7 +350,7 @@ while ((Flags.Enabled or shared.afy) and task.wait()) do
 			end
 		end
 
-		for i = 1, 15 do
+		for i = 1, Flags.BuyAmount or 15 do
 			local QuantumTool = GetBuyTool('Quantum Hack Tool')
 			local UltimateTool = GetBuyTool('Ultimate Hack Tool')
 			local ProTool = GetBuyTool('Pro Hack Tool')
