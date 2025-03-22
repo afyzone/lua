@@ -82,3 +82,5 @@ end))
 getgenv().namecall = clonefunction(newcclosure(function(...)
 	return ...
 end))
+
+return HookHandler;
