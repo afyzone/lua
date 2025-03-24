@@ -11,7 +11,7 @@ local Connections = setmetatable({}, { __mode = 'kv' })
 
 local Services = setmetatable({}, {
 	__index = function(self, key)
-		local Service = rawget(self, key) or pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
+		local Service = pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
 		rawset(self, key, Service)
 
 		return rawget(self, key)
