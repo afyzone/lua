@@ -1,24 +1,47 @@
 -- https://www.roblox.com/games/161766693/
 
-local our_color = workspace.DropStorage:FindFirstChildWhichIsA('Model').Name
+local Connections = {}
 shared.afy = not shared.afy
 
-while (shared.afy and task.wait()) do
-    local ct = os.clock()
+local GetMyTycoon = function()
+    local TycoonDropper = workspace.DropStorage:FindFirstChildWhichIsA('Model')
+    local MyTycoon = TycoonDropper and workspace.Tycoons:FindFirstChild(TycoonDropper.Name)
 
-    while (shared.afy and os.clock() - ct < 10 and task.wait()) do 
-        for i,v in (workspace.DropStorage:FindFirstChildWhichIsA('Model'):GetChildren()) do
-            for i,v2 in (workspace.Tycoons[our_color].PurchasedObjects:GetChildren()) do
-                if not (v2:FindFirstChild('Upgrade') and v2.Upgrade:FindFirstChildWhichIsA('TouchTransmitter')) then continue end
+    return MyTycoon, TycoonDropper
+end
 
-                v.CFrame = v2.Upgrade.CFrame
-                firetouchinterest(v, v2.Upgrade, 0)
-            end
+local Tycoon, Dropper = GetMyTycoon()
+
+table.insert(Connections, Dropper.ChildAdded:Connect(function(drop)
+    local DroppedTime = tick()
+
+    while (shared.afy and drop and tick() - DroppedTime < 10) do
+        for i,v in (Tycoon.PurchasedObjects:GetChildren()) do
+			task.wait()
+
+			drop.AssemblyLinearVelocity = vector.zero
+
+            local Upgrade = v:FindFirstChild('Upgrade')
+            local UpgradeTouch = Upgrade and Upgrade:FindFirstChildWhichIsA('TouchTransmitter')
+
+            if (not UpgradeTouch) then continue end
+
+            drop.CFrame = Upgrade.CFrame
+            firetouchinterest(drop, Upgrade, 0)
+            firetouchinterest(drop, Upgrade, 1)
         end
+
+        task.wait()
     end
 
-    for i,v in (workspace.DropStorage:FindFirstChildWhichIsA('Model'):GetChildren()) do
-        v.CFrame = workspace.Tycoons[our_color].Essentials.TeamColor.CFrame
-        firetouchinterest(v, workspace.Tycoons[our_color].Essentials.TeamColor, 0)
-    end
+    local Seller = Tycoon.Essentials.TeamColor
+    drop.CFrame = Seller.CFrame
+    firetouchinterest(drop, Seller, 0)
+    firetouchinterest(drop, Seller, 1)
+end))
+
+while (shared.afy) do task.wait() end
+
+for i,v in Connections do
+	v:Disconnect()
 end
