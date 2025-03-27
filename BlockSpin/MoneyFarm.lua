@@ -1,7 +1,7 @@
 -- This is patched, leaving this for learning purposes
 -- https://www.roblox.com/games/104715542330896/BlockSpin
 
-assert(true, 'This is patched, leaving this for learning purposes')
+assert(false, 'This is patched, leaving this for learning purposes')
 
 local Flags = Flags or {
 	StaminaFarm = true,
