@@ -3,7 +3,7 @@
 local Players = game:GetService('Players')
 local TextChatService = game:GetService('TextChatService')
 local Client = Players.LocalPlayer
-local Connections = {}
+local LastHit, Connections = 0, {}
 
 local GetChar, CharacterAdded, CreateConnection; do
 	GetChar = function(player)
@@ -24,13 +24,14 @@ local GetChar, CharacterAdded, CreateConnection; do
             local Part = v.Parent
             
             CreateConnection(Part.Touched, function(HitPart)
-                if (Part.Transparency ~= 1 and HitPart:IsDescendantOf(Char)) then
+                if (Part.Transparency ~= 1 and tick() - LastHit > 1 and HitPart:IsDescendantOf(Char)) then
                     local Answers = Part.Script.Answers.Value:split('|')
 
                     local Random = math.random(#Answers)
                     local Answer = Answers[Random]
 
                     TextChatService.TextChannels.RBXGeneral:SendAsync(Answer)
+                    LastHit = tick()
                 end
             end)
         end
