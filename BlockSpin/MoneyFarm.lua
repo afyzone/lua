@@ -1,6 +1,8 @@
 -- This is patched, leaving this for learning purposes
 -- https://www.roblox.com/games/104715542330896/BlockSpin
 
+assert(true, 'This is patched, leaving this for learning purposes')
+
 local Flags = Flags or {
 	StaminaFarm = true,
 	TweenSpeed = 0.5,
@@ -11,13 +13,13 @@ local Flags = Flags or {
 }
 
 local Services = setmetatable({}, {
-    __index = function(self, key)
+	__index = function(self, key)
 		local cloneref = cloneref or function(...) return ... end
-        local Succ, Result = pcall(cloneref, game:FindService(key))
-        rawset(self, key, Succ and Result or Instance.new(key))
+		local Succ, Result = pcall(cloneref, game:FindService(key))
+		rawset(self, key, Succ and Result or Instance.new(key))
 
-        return rawget(self, key)
-    end
+		return rawget(self, key)
+	end
 })
 
 local Players = Services.Players
