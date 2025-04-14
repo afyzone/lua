@@ -11,7 +11,7 @@ local Icons = {
 	['rbxassetid://134317346328662'] = 'Health',
 	['rbxassetid://126277523665080'] = 'Defense',
 	['rbxassetid://128337057508912'] = 'Psychics',
-	-- [''] = 'Magic',
+	['rbxassetid://104195452885717'] = 'Magic',
 }
 
 shared.afy = not shared.afy
@@ -147,6 +147,7 @@ while shared.afy and task.wait() do
 		end
 
 		if (Upgrade == 'Magic') then
+			ReplicatedStorage:WaitForChild("Events"):WaitForChild("Train"):WaitForChild("TrainMagic"):FireServer(TrainingPart and tonumber(TrainingPart.Name) or 0)
 		end
 	end
 
