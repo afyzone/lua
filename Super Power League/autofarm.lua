@@ -1,5 +1,4 @@
 -- https://www.roblox.com/games/137681066791460
--- unfinished
 
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -13,6 +12,17 @@ local Icons = {
 	['rbxassetid://128337057508912'] = 'Psychics',
 	['rbxassetid://104195452885717'] = 'Magic',
 }
+
+getconnections(Client.Idled)[1]:Disconnect()
+
+local Hooks = loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/%23Libraries/HookHandler/HookHandler.lua'))()
+namecall = function(...)
+	local Method = Hooks.getnamecallmethod()
+
+	if (Method == 'FireServer' and select(1, ...) == ReplicatedStorage.Events.Rejoin) then return end
+
+	return ...
+end
 
 shared.afy = not shared.afy
 print(shared.afy)
