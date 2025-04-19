@@ -8,13 +8,15 @@ local PlayerGui = Client:WaitForChild('PlayerGui')
 shared.afy = not shared.afy
 print(shared.afy)
 
-local MyFarm = (function()
+local MyFarm; do 
     for i,v in (workspace.Farm:GetChildren()) do
         if (v.Important.Data.Owner.Value == Client.Name) then
-            return v
+            MyFarm = v
         end
+        
+        if MyFarm then break end 
     end
-end)()
+end
 
 assert(MyFarm, 'My farm was not found.')
 
