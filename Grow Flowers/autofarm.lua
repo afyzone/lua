@@ -5,7 +5,9 @@ local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local Client = Players.LocalPlayer
 local PlayerGui = Client:WaitForChild('PlayerGui')
 
-getconnections(Client.Idled)[1]:Disconnect()
+for i,v in getconnections(Client.Idled) do
+	v:Disconnect()
+end
 
 shared.afy = not shared.afy
 print(shared.afy)
