@@ -91,7 +91,7 @@ while shared.afy and task.wait(1/30) do
 
     -- Collect Placed Drills
     for i,v in (Plot.Drills:GetChildren()) do
-        if (v.DrillData.Drilling.Value) then continue end
+        if (not v:FindFirstChild('DrillData') or v.DrillData.Drilling.Value) then continue end
 
         ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("PlotService"):WaitForChild("RE"):WaitForChild("CollectDrill"):FireServer(v)
     end
