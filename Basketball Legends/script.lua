@@ -154,7 +154,7 @@ while (shared.afy and task.wait()) do
                     virtualinputmanager:SendKeyEvent(true, 'Space', false, nil)
                 end
 
-                local lerpto_position = LerpTo(player_with_ball.HumanoidRootPart, closest_hoop, player_with_ball.Head.Position.Y > (char.Head.Position.Y + 1) and 1 or 6)
+                local lerpto_position = position_between_two_instances(player_with_ball.HumanoidRootPart, closest_hoop, player_with_ball.Head.Position.Y > (char.Head.Position.Y + 1) and 1 or 6)
                 
                 if vector.magnitude(lerpto_position - root.Position) > 0.2 then
                     hum.WalkToPoint = lerpto_position
