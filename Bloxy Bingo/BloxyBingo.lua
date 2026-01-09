@@ -1,45 +1,22 @@
 -- /// game.GameId == 5244411056 \\
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local SubContainer = LocalPlayer.PlayerGui.Bingo.StaticDisplayArea.Cards.PlayerArea.Cards.Container.SubContainer
+local Players = game:GetService('Players')
+local Client = Players.LocalPlayer
+local PlayerGui = Client:WaitForChild('PlayerGui')
 
-local firebutton, GetCards; do
-    firebutton = function(button)
-        if button then
-            for i, signal in pairs(getconnections(button.MouseButton1Click)) do
-                signal:Fire()
-            end
-            for i, signal in pairs(getconnections(button.MouseButton1Down)) do
-                signal:Fire()
-            end
-            for i, signal in pairs(getconnections(button.Activated)) do
-                signal:Fire()
-            end
-        end
-    end
-    
-    GetCards = function()
-        return SubContainer:FindFirstChild("Blocks") and SubContainer.Blocks.Block or SubContainer.VerticalScroll.Cards
-    end
-end
+getconnections(Client.Idled)[1]:Disconnect()
 
-while task.wait() do
-    local Cards;
-    local BingoButton = SubContainer.Buttons.ClaimButton
-    Cards = GetCards()
-    if Cards and BingoButton then
-        for _, card in pairs(Cards:GetChildren()) do
-            if card:IsA("Frame") then
-                if card and card:FindFirstChild("Content") and card.Content:FindFirstChild("Numbers") then
-                    for _, button in pairs(card.Content.Numbers:GetChildren()) do
-                        firebutton(button)
-                        task.wait()
-                    end
-                    if card and card:FindFirstChild("ToGo") and card.ToGo.ToGoText.Text == "BINGO!" then
-                        firebutton(BingoButton)
-                    end
-                end
-            end
+shared.afy = not shared.afy
+print('[afy]', shared.afy)
+
+while shared.afy and task.wait() do
+    for Index, Button in PlayerGui.Bingo.StaticDisplayArea.Cards.PlayerArea.Cards.Container.SubContainer:GetDescendants() do
+        local IsButton = Button:IsA('TextButton') or Button:IsA('ImageButton')
+        if not IsButton then continue end
+        
+        if table.find({'Plus', 'Minus'}, Button.Name) then continue end
+
+        for Index, Connection in getconnections(Button.Activated) do
+            Connection:Function()
         end
     end
 end
