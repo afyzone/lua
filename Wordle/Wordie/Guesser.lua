@@ -80,7 +80,7 @@ local function GetData()
 		return String:sub(1, Index - 1) .. Char .. String:sub(Index + 1)
 	end
 
-	local Rows = PlayerGui.MainUI.Game.HardcoreMode.InputArea.Rows
+	local Rows = PlayerGui.MainUI.Game.InputArea.Rows
 
 	for _, Value in Rows:GetDescendants() do
 		if Value:IsA('TextLabel') and Value.Name == 'TextArea' and Value.Text ~= '' then
