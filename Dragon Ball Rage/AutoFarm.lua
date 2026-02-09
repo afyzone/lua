@@ -10,10 +10,34 @@ local Client = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = Client:WaitForChild('PlayerGui')
 local Network = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Library'):WaitForChild('Network'))
 local WorldData, Connections = {
-    ['Time Chamber'] = 1362482151,
-    ['Gravity Chamber'] = 3371469539,
-    ['Hell'] = 15669378828,
-    ['Beerus Planet'] = 3336119605
+    ['Time Chamber'] = {
+        PlaceId = 1362482151,
+        Agility = 2,
+        Attack = 2,
+        Defense = 2,
+        Ki = 2,
+    },
+    ['Gravity Chamber'] = {
+        PlaceId = 3371469539,
+        Agility = 6,
+        Attack = 3,
+        Defense = 0.5,
+        Ki = 0.5,
+    },
+    ['Hell'] = {
+        PlaceId = 15669378828,
+        Agility = 0.5,
+        Attack = 0.5,
+        Defense = 4,
+        Ki = 1.5,
+    },
+    ['Beerus Planet'] = {
+        PlaceId = 3336119605,
+        Agility = 0.5,
+        Attack = 0.5,
+        Defense = 3,
+        Ki = 3,
+    }
 }, {}
 
 shared.afy = not shared.afy
@@ -68,15 +92,50 @@ local GetRoot; do
         end
     end
 
-    GetOptimalWorld = function(Training)
+    GetOptimalWorld = function(TrainingStat)
         local Zenkai = GetZenkai() or 0
+        local Agility, Attack, Defense, Ki = GetStatInfo()
+        local CanTimeChamber = Agility >= 1250000 and Attack >= 1250000 and Defense >= 1250000 and Ki >= 1250000
+        local Candidates = {}
 
-        if Training == "Agility" or Training == "Attack" then
-            return Zenkai >= 5 and "Gravity Chamber" or "Time Chamber"
-
-        elseif Training == "Defense" or Training == "Ki" then
-            return Zenkai >= 5 and "Beerus Planet" or Zenkai >= 3 and "Hell" or "Time Chamber"
+        if CanTimeChamber then
+            table.insert(Candidates, {
+                Name = "Time Chamber",
+                Multi = WorldData["Time Chamber"][TrainingStat] or 1
+            })
         end
+
+        if Zenkai >= 6 then
+            table.insert(Candidates, {
+                Name = "Gravity Chamber",
+                Multi = WorldData["Gravity Chamber"][TrainingStat] or 1
+            })
+        end
+
+        if Zenkai >= 3 then
+            table.insert(Candidates, {
+                Name = "Hell",
+                Multi = WorldData["Hell"][TrainingStat] or 1
+            })
+        end
+
+        if Zenkai >= 5 then
+            table.insert(Candidates, {
+                Name = "Beerus Planet",
+                Multi = WorldData["Beerus Planet"][TrainingStat] or 1
+            })
+        end
+
+        table.insert(Candidates, { Name = "Earth", Multi = 1 })
+
+        local BestWorld = Candidates[1]
+        for Index, World in ipairs(Candidates) do
+            if World.Multi > BestWorld.Multi then
+                BestWorld = World
+            end
+        end
+
+        return BestWorld.Name
     end
 end
 
@@ -110,16 +169,14 @@ while shared.afy and task.wait() do
     local EnergyPercent = GetEnergyPercent()
     local Agility, Attack, Defense, Ki = GetStatInfo()
     local TimeChamberThreshold = 1250000
-    local CanTimeChamber = Agility >= TimeChamberThreshold and Attack >= TimeChamberThreshold and Defense >= TimeChamberThreshold and Ki >= TimeChamberThreshold
-    local AgilityAttackPair = (BestTraining == "Agility" or BestTraining == "Attack")
-    local DefenceKiPair  = (BestTraining == "Defense" or BestTraining == "Ki")
     local OptimalWorld = GetOptimalWorld(BestTraining)
 
-    if OptimalWorld and (OptimalWorld ~= 'Time Chamber' or CanTimeChamber) and WorldData[OptimalWorld] ~= game.PlaceId then
-        TeleportService:Teleport(WorldData[OptimalWorld])
+    if OptimalWorld and WorldData[OptimalWorld].PlaceId ~= game.PlaceId then
+        TeleportService:Teleport(WorldData[OptimalWorld].PlaceId)
+        task.wait(5)
     end
 
-    if AgilityAttackPair then
+    if BestTraining == "Agility" or BestTraining == "Attack" then
         Network:FireServer("FastFlight", true)
         Network:FireServer("Combat")
         continue
@@ -138,7 +195,7 @@ while shared.afy and task.wait() do
     local Charging = Character:WaitForChild('State'):WaitForChild('Charging')
     if Charging and Charging.Value then Charge(false) continue end
 
-    if DefenceKiPair then
+    if BestTraining == "Defense" or BestTraining == "Ki" then
         Network:FireServer("DefenseTrain") -- , {["Autododge"] = false}
         Network:FireServer("KiBlast", 'Left', vector.zero)
     end
