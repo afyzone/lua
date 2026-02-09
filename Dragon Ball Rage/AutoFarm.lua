@@ -190,8 +190,11 @@ while shared.afy and task.wait() do
     local Charging = Character:WaitForChild('State'):WaitForChild('Charging')
     if Charging and Charging.Value then Charge(false) continue end
 
-    if BestTraining == "Defense" or BestTraining == "Ki" then
+    if BestTraining == "Defense" then
         Network:FireServer("DefenseTrain") -- , {["Autododge"] = false}
+    end
+
+    if BestTraining == "Ki" then
         Network:FireServer("KiBlast", 'Left', vector.zero)
     end
 end
