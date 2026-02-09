@@ -9,6 +9,8 @@ local TeleportService = game:GetService('TeleportService')
 local Client = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = Client:WaitForChild('PlayerGui')
 local Network = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Library'):WaitForChild('Network'))
+local StatUtils = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Shared'):WaitForChild('StatUtils'))
+
 local WorldData, Connections = {
     ['Time Chamber'] = {
         PlaceId = 1362482151,
@@ -60,23 +62,19 @@ local GetRoot; do
         end
     end
 
-    GetBestTraining = function()
-        for Index, Training in PlayerGui.PlayerInterface.Center.Zenkai.Container.Progress:GetChildren() do
-            if not Training:IsA('Frame') then continue end
-
-            local Progress = Training.Bar.Slider.Size.X.Scale
-            if Progress == 1 then continue end
-
-            local Name = Training.Name:gsub('Bar', '')
-            return Name
-        end
-    end
-
     GetStatInfo = function()
         local Stats = Client:FindFirstChild('Stats')
 
         if Stats then
-            return Stats.Agility.Value, Stats.Attack.Value, Stats.Defense.Value, Stats.Ki.Value
+            return Stats.Agility, Stats.Attack, Stats.Defense, Stats.Ki
+        end
+    end
+
+    GetBestTraining = function()
+        local Required = StatUtils:GetRequiredZenkaiStats(GetZenkai() + 1)
+        
+        for Index, Stat in GetStatInfo() do
+            if Stat.Value < Required then return v.Name end
         end
     end
 
@@ -95,7 +93,7 @@ local GetRoot; do
     GetOptimalWorld = function(TrainingStat)
         local Zenkai = GetZenkai() or 0
         local Agility, Attack, Defense, Ki = GetStatInfo()
-        local CanTimeChamber = Agility >= 1250000 and Attack >= 1250000 and Defense >= 1250000 and Ki >= 1250000
+        local CanTimeChamber = Agility.Value >= 1250000 and Attack.Value >= 1250000 and Defense.Value >= 1250000 and Ki.Value >= 1250000
         local Candidates = {}
 
         if CanTimeChamber then
