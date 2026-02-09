@@ -1,14 +1,14 @@
 local Flags = {}
 local HiddenFlags = {}
 
-if not game:IsLoaded() then game.Loaded:Wait() end
+if not game:IsLoaded() then game.Loaded:Wait() task.wait(1) end
 
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local TeleportService = game:GetService('TeleportService')
 local Client = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = Client:WaitForChild('PlayerGui')
-local Network = task.wait(1) and require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Library'):WaitForChild('Network'))
+local Network = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Library'):WaitForChild('Network'))
 local WorldData, Connections = {
     ['Time Chamber'] = 1362482151,
     ['Gravity Chamber'] = 3371469539,
