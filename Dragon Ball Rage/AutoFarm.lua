@@ -1,6 +1,8 @@
 local Flags = {}
 local HiddenFlags = {}
 
+if not game:IsLoaded() then game.Loaded:Wait() end
+
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local TeleportService = game:GetService('TeleportService')
