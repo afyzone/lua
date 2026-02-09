@@ -60,10 +60,8 @@ local GetRoot; do
 
     Charge = function(Bool)
         if Bool then
-            HiddenFlags.IsCharging = true
             Network:InvokeServer("ChargeEnergy", true)
         else
-            HiddenFlags.IsCharging = false
             Network:FireServer("ChargeEnergy", false)
         end
     end
