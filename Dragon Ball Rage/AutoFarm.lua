@@ -6,6 +6,7 @@ if not game:IsLoaded() then game.Loaded:Wait() task.wait(1) end
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local TeleportService = game:GetService('TeleportService')
+local GuiService = game:GetService("GuiService")
 local Client = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = Client:WaitForChild('PlayerGui')
 local Network = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Library'):WaitForChild('Network'))
@@ -146,6 +147,15 @@ table.insert(Connections, Client.OnTeleport:Connect(function()
         if afy then return end getgenv().afy = true
         loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Dragon%20Ball%20Rage/AutoFarm.lua'))()
     ]])
+end))
+
+table.insert(Connections, TeleportService.TeleportInitFailed:Connect(function()
+    task.wait(5)
+    TeleportService:Teleport(game.PlaceId)
+end))
+
+table.insert(Connections, GuiService.ErrorMessageChanged:Connect(function()
+    TeleportService:Teleport(game.PlaceId)
 end))
 
 while shared.afy and task.wait() do
