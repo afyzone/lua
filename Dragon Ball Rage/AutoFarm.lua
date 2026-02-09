@@ -165,10 +165,7 @@ while shared.afy and task.wait() do
         continue
     end
 
-    local Zenkai = GetZenkai()
     local EnergyPercent = GetEnergyPercent()
-    local Agility, Attack, Defense, Ki = GetStatInfo()
-    local TimeChamberThreshold = 1250000
     local OptimalWorld = GetOptimalWorld(BestTraining)
 
     if OptimalWorld and WorldData[OptimalWorld].PlaceId ~= game.PlaceId then
