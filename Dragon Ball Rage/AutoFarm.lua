@@ -1,6 +1,3 @@
--- https://www.roblox.com/games/71315343/
--- Auto Zenkai Boost, Auto Farm Every Stat
-
 local Flags = {}
 local HiddenFlags = {}
 
@@ -10,12 +7,12 @@ local TeleportService = game:GetService('TeleportService')
 local Client = Players.LocalPlayer
 local PlayerGui = Client:WaitForChild('PlayerGui')
 local Network = require(ReplicatedStorage.Modules.Library.Network)
-local WorldData = {
+local WorldData, Connections = {
     ['Time Chamber'] = 1362482151,
     ['Gravity Chamber'] = 3371469539,
     ['Hell'] = 15669378828,
     ['Beerus Planet'] = 3336119605
-}
+}, {}
 
 shared.afy = not shared.afy
 print('[afy]', shared.afy)
@@ -70,7 +67,27 @@ local GetRoot; do
             Network:FireServer("ChargeEnergy", false)
         end
     end
+
+    GetOptimalWorld = function(Training)
+        if Training == "Agility" or Training == "Attack" then
+            return Zenkai >= 5 and "Gravity Chamber" or "Time Chamber"
+
+        elseif Training == "Defense" or Training == "Ki" then
+            return Zenkai >= 5 and "Beerus Planet" or Zenkai >= 3 and "Hell" or "Time Chamber"
+        end
+    end
 end
+
+for Index, Connection in getconnections(Client.Idled) do
+    Connection:Disconnect()
+end
+
+table.insert(Connections, Client.OnTeleport:Connect(function()
+    queue_on_teleport([[
+        if afy then return end getgenv().afy = true
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Dragon%20Ball%20Rage/AutoFarm.lua'))()
+    ]])
+end))
 
 while shared.afy and task.wait() do
     local Character = Client.Character
@@ -94,24 +111,10 @@ while shared.afy and task.wait() do
     local CanTimeChamber = Agility >= TimeChamberThreshold and Attack >= TimeChamberThreshold and Defense >= TimeChamberThreshold and Ki >= TimeChamberThreshold
     local AgilityAttackPair = (BestTraining == "Agility" or BestTraining == "Attack")
     local DefenceKiPair  = (BestTraining == "Defense" or BestTraining == "Ki")
+    local OptimalWorld = GetOptimalWorld()
 
-    local OptimalWorld
-    if AgilityAttackPair then
-        OptimalWorld = (Zenkai >= 5) and "Gravity Chamber" or CanTimeChamber and "Time Chamber"
-    elseif DefenceKiPair then
-        if Zenkai >= 5 then
-            OptimalWorld = "Beerus Planet"
-        elseif Zenkai >= 3 then
-            OptimalWorld = "Hell"
-        elseif CanTimeChamber then
-            OptimalWorld = "Time Chamber"
-        end
-    end
-
-    if OptimalWorld then
-        if WorldData[OptimalWorld] ~= game.PlaceId then
-            TeleportService:Teleport(WorldData[OptimalWorld])
-        end
+    if OptimalWorld and (OptimalWorld ~= 'Time Chamber' or CanTimeChamber) and WorldData[OptimalWorld] ~= game.PlaceId then
+        TeleportService:Teleport(WorldData[OptimalWorld])
     end
 
     if AgilityAttackPair then
@@ -139,15 +142,20 @@ while shared.afy and task.wait() do
     end
 end
 
+for Index, Connection in Connections do
+    Connection:Disconnect()
+end
+
 Root.CFrame = HiddenFlags.OriginalCFrame
 
--- Name: Dragon Ball Rage PlaceId: 71315343
+-- Name: Prince SSJ3 âœ¨ | Dragon Ball Rage PlaceId: 71315343
 -- Name: Yardrat PlaceId: 1357512648
 -- Name: Time Chamber PlaceId: 1362482151
 -- Name: Beerus Planet PlaceId: 3336119605
 -- Name: Gravity Chamber PlaceId: 3371469539
 -- Name: HFIL PlaceId: 15669378828
 -- Name: Plushenza PlaceId: 105326626626130
+
 
 -- local GameTables = {}
 -- for Index, Table in shared.afy and getgc(true) or {} do 
