@@ -69,6 +69,8 @@ local GetRoot; do
     end
 
     GetOptimalWorld = function(Training)
+        local Zenkai = GetZenkai() or 0
+
         if Training == "Agility" or Training == "Attack" then
             return Zenkai >= 5 and "Gravity Chamber" or "Time Chamber"
 
@@ -111,7 +113,7 @@ while shared.afy and task.wait() do
     local CanTimeChamber = Agility >= TimeChamberThreshold and Attack >= TimeChamberThreshold and Defense >= TimeChamberThreshold and Ki >= TimeChamberThreshold
     local AgilityAttackPair = (BestTraining == "Agility" or BestTraining == "Attack")
     local DefenceKiPair  = (BestTraining == "Defense" or BestTraining == "Ki")
-    local OptimalWorld = GetOptimalWorld()
+    local OptimalWorld = GetOptimalWorld(BestTraining)
 
     if OptimalWorld and (OptimalWorld ~= 'Time Chamber' or CanTimeChamber) and WorldData[OptimalWorld] ~= game.PlaceId then
         TeleportService:Teleport(WorldData[OptimalWorld])
@@ -145,8 +147,6 @@ end
 for Index, Connection in Connections do
     Connection:Disconnect()
 end
-
-Root.CFrame = HiddenFlags.OriginalCFrame
 
 -- Name: Prince SSJ3 âœ¨ | Dragon Ball Rage PlaceId: 71315343
 -- Name: Yardrat PlaceId: 1357512648
