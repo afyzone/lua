@@ -1,5 +1,5 @@
 -- https://www.roblox.com/games/71315343/
--- Auto Zenkai Boost, Auto Farm Every Stat, Auto Reconnect, Auto Re-exec, Anti-AFK, Safe Farm
+-- Auto Zenkai Boost, Auto Farm Every Stat, Auto Reconnect, Auto Re-exec, Anti-AFK, Safe Farm, Auto Transform
 
 local Flags = Flags or {
     Type = 'Auto', -- Auto, Agility, Attack, Defense, Ki 
