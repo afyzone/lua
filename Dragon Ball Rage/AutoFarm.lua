@@ -104,7 +104,7 @@ local GetRoot; do
         local Required = StatUtils:GetRequiredZenkaiStats(GetZenkai() + 1)
         
         for Index, Stat in { GetStatInfo() } do
-            if Stat.Value < Required then return Stat.Name end
+            if Stat.Value < (Required or math.huge) then return Stat.Name end
         end
     end
 
