@@ -1,18 +1,25 @@
-local Flags = {}
-local HiddenFlags = {}
+-- https://www.roblox.com/games/71315343/
+-- Auto Zenkai Boost, Auto Farm Every Stat, Auto Reconnect, Auto Re-exec, Anti-AFK, Safe Farm
+
+local Flags = Flags or {
+    Type = 'Auto', -- Auto, Agility, Attack, Defense, Ki 
+    ZenkaiBoost = true,
+    SafeFarm = true,
+    OptimalWorld = true,
+}
 
 if not game:IsLoaded() then game.Loaded:Wait() task.wait(1) end
 
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local TeleportService = game:GetService('TeleportService')
-local GuiService = game:GetService("GuiService")
+local GuiService = game:GetService('GuiService')
 local Client = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = Client:WaitForChild('PlayerGui')
 local Network = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Library'):WaitForChild('Network'))
 local StatUtils = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Shared'):WaitForChild('StatUtils'))
 
-local WorldData, Connections = {
+local WorldData, Connections, HiddenFlags = {
     ['Time Chamber'] = {
         PlaceId = 1362482151,
         Agility = 2,
@@ -41,7 +48,7 @@ local WorldData, Connections = {
         Defense = 3,
         Ki = 3,
     }
-}, {}
+}, {}, {}
 
 shared.afy = not shared.afy
 print('[afy]', shared.afy)
@@ -94,7 +101,8 @@ local GetRoot; do
     GetOptimalWorld = function(TrainingStat)
         local Zenkai = GetZenkai() or 0
         local Agility, Attack, Defense, Ki = GetStatInfo()
-        local CanTimeChamber = Agility.Value >= 1250000 and Attack.Value >= 1250000 and Defense.Value >= 1250000 and Ki.Value >= 1250000
+        local TimeChamberThreshold = 1_250_000
+        local CanTimeChamber = Agility.Value >= TimeChamberThreshold and Attack.Value >= TimeChamberThreshold and Defense.Value >= TimeChamberThreshold and Ki.Value >= TimeChamberThreshold
         local Candidates = {}
 
         if CanTimeChamber then
@@ -143,7 +151,14 @@ for Index, Connection in getconnections(Client.Idled) do
 end
 
 table.insert(Connections, Client.OnTeleport:Connect(function()
-    queue_on_teleport([[
+    local SerializedFlags = 'getgenv().Flags = {'
+    for Setting, Value in Flags do
+        local IsString = typeof(Value) == 'string'
+        SerializedFlags..=(`%s={IsString and `'%s'` or `%s`},`):format(tostring(Setting), tostring(Value))
+    end
+    SerializedFlags..='}\n'
+
+    queue_on_teleport(SerializedFlags..[[
         if afy then return end getgenv().afy = true
         loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Dragon%20Ball%20Rage/AutoFarm.lua'))()
     ]])
@@ -155,6 +170,7 @@ table.insert(Connections, TeleportService.TeleportInitFailed:Connect(function()
 end))
 
 table.insert(Connections, GuiService.ErrorMessageChanged:Connect(function()
+    task.wait(2)
     TeleportService:Teleport(game.PlaceId)
 end))
 
@@ -164,21 +180,29 @@ while shared.afy and task.wait() do
     if not Root then continue end
 
     if not HiddenFlags.OriginalCFrame then HiddenFlags.OriginalCFrame = Root.CFrame end
-    Root.CFrame = CFrame.new(0, 10000, 0)
+
+    if Flags.SafeFarm then
+        Root.CFrame = CFrame.new(0, 10000, 0)
+    end
 
     local BestTraining = GetBestTraining()
-    if not BestTraining then
+
+    if Flags.ZenkaiBoost and not BestTraining then
         Network:InvokeServer("RequestZenkaiBoost")
         task.wait(2)
         continue
     end
 
+    local BestTraining = Flags.Type == 'Auto' and BestTraining or Flags.Type
     local EnergyPercent = GetEnergyPercent()
     local OptimalWorld = GetOptimalWorld(BestTraining)
+    local World = WorldData[OptimalWorld]
+    local WorldId = World and World.PlaceId
 
-    if OptimalWorld and WorldData[OptimalWorld].PlaceId ~= game.PlaceId then
-        TeleportService:Teleport(WorldData[OptimalWorld].PlaceId)
+    if Flags.OptimalWorld and WorldId ~= game.PlaceId then
+        TeleportService:Teleport(WorldId)
         task.wait(5)
+        continue
     end
 
     if BestTraining == "Agility" or BestTraining == "Attack" then
@@ -213,7 +237,7 @@ for Index, Connection in Connections do
     Connection:Disconnect()
 end
 
--- Name: Prince SSJ3 âœ¨ | Dragon Ball Rage PlaceId: 71315343
+-- Name: Dragon Ball Rage PlaceId: 71315343
 -- Name: Yardrat PlaceId: 1357512648
 -- Name: Time Chamber PlaceId: 1362482151
 -- Name: Beerus Planet PlaceId: 3336119605
