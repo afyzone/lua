@@ -6,6 +6,7 @@ local Flags = Flags or {
     ZenkaiBoost = true,
     SafeFarm = true,
     OptimalWorld = true,
+    Transform = true,
 }
 
 if not game:IsLoaded() then game.Loaded:Wait() task.wait(1) end
@@ -78,6 +79,27 @@ local GetRoot; do
         end
     end
 
+    GetTransformInfo = function()
+        local Character = Client.Character
+        if not Character then return end
+
+        local Stats = Client:FindFirstChild('Stats')
+        local State = Character:FindFirstChild('State')
+
+        if Stats and State then
+            return Stats.SelectedMode.Value, State.ActiveMode.Value
+        end
+    end
+
+    Transform = function()
+        local EquippedMode, EnabledMode = GetTransformInfo()
+
+        if EquippedMode and (not EnabledMode or EnabledMode == '') then
+            Network:InvokeServer("Transform", "Quick")
+            return true
+        end
+    end
+
     GetBestTraining = function()
         local Required = StatUtils:GetRequiredZenkaiStats(GetZenkai() + 1)
         
@@ -87,7 +109,11 @@ local GetRoot; do
     end
 
     GetZenkai = function()
-        return Client.leaderstats["Zenkai Boosts"].Value
+        local Stats = Client:FindFirstChild('Stats')
+
+        if Stats then
+            return Stats.ZenkaiBoost.Value
+        end
     end
 
     Charge = function(Bool)
@@ -183,6 +209,10 @@ while shared.afy and task.wait() do
 
     if Flags.SafeFarm then
         Root.CFrame = CFrame.new(0, 10000, 0)
+    end
+
+    if Flags.Transform then
+        if Transform() then continue end
     end
 
     local BestTraining = GetBestTraining()
