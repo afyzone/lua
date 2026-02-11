@@ -235,13 +235,13 @@ local GetRoot; do
         if DragonBall then
             HiddenFlags.DataStoreDelay = true
             BallFound = true
-            Root.CFrame = Model:GetPivot() + vector.create(0, -5, 0)
+            Root.CFrame = DragonBall:GetPivot() + vector.create(0, -5, 0)
 
             if not HiddenFlags.ProximityPrompt then
                 HiddenFlags.ProximityPrompt = true
 
                 task.delay(0.5, function()
-                    local Prox = Model:FindFirstChild('ProximityPrompt', true)
+                    local Prox = DragonBall:FindFirstChild('ProximityPrompt', true)
 
                     if Prox then
                         fireproximityprompt(Prox)
@@ -334,7 +334,7 @@ while shared.afy and task.wait() do
                     while Root and tick() - Tick < 0.5 and task.wait() do 
                         Root.CFrame = CenterPedestial.CFrame + vector.create(0, -5, 0)
                     end
-                    
+
                     fireproximityprompt(CenterPedestial.Attachment.ProximityPrompt)
                     Network:FireServer('SelectWish', 'ZenkaiBoost')
                 else
