@@ -283,14 +283,6 @@ while shared.afy and task.wait() do
 
     if not HiddenFlags.OriginalCFrame then HiddenFlags.OriginalCFrame = Root.CFrame end
 
-    if Flags.SafeFarm then
-        Root.CFrame = CFrame.new(0, 10000, 0)
-    end
-
-    if Flags.Transform then
-        if Transform() then continue end
-    end
-
     if Flags.DragonBallFinder then
         local DragonBalls, IsFull = GetDragonBallData()
 
@@ -298,6 +290,14 @@ while shared.afy and task.wait() do
             DragonBallFinder()
             continue
         end
+    end
+
+    if Flags.SafeFarm then
+        Root.CFrame = CFrame.new(0, 10000, 0)
+    end
+
+    if Flags.Transform then
+        if Transform() then continue end
     end
 
     local BestTraining = GetBestTraining()
