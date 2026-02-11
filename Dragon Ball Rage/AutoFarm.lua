@@ -20,6 +20,7 @@ local Client = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = Client:WaitForChild('PlayerGui')
 local Network = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Library'):WaitForChild('Network'))
 local StatUtils = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Shared'):WaitForChild('StatUtils'))
+local Constants = require(ReplicatedStorage:WaitForChild('Constants'))
 
 local HiddenFlags, Connections = {
     WorldData = {
@@ -114,7 +115,7 @@ local GetRoot; do
         local Required = StatUtils:GetRequiredZenkaiStats(GetZenkai() + 1)
         
         for Index, Stat in { GetStatInfo() } do
-            if Stat.Value < (Required or math.huge) then return Stat.Name end
+            if Stat.Value < (Required or Constants.Training.BaseMaxStats) then return Stat.Name end
         end
     end
 
@@ -287,10 +288,10 @@ while shared.afy and task.wait() do
         Root.CFrame = CFrame.new(0, 10000, 0)
     end
 
-    if Flags.DragonBallFinder then
-        local DragonBalls, IsFull = GetDragonBallData()
+    local DragonBalls, IsDragonBallFull = GetDragonBallData()
 
-        if not IsFull then
+    if Flags.DragonBallFinder then
+        if not IsDragonBallFull then
             DragonBallFinder()
             continue
         end
@@ -302,10 +303,23 @@ while shared.afy and task.wait() do
 
     local BestTraining = GetBestTraining()
 
-    if Flags.ZenkaiBoost and not BestTraining and GetZenkai() < 45 then
-        Network:InvokeServer("RequestZenkaiBoost")
-        task.wait(2)
-        continue
+    if Flags.ZenkaiBoost and not BestTraining then
+        local Zenkai = GetZenkai()
+        
+        if Zenkai < Constants.Training.MaxZenkai then
+            if Zenkai < Constants.Training.DragonBallZenkaiLimit then
+                local CanZenkaiBoost = StatUtils:CanPlayerZenkai(Client)
+
+                if CanZenkaiBoost then
+                    Network:InvokeServer("RequestZenkaiBoost")
+                end
+            elseif IsDragonBallFull then
+                Network:FireServer('SelectWish', 'ZenkaiBoost')
+            end
+
+            task.wait(2)
+            continue
+        end
     end
 
     local BestTraining = Flags.Type == 'Auto' and BestTraining or Flags.Type
