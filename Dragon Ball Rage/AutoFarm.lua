@@ -391,33 +391,3 @@ end
 for Index, Connection in Connections do
     Connection:Disconnect()
 end
-
--- Name: Dragon Ball Rage PlaceId: 71315343
--- Name: Yardrat PlaceId: 1357512648
--- Name: Time Chamber PlaceId: 1362482151
--- Name: Beerus Planet PlaceId: 3336119605
--- Name: Gravity Chamber PlaceId: 3371469539
--- Name: HFIL PlaceId: 15669378828
--- Name: Plushenza PlaceId: 105326626626130
-
-
--- local GameTables = {}
--- for Index, Table in shared.afy and getgc(true) or {} do 
---     if type(Table) == 'table' and rawget(Table, 'Remote') then 
---         -- Table.Remote.Name = Table.Name
-
---         if Table.Name == 'ChargeEnergy' then
---             if Table.Folder.Name == 'Functions' then Table.Name = 'ChargeEnergyStart' end
---             if Table.Folder.Name == 'Events' then Table.Name = 'ChargeEnergyStop' end
---         end
-
---         GameTables[Table.Name] = Table
---     end
--- end
--- GameTables.ChargeEnergyStart.Remote:FireServer("\a", true)
--- GameTables.ChargeEnergyStop.Remote:FireServer(false)
--- GameTables.RequestZenkaiBoost.Remote:FireServer("\x11")
--- GameTables.FastFlight.Remote:FireServer(true)
--- GameTables.Combat.Remote:FireServer()
--- GameTables.DefenseTrain.Remote:FireServer()
--- GameTables.KiBlast.Remote:FireServer('Left', vector.zero)
