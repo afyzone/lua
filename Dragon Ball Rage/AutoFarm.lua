@@ -206,6 +206,19 @@ local GetRoot; do
         return DragonBalls, IsFull
     end
 
+    GetDragonBall = function(DragonBalls)
+        for Index, Model in workspace.Map:GetChildren() do
+            local SpawnPos = Model:GetAttribute('SpawnPos')
+            local BallNumber = Model:GetAttribute('BallNum')
+
+            if SpawnPos and BallNumber then
+                if DragonBalls[BallNumber] then continue end
+
+                return Model
+            end
+        end
+    end
+
     DragonBallFinder = function()
         local EarthId = HiddenFlags.WorldData.Earth.PlaceId
         if game.PlaceId ~= EarthId then TeleportService:Teleport(EarthId) task.wait(5) end
@@ -217,34 +230,31 @@ local GetRoot; do
         local DragonBalls, IsFull, BallFound = GetDragonBallData()
         if IsFull then return end
 
-        for Index, Model in workspace.Map:GetChildren() do
-            local SpawnPos = Model:GetAttribute('SpawnPos')
-            local BallNumber = Model:GetAttribute('BallNum')
+        local DragonBall = GetDragonBall(DragonBalls)
 
-            if SpawnPos and BallNumber then
-                if DragonBalls[BallNumber] then continue end
-                BallFound = true
-                Root.CFrame = Model:GetPivot() + vector.create(0, -5, 0)
+        if DragonBall then
+            HiddenFlags.DataStoreDelay = true
+            BallFound = true
+            Root.CFrame = Model:GetPivot() + vector.create(0, -5, 0)
 
-                if not HiddenFlags.ProximityPrompt then
-                    HiddenFlags.ProximityPrompt = true
+            if not HiddenFlags.ProximityPrompt then
+                HiddenFlags.ProximityPrompt = true
 
-                    task.delay(0.5, function()
-                        local Prox = Model:FindFirstChild('ProximityPrompt', true)
+                task.delay(0.5, function()
+                    local Prox = Model:FindFirstChild('ProximityPrompt', true)
 
-                        if Prox then
-                            fireproximityprompt(Prox)
-                        end
+                    if Prox then
+                        fireproximityprompt(Prox)
+                    end
 
-                        task.wait(0.5)
-                        HiddenFlags.ProximityPrompt = false
-                    end)
-                end
+                    task.wait(0.5)
+                    HiddenFlags.ProximityPrompt = false
+                end)
             end
         end
 
         if not BallFound then
-            task.wait(1)
+            if HiddenFlags.DataStoreDelay then task.wait(1) end
             loadstring(game:HttpGet('https://raw.githubusercontent.com/Cesare0328/my-scripts/refs/heads/main/CachedServerhop.lua'))()
         end
     end
@@ -318,6 +328,9 @@ while shared.afy and task.wait() do
                 local EarthId = HiddenFlags.WorldData.Earth.PlaceId
                 
                 if game.PlaceId == EarthId then
+                    local CenterPedestial = workspace.Map.Pedestal.Center
+                    Root.CFrame = CenterPedestial.CFrame + vector.create(0, -5, 0)
+                    fireproximityprompt(CenterPedestial.Attachment.ProximityPrompt)
                     Network:FireServer('SelectWish', 'ZenkaiBoost')
                 else
                     TeleportService:Teleport(EarthId) 
