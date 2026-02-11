@@ -244,6 +244,7 @@ local GetRoot; do
         end
 
         if not BallFound then
+            task.wait(1)
             loadstring(game:HttpGet('https://raw.githubusercontent.com/Cesare0328/my-scripts/refs/heads/main/CachedServerhop.lua'))()
         end
     end
