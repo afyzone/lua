@@ -1,5 +1,5 @@
 -- https://www.roblox.com/games/71315343/
--- Auto Zenkai Boost, Auto Farm Every Stat, Auto Reconnect, Auto Re-exec, Anti-AFK, Safe Farm, Auto Transform
+-- Auto Zenkai Boost, Auto Farm Every Stat, Auto Reconnect, Auto Re-exec, Anti-AFK, Safe Farm, Auto Transform, Dragon Ball Finder
 
 local Flags = Flags or {
     Type = 'Auto', -- Auto, Agility, Attack, Defense, Ki 
@@ -7,6 +7,7 @@ local Flags = Flags or {
     SafeFarm = true,
     OptimalWorld = true,
     Transform = true,
+    DragonBallFinder = true,
 }
 
 if not game:IsLoaded() then game.Loaded:Wait() task.wait(1) end
@@ -20,36 +21,45 @@ local PlayerGui = Client:WaitForChild('PlayerGui')
 local Network = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Library'):WaitForChild('Network'))
 local StatUtils = require(ReplicatedStorage:WaitForChild('Modules'):WaitForChild('Shared'):WaitForChild('StatUtils'))
 
-local WorldData, Connections, HiddenFlags = {
-    ['Time Chamber'] = {
-        PlaceId = 1362482151,
-        Agility = 2,
-        Attack = 2,
-        Defense = 2,
-        Ki = 2,
-    },
-    ['Gravity Chamber'] = {
-        PlaceId = 3371469539,
-        Agility = 6,
-        Attack = 3,
-        Defense = 0.5,
-        Ki = 0.5,
-    },
-    ['Hell'] = {
-        PlaceId = 15669378828,
-        Agility = 0.5,
-        Attack = 0.5,
-        Defense = 4,
-        Ki = 1.5,
-    },
-    ['Beerus Planet'] = {
-        PlaceId = 3336119605,
-        Agility = 0.5,
-        Attack = 0.5,
-        Defense = 3,
-        Ki = 3,
+local HiddenFlags, Connections = {
+    WorldData = {
+        ['Time Chamber'] = {
+            PlaceId = 1362482151,
+            Agility = 2,
+            Attack = 2,
+            Defense = 2,
+            Ki = 2,
+        },
+        ['Gravity Chamber'] = {
+            PlaceId = 3371469539,
+            Agility = 6,
+            Attack = 3,
+            Defense = 0.5,
+            Ki = 0.5,
+        },
+        ['Hell'] = {
+            PlaceId = 15669378828,
+            Agility = 0.5,
+            Attack = 0.5,
+            Defense = 4,
+            Ki = 1.5,
+        },
+        ['Beerus Planet'] = {
+            PlaceId = 3336119605,
+            Agility = 0.5,
+            Attack = 0.5,
+            Defense = 3,
+            Ki = 3,
+        },
+        ['Earth'] = {
+            PlaceId = 71315343,
+            Agility = 1,
+            Attack = 1,
+            Defense = 1,
+            Ki = 1,
+        }
     }
-}, {}, {}
+}, {}
 
 shared.afy = not shared.afy
 print('[afy]', shared.afy)
@@ -134,28 +144,28 @@ local GetRoot; do
         if CanTimeChamber then
             table.insert(Candidates, {
                 Name = "Time Chamber",
-                Multi = WorldData["Time Chamber"][TrainingStat] or 1
+                Multi = HiddenFlags.WorldData["Time Chamber"][TrainingStat] or 1
             })
         end
 
         if Zenkai >= 6 then
             table.insert(Candidates, {
                 Name = "Gravity Chamber",
-                Multi = WorldData["Gravity Chamber"][TrainingStat] or 1
+                Multi = HiddenFlags.WorldData["Gravity Chamber"][TrainingStat] or 1
             })
         end
 
         if Zenkai >= 3 then
             table.insert(Candidates, {
                 Name = "Hell",
-                Multi = WorldData["Hell"][TrainingStat] or 1
+                Multi = HiddenFlags.WorldData["Hell"][TrainingStat] or 1
             })
         end
 
         if Zenkai >= 5 then
             table.insert(Candidates, {
                 Name = "Beerus Planet",
-                Multi = WorldData["Beerus Planet"][TrainingStat] or 1
+                Multi = HiddenFlags.WorldData["Beerus Planet"][TrainingStat] or 1
             })
         end
 
@@ -169,6 +179,72 @@ local GetRoot; do
         end
 
         return BestWorld.Name
+    end
+
+    GetDragonBallData = function()
+        local Stats = Client:FindFirstChild('Stats')
+        local DragonBalls = Stats and Stats:FindFirstChild('DragonBalls')
+        if not DragonBalls then return end
+
+        local DragonBallsString = DragonBalls.Value
+        local DragonBalls, IsFull = {}, true
+
+        for Index, BallData in DragonBallsString:split(';') do
+            local Ball = BallData:split('=')
+            local BallNumber = Ball and tonumber(Ball[1])
+            if not BallNumber then continue end
+            DragonBalls[BallNumber] = true
+        end
+
+        for Number = 1, 7 do
+            if not DragonBalls[Number] then
+                IsFull = false
+            end
+        end
+
+        return DragonBalls, IsFull
+    end
+
+    DragonBallFinder = function()
+        local EarthId = HiddenFlags.WorldData.Earth.PlaceId
+        if game.PlaceId ~= EarthId then TeleportService:Teleport(EarthId) task.wait(5) end
+
+        local Character = Client.Character
+        local Root = GetRoot(Character)
+        if not Root then return end
+
+        local DragonBalls, IsFull, BallFound = GetDragonBallData()
+        if IsFull then return end
+
+        for Index, Model in workspace.Map:GetChildren() do
+            local SpawnPos = Model:GetAttribute('SpawnPos')
+            local BallNumber = Model:GetAttribute('BallNum')
+
+            if SpawnPos and BallNumber then
+                if DragonBalls[BallNumber] then continue end
+                BallFound = true
+                Root.CFrame = Model:GetPivot() + vector.create(0, -5, 0)
+
+                if not HiddenFlags.ProximityPrompt then
+                    HiddenFlags.ProximityPrompt = true
+
+                    task.delay(0.5, function()
+                        local Prox = Model:FindFirstChild('ProximityPrompt', true)
+
+                        if Prox then
+                            fireproximityprompt(Prox)
+                        end
+
+                        task.wait(0.5)
+                        HiddenFlags.ProximityPrompt = false
+                    end)
+                end
+            end
+        end
+
+        if not BallFound then
+            loadstring(game:HttpGet('https://raw.githubusercontent.com/Cesare0328/my-scripts/refs/heads/main/CachedServerhop.lua'))()
+        end
     end
 end
 
@@ -215,9 +291,18 @@ while shared.afy and task.wait() do
         if Transform() then continue end
     end
 
+    if Flags.DragonBallFinder then
+        local DragonBalls, IsFull = GetDragonBallData()
+
+        if not IsFull then
+            DragonBallFinder()
+            continue
+        end
+    end
+
     local BestTraining = GetBestTraining()
 
-    if Flags.ZenkaiBoost and not BestTraining then
+    if Flags.ZenkaiBoost and not BestTraining and GetZenkai() < 45 then
         Network:InvokeServer("RequestZenkaiBoost")
         task.wait(2)
         continue
@@ -226,7 +311,7 @@ while shared.afy and task.wait() do
     local BestTraining = Flags.Type == 'Auto' and BestTraining or Flags.Type
     local EnergyPercent = GetEnergyPercent()
     local OptimalWorld = GetOptimalWorld(BestTraining)
-    local World = WorldData[OptimalWorld]
+    local World = HiddenFlags.WorldData[OptimalWorld]
     local WorldId = World and World.PlaceId
 
     if Flags.OptimalWorld and WorldId ~= game.PlaceId then
