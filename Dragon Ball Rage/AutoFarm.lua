@@ -233,6 +233,7 @@ local GetRoot; do
         local DragonBall = GetDragonBall(DragonBalls)
 
         if DragonBall then
+            HiddenFlags.DataStoreDelay = true
             BallFound = true
             Root.CFrame = Model:GetPivot() + vector.create(0, -5, 0)
 
@@ -253,7 +254,7 @@ local GetRoot; do
         end
 
         if not BallFound then
-            task.wait(1)
+            if HiddenFlags.DataStoreDelay then task.wait(1) end
             loadstring(game:HttpGet('https://raw.githubusercontent.com/Cesare0328/my-scripts/refs/heads/main/CachedServerhop.lua'))()
         end
     end
