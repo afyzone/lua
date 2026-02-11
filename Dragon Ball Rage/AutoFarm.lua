@@ -115,7 +115,7 @@ local GetRoot; do
         local Required = StatUtils:GetRequiredZenkaiStats(GetZenkai() + 1)
         
         for Index, Stat in { GetStatInfo() } do
-            if Stat.Value < (Required or Constants.Training.BaseMaxStats) then return Stat.Name end
+            if Stat.Value < (Required or StatUtils.MaxStats) then return Stat.Name end
         end
     end
 
