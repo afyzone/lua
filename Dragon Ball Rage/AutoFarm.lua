@@ -329,7 +329,12 @@ while shared.afy and task.wait() do
                 
                 if game.PlaceId == EarthId then
                     local CenterPedestial = workspace.Map.Pedestal.Center
-                    Root.CFrame = CenterPedestial.CFrame + vector.create(0, -5, 0)
+                    local Tick = tick()
+
+                    while Root and tick() - Tick < 0.5 and task.wait() do 
+                        Root.CFrame = CenterPedestial.CFrame + vector.create(0, -5, 0)
+                    end
+                    
                     fireproximityprompt(CenterPedestial.Attachment.ProximityPrompt)
                     Network:FireServer('SelectWish', 'ZenkaiBoost')
                 else
