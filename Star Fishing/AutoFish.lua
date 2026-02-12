@@ -1,3 +1,4 @@
+
 -- https://www.roblox.com/games/86111605798689/
 -- Auto Fish
 
@@ -25,8 +26,8 @@ local function Cast()
     local Rod = Character:FindFirstChild('Rod')
     if not Rod then return end
 
-    local Farming = Flags.Farm == 'Self' and Root or workspace.Zones:FindFirstChild(Flags.Farm) or Root
-    local FarmType = {Farming:GetPivot().Position, Farming:GetPivot().LookVector}
+    local Farming = Flags.Farm == 'Self' and Root or workspace.Galaxies:FindFirstChild(Flags.Farm) or Root
+    local FarmType = {Farming:GetPivot().Position + vector.create(0, 5, 0), Farming:GetPivot().LookVector}
     local CastArguments = {
         Humanoid,
         FarmType[1],
