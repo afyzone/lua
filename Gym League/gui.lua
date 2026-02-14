@@ -228,6 +228,13 @@ local script_handler = {}; do
 
             local success = pcall(function()
                 path:ComputeAsync(root.Position, pos)
+
+                if path.Status ~= Enum.PathStatus.Success then
+                    local SpawnLocation = workspace.Map:FindFirstChild('SpawnLocation')
+                    root.CFrame = SpawnLocation.CFrame + vector.create(0, 4, 0)
+                    return
+                end
+
                 local waypoints = path:GetWaypoints()
     
                 for _, waypoint in (waypoints) do
@@ -349,15 +356,14 @@ local script_handler = {}; do
                     end
                 else
                     if (self.farmmode) then 
-                        -- self:call('EquipmentService', 'RF', 'AutoLoad') pressing auto load in the current game version also enables Auto Train in game which can be bought for 10k
-                        -- and it disables this scripts fast clicking power then it caps the speed of the training to 1.00x because its the free version (10k in game money)
-                        
-                        if (not self.enable_fast_mode) then
-                            task.spawn(function()
-                                task.wait(0.1)
-                                self:call('EquipmentService', 'RE', 'autoTrain', false)
-                            end)
-                        end
+                        self:call('EquipmentService', 'RF', 'AutoLoad')
+
+                        -- if (not self.enable_fast_mode) then
+                        --     task.spawn(function()
+                        --         task.wait(0.1)
+                        --         self:call('EquipmentService', 'RE', 'autoTrain', false)
+                        --     end)
+                        -- end
 
                         if (self.auto_click) then
                             self:call('EquipmentService', 'RE', 'click')
@@ -371,7 +377,7 @@ local script_handler = {}; do
                                 root.CFrame = target:FindFirstChildWhichIsA('Part').CFrame
                                 fireproximityprompt(target_prompt, 1, true)
                             end
-
+`
                             self.fast_mode_delay = os.clock()
                         end
                     end
@@ -436,7 +442,7 @@ local script_handler = {}; do
         local rewards = podium.RewardsFrame
 
         if (podium.Enabled) then
-            replicatedstorage.common.minigames.Competition.comm:FireServer()
+            -- replicatedstorage:WaitForChild("Shared"):WaitForChild("minigames"):WaitForChild("Competition"):WaitForChild("comm"):FireServer()
 
             for i,v in (getconnections(rewards.CanvasGroup.Continue.MouseButton1Up)) do
                 v:Function()
@@ -451,7 +457,7 @@ local script_handler = {}; do
 
                 if (os.clock() - (self.debounces['competition'] or 0) > 3) then
                     self.current_farming_instance = nil
-                    self:can_collide(true)
+                    -- self:can_collide(true)
                     self:call('EquipmentService', 'RF', 'Leave')
                     self:call('MiniPodiumService', 'RF', 'Teleport')
 
@@ -522,9 +528,9 @@ local main_tab = UI.New({Title = 'Main'}); do
         handler.manual_farm = Value
     end})
     
-    main_tab.Toggle({Text = 'Fast Mode (Blatant)', Enabled = false, Callback = function(self)
-        handler.enable_fast_mode = self
-    end, Menu = { Information = function(self) UI.Banner({Text = "Sometimes faster stat gain." }) end}})
+    -- main_tab.Toggle({Text = 'Fast Mode (Blatant)', Enabled = false, Callback = function(self)
+    --     handler.enable_fast_mode = self
+    -- end, Menu = { Information = function(self) UI.Banner({Text = "Sometimes faster stat gain." }) end}})
     
     main_tab.Toggle({Text = 'Auto Clicker', Enabled = false, Callback = function(self)
         handler.auto_click = self
