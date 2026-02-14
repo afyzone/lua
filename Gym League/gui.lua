@@ -13,6 +13,9 @@ local players = service.Players
 local runservice = service.RunService
 local pathfindservice =  service.PathfindingService
 local replicatedstorage = service.ReplicatedStorage
+local ReplicatedStorage = service.ReplicatedStorage
+local EquipmentsModule = require(ReplicatedStorage.Shared.presets.equipments)
+local BigNum = require(ReplicatedStorage.Packages.BigNum)
 
 local Material = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone/8874e6a5f489d7e548db2ed8f5b87004/raw/"))()
 local UI = Material.Load({Title = "@cats - Gym League",Style = 1,SizeX = 500,SizeY = 400, ColorOverrides = { MainFrame = Color3.fromRGB(15,15,15), Minimise = Color3.fromRGB(68, 208, 255), MinimiseAccent = Color3.fromRGB(3, 188, 182), Maximise = Color3.fromRGB(25,255,0), MaximiseAccent = Color3.fromRGB(0,255,110), NavBar = Color3.fromRGB(15,15,15), NavBarAccent = Color3.fromRGB(255,255,255), NavBarInvert = Color3.fromRGB(15,15,15), TitleBar = Color3.fromRGB(30, 30, 30), TitleBarAccent = Color3.fromRGB(255,255,255), Overlay = Color3.fromRGB(30, 30, 30), Banner = Color3.fromRGB(30, 30, 30), BannerAccent = Color3.fromRGB(255,255,255), Content = Color3.fromRGB(85,85,85), Button = Color3.fromRGB(40, 40, 40), ButtonAccent = Color3.fromRGB(235, 235, 235), ChipSet = Color3.fromRGB(170, 170, 170), ChipSetAccent = Color3.fromRGB(100,100,100), DataTable = Color3.fromRGB(160,160,160), DataTableAccent = Color3.fromRGB(45,45,45), Slider = Color3.fromRGB(45,45,45), SliderAccent = Color3.fromRGB(235,235,235), Toggle = Color3.fromRGB(230, 230, 230), ToggleAccent = Color3.fromRGB(235, 235, 235), Dropdown = Color3.fromRGB(45, 45, 45), DropdownAccent = Color3.fromRGB(235,235,235), ColorPicker = Color3.fromRGB(10, 10, 10), ColorPickerAccent = Color3.fromRGB(235,235,235), TextField = Color3.fromRGB(55,55,55), TextFieldAccent = Color3.fromRGB(235,235,235), }})
@@ -21,18 +24,7 @@ local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local label_timer = workspace.Podium.entrance.billboard.billboard.labelTimer
 
-local powerups, equipment_rewards, fast_mode = {}, {
-    ['Stamina'] = 'treadmill',
-    ['Chest'] = 'benchpress',
-    ['Triceps'] = workspace.Equipments:FindFirstChild('triceppushdown') and 'triceppushdown' or 'tricepscurl',
-    ['Shoulder'] = 'pushpress',
-    ['Abs'] = 'crunch',
-    ['Forearm'] = 'wristcurl',
-    ['Legs'] = 'legpress',
-    ['Back'] = 'deadlift',
-    ['Biceps'] = 'hammercurl',
-    ['Calves'] = 'frontsquat',
-}, {
+local powerups, fast_mode = {}, {
     ['Stamina'] = false,
     ['Chest'] = true,
     ['Triceps'] = not workspace.Equipments:FindFirstChild('triceppushdown'),
@@ -44,6 +36,47 @@ local powerups, equipment_rewards, fast_mode = {}, {
     ['Biceps'] = true,
     ['Calves'] = true,
 }
+
+-- local equipment_rewards = {
+--     ['Stamina'] = 'treadmill',
+--     ['Chest'] = 'benchpress',
+--     ['Triceps'] = workspace.Equipments:FindFirstChild('triceppushdown') and 'triceppushdown' or 'tricepscurl',
+--     ['Shoulder'] = 'pushpress',
+--     ['Abs'] = 'crunch',
+--     ['Forearm'] = 'wristcurl',
+--     ['Legs'] = 'legpress',
+--     ['Back'] = 'deadlift',
+--     ['Biceps'] = 'hammercurl',
+--     ['Calves'] = 'frontsquat',
+-- }
+
+local Equipments = {} -- {['hammercurl'] = {['Biceps'] = 0.7, ['Forearm'] = 0.3}, ...}
+local EquipmentNaming = {}
+for Index, EquipmentInfo in EquipmentsModule do
+	if type(EquipmentInfo) == 'table' and (EquipmentInfo.type == 'machine' or EquipmentInfo.type == 'weight' or EquipmentInfo.type == 'treadmill') then
+        Equipments[Index] = EquipmentInfo.earnings
+        table.insert(EquipmentNaming, Index)
+	end
+end
+
+local function GetBestEquipmentName(Muscle)
+    local Highest, Best = 0, nil
+
+    for MachineName, Info in Equipments do
+        local Machine = workspace.Equipments:FindFirstChild(MachineName)
+        if not Machine then continue end
+
+        local Stat = Info[Muscle]
+        if not Stat then continue end
+
+        if Stat > Highest then
+            Highest = Stat
+            Best = MachineName
+        end
+    end
+
+    return Best
+end
 
 for i,v in (playergui.Frames.GymStore.PowerUps.CanvasGroup.List:GetChildren()) do
     if (not v:IsA('Frame')) then continue end
@@ -103,13 +136,13 @@ local script_handler = {}; do
         self.use_all_powerups = false
         self.selected_powerup = {}
         
-        self.ui_funcs = {}; do
-            for i,v in (equipment_rewards) do
-                self.ui_funcs[i] = function(self)
-                    self.SetText(v)
-                end
-            end
-        end
+        -- self.ui_funcs = {}; do
+        --     for i,v in (equipment_rewards) do
+        --         self.ui_funcs[i] = function(self)
+        --             self.SetText(v)
+        --         end
+        --     end
+        -- end
 
         return self
     end 
@@ -160,10 +193,10 @@ local script_handler = {}; do
     end
     
     function script_handler:grab_stamina()
-        local stamina = client:GetAttribute('stamina')
-        local max_stamina = client:GetAttribute('maxStamina')
+        local Stamina = BigNum.fromString64(client:GetAttribute('stamina') or BigNum.One)
+        local MaxStamina = BigNum.fromString64(client:GetAttribute('maxStamina') or BigNum.One)
 
-        return (stamina / max_stamina) * 100
+        return (Stamina:native() / MaxStamina:native()) * 100
     end
 
     function script_handler:move(pos: Vector3)
@@ -236,7 +269,7 @@ local script_handler = {}; do
     end
 
     function script_handler:call(service, folder, remote, ...)
-        local remote_service = replicatedstorage.common.packages._Index["sleitnick_knit@1.5.1"].knit.Services[service]
+        local remote_service = replicatedstorage.Packages._Index["sleitnick_knit@1.5.1"].knit.Services[service]
         local remote_folder = remote_service and remote_service[folder]
         local remote = remote_folder and remote_folder[remote]
         local args = {...}
@@ -373,12 +406,15 @@ local script_handler = {}; do
                 if (v == 100) then continue end
                 all_stats_maxed = false
 
-                local equipment = self:get_equipment(equipment_rewards[i])
+                local EquipmentName = GetBestEquipmentName(i)
+                if not EquipmentName then continue end
+
+                local equipment = self:get_equipment(EquipmentName)
                 if (not equipment) then continue end
 
                 self.fast_mode = fast_mode[i]
 
-                return equipment_rewards[i]
+                return EquipmentName
             end
         end)()
 
@@ -390,7 +426,7 @@ local script_handler = {}; do
             return self.manual_farm
         end
 
-        return selected_farm or equipment_rewards['Stamina']
+        return selected_farm or GetBestEquipmentName('Stamina')
     end
 
     function script_handler:competition()
@@ -473,14 +509,18 @@ local main_tab = UI.New({Title = 'Main'}); do
         handler.manual = self
     end, Menu = { Information = function(self) UI.Banner({Text = "Turning on manual mode wont auto complete your stats." }) end}})
 
-    main_tab.TextField({
-        Text = "Manual Farms",
-        Editable = false,
-        Callback = function(Value)
-            handler.manual_farm = Value
-        end,
-        Menu = handler.ui_funcs
-    })
+    -- main_tab.TextField({
+    --     Text = "Manual Farms",
+    --     Editable = false,
+    --     Callback = function(Value)
+    --         handler.manual_farm = Value
+    --     end,
+    --     Menu = handler.ui_funcs
+    -- })
+
+    main_tab.Dropdown({Text = 'Choose manual farm', Default = 'Stamina', Options = EquipmentNaming, Callback = function(Value)
+        handler.manual_farm = Value
+    end})
     
     main_tab.Toggle({Text = 'Fast Mode (Blatant)', Enabled = false, Callback = function(self)
         handler.enable_fast_mode = self
