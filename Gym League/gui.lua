@@ -16,15 +16,12 @@ local replicatedstorage = service.ReplicatedStorage
 local ReplicatedStorage = service.ReplicatedStorage
 local EquipmentsModule = require(ReplicatedStorage.Shared.presets.equipments)
 local BigNum = require(ReplicatedStorage.Packages.BigNum)
-local Packages = ReplicatedStorage.Packages
-local KnitModule = require(Packages.knit)
-local WorldService = KnitModule.GetService("WorldService")
+local KnitModule = require(ReplicatedStorage.Packages.knit)
 local GymsList = require(ReplicatedStorage.HotControllers:WaitForChild('GymsList_Loaded'))
-local ActiveWorlds = GymsList.Config.GetActiveWorlds and GymsList.Config.GetActiveWorlds()
+local WorldsModule = require(ReplicatedStorage.Shared.presets.worlds)
+local WorldService = KnitModule.GetService("WorldService")
 local DataController = KnitModule.GetController("DataController")
-local Presets = ReplicatedStorage.Shared.presets
-local WorldsModule = require(Presets.worlds)
-
+local ActiveWorlds = GymsList.Config.GetActiveWorlds and GymsList.Config.GetActiveWorlds()
 
 local Material = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone/8874e6a5f489d7e548db2ed8f5b87004/raw/"))()
 local UI = Material.Load({Title = "@cats - Gym League",Style = 1,SizeX = 500,SizeY = 400, ColorOverrides = { MainFrame = Color3.fromRGB(15,15,15), Minimise = Color3.fromRGB(68, 208, 255), MinimiseAccent = Color3.fromRGB(3, 188, 182), Maximise = Color3.fromRGB(25,255,0), MaximiseAccent = Color3.fromRGB(0,255,110), NavBar = Color3.fromRGB(15,15,15), NavBarAccent = Color3.fromRGB(255,255,255), NavBarInvert = Color3.fromRGB(15,15,15), TitleBar = Color3.fromRGB(30, 30, 30), TitleBarAccent = Color3.fromRGB(255,255,255), Overlay = Color3.fromRGB(30, 30, 30), Banner = Color3.fromRGB(30, 30, 30), BannerAccent = Color3.fromRGB(255,255,255), Content = Color3.fromRGB(85,85,85), Button = Color3.fromRGB(40, 40, 40), ButtonAccent = Color3.fromRGB(235, 235, 235), ChipSet = Color3.fromRGB(170, 170, 170), ChipSetAccent = Color3.fromRGB(100,100,100), DataTable = Color3.fromRGB(160,160,160), DataTableAccent = Color3.fromRGB(45,45,45), Slider = Color3.fromRGB(45,45,45), SliderAccent = Color3.fromRGB(235,235,235), Toggle = Color3.fromRGB(230, 230, 230), ToggleAccent = Color3.fromRGB(235, 235, 235), Dropdown = Color3.fromRGB(45, 45, 45), DropdownAccent = Color3.fromRGB(235,235,235), ColorPicker = Color3.fromRGB(10, 10, 10), ColorPickerAccent = Color3.fromRGB(235,235,235), TextField = Color3.fromRGB(55,55,55), TextFieldAccent = Color3.fromRGB(235,235,235), }})
@@ -130,6 +127,8 @@ local script_handler = {}; do
         self.farmmode = false
         self.autofarm = false
 
+        self.farmstatus = 'Disabled'
+
         self.enable_fast_mode = false
         self.fast_mode = false
 
@@ -166,6 +165,7 @@ local script_handler = {}; do
             self.current_farming_instance = nil
         end
 
+        self.farmstatus = text
         self.current_farming = text
     end
  
@@ -318,6 +318,10 @@ local script_handler = {}; do
         local root = get_root(char)
         local hum = get_hum(char)
 
+        if self.AutoFarmTextField then
+            self.AutoFarmTextField:SetText('Status: '..self.farmstatus)
+        end
+
         if self.autonextworld then
             self:try_next_world()
         end
@@ -328,7 +332,10 @@ local script_handler = {}; do
         end
 
         self:competition()
-        if (not self.comp_yield) then
+        if (self.comp_yield) then
+            self.farmstatus = 'Competition'
+            return
+        else
             self:can_collide(client:GetAttribute('ragdolled'))
         end
 
@@ -556,6 +563,7 @@ local main_tab = UI.New({Title = 'Main'}); do
     main_tab.Toggle({Text = 'Autofarm', Enabled = false, Callback = function(self)
         handler:toggle_autofarm(self)
     end, Menu = { Information = function(self) UI.Banner({Text = "Finds the best equipment to farm based on your stats." }) end}})
+    handler.AutoFarmTextField = main_tab.TextField({Text = 'Status: '..handler.farmstatus, Type = 'NoSuggestions'})
 
     main_tab.Label({Text = 'Manual Farming'})
     main_tab.Toggle({Text = 'Manual Farm', Enabled = false, Callback = function(self)
@@ -578,6 +586,27 @@ local main_tab = UI.New({Title = 'Main'}); do
     -- main_tab.Toggle({Text = 'Fast Mode (Blatant)', Enabled = false, Callback = function(self)
     --     handler.enable_fast_mode = self
     -- end, Menu = { Information = function(self) UI.Banner({Text = "Sometimes faster stat gain." }) end}})
+
+    main_tab.Label({Text = 'Progression'})
+    main_tab.Toggle({Text = 'Auto Quest', Callback = function(self)
+        handler.autoquest = self
+    end})
+    main_tab.Toggle({Text = 'Auto World', Callback = function(self)
+        if self then
+            local GetQuest = workspace:FindFirstChild('GetQuest', true)
+
+            if GetQuest then
+                local Prox = GetQuest:FindFirstChild('GetQuest')
+                local Quest = Prox and Prox:GetAttribute('Quest')
+
+                if Quest then
+                    handler:call('QuestService', 'RF', 'giveStoryQuest', Quest)
+                end
+            end
+        end
+
+        handler.autonextworld = self
+    end})
     
     main_tab.Toggle({Text = 'Auto Clicker', Enabled = false, Callback = function(self)
         handler.auto_click = self
@@ -622,12 +651,6 @@ local misc_tab = UI.New({Title = 'Misc'}); do
 
     misc_tab.Toggle({Text = 'Next Alter (Upgrades body)', Callback = function(self)
         handler.next_alter = self
-    end})
-
-    misc_tab.Label({Text = 'Quests'})
-    misc_tab.Toggle({Text = 'Auto Quest + World', Callback = function(self)
-        handler.autoquest = self
-        handler.autonextworld = self
     end})
 
     misc_tab.Label({Text = 'Aura'})
