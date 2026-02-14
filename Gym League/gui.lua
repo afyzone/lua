@@ -332,6 +332,20 @@ local script_handler = {}; do
             self:roll('PoseService', self.buyposerolls)
         end
 
+        if (self.autoquest) then
+            for Index, Quest in playergui.Frames.Quests.MainQuestsList:GetChildren() do
+                local Reward = Quest:FindFirstChild('Reward')
+                if not Reward or not Quest:IsA('Frame') or #Quest:GetChildren() == 0 then continue end
+
+                if Reward.BackgroundColor3 == Color3.fromRGB(94, 255, 19) then
+                    local Name = Quest.Name
+
+                    self:call('QuestService', 'RF', 'complete', Name)
+                    self:call('QuestService', 'RF', 'giveStoryQuest', Name)
+                end
+            end
+        end
+
         if (self.autofarm or self.manual) then
             if (self.comp_yield) then return end
 
@@ -377,7 +391,7 @@ local script_handler = {}; do
                                 root.CFrame = target:FindFirstChildWhichIsA('Part').CFrame
                                 fireproximityprompt(target_prompt, 1, true)
                             end
-`
+                            
                             self.fast_mode_delay = os.clock()
                         end
                     end
@@ -388,8 +402,8 @@ local script_handler = {}; do
                     self:pathmove(target:GetPivot().Position)
                     
                     if vector.magnitude(root.Position - target:GetPivot().Position) < 10 then
-                        fireproximityprompt(target_prompt, 1, true)
                         self.current_farming_instance = target
+                        fireproximityprompt(target_prompt, 1, true)
                     end
                 end
             end
@@ -481,16 +495,18 @@ local script_handler = {}; do
             local character_item = char:FindFirstChild(item)
             local backpack_item = backpack:FindFirstChild(item)
 
-            if (backpack_item or character_item) then
+            if (boost) then
                 if (self.use_powerup) then
-                    if (backpack_item) then
-                        backpack_item.Parent = char
-                    end
+                    -- if (backpack_item) then
+                    --     backpack_item.Parent = char
+                    -- end
 
-                    if (character_item) then
-                        character_item:Activate()
-                        character_item.Parent = backpack
-                    end
+                    -- if (character_item) then
+                    --     character_item:Activate()
+                    --     character_item.Parent = backpack
+                    -- end
+                    
+                    self:call('ToolService', 'RF', 'ActivateTool', { powerupName = item, player = client })
                 end
             else
                 if (not boost and self.buy_powerup and os.clock() - (self.debounces[item] or 0) >= 2) then
@@ -577,6 +593,11 @@ local misc_tab = UI.New({Title = 'Misc'}); do
         handler.next_alter = self
     end})
 
+    misc_tab.Label({Text = 'Quests'})
+    misc_tab.Toggle({Text = 'Auto Quest', Callback = function(self)
+        handler.autoquest = self
+    end})
+
     misc_tab.Label({Text = 'Aura'})
     misc_tab.Toggle({Text = 'Aura Roll', Callback = function(self)
         handler.auraautoroll = self
@@ -596,7 +617,11 @@ local misc_tab = UI.New({Title = 'Misc'}); do
     end})
 end
 
-runservice.Heartbeat:Connect(function()
+if shared.afy then
+    shared.afy:Disconnect()
+end
+
+shared.afy = runservice.Heartbeat:Connect(function()
     handler:update_farm(handler:grab_farm())
     handler:update()
 end)
