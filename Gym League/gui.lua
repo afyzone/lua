@@ -16,6 +16,15 @@ local replicatedstorage = service.ReplicatedStorage
 local ReplicatedStorage = service.ReplicatedStorage
 local EquipmentsModule = require(ReplicatedStorage.Shared.presets.equipments)
 local BigNum = require(ReplicatedStorage.Packages.BigNum)
+local Packages = ReplicatedStorage.Packages
+local KnitModule = require(Packages.knit)
+local WorldService = KnitModule.GetService("WorldService")
+local GymsList = require(ReplicatedStorage.HotControllers:WaitForChild('GymsList_Loaded'))
+local ActiveWorlds = GymsList.Config.GetActiveWorlds and GymsList.Config.GetActiveWorlds()
+local DataController = KnitModule.GetController("DataController")
+local Presets = ReplicatedStorage.Shared.presets
+local WorldsModule = require(Presets.worlds)
+
 
 local Material = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone/8874e6a5f489d7e548db2ed8f5b87004/raw/"))()
 local UI = Material.Load({Title = "@cats - Gym League",Style = 1,SizeX = 500,SizeY = 400, ColorOverrides = { MainFrame = Color3.fromRGB(15,15,15), Minimise = Color3.fromRGB(68, 208, 255), MinimiseAccent = Color3.fromRGB(3, 188, 182), Maximise = Color3.fromRGB(25,255,0), MaximiseAccent = Color3.fromRGB(0,255,110), NavBar = Color3.fromRGB(15,15,15), NavBarAccent = Color3.fromRGB(255,255,255), NavBarInvert = Color3.fromRGB(15,15,15), TitleBar = Color3.fromRGB(30, 30, 30), TitleBarAccent = Color3.fromRGB(255,255,255), Overlay = Color3.fromRGB(30, 30, 30), Banner = Color3.fromRGB(30, 30, 30), BannerAccent = Color3.fromRGB(255,255,255), Content = Color3.fromRGB(85,85,85), Button = Color3.fromRGB(40, 40, 40), ButtonAccent = Color3.fromRGB(235, 235, 235), ChipSet = Color3.fromRGB(170, 170, 170), ChipSetAccent = Color3.fromRGB(100,100,100), DataTable = Color3.fromRGB(160,160,160), DataTableAccent = Color3.fromRGB(45,45,45), Slider = Color3.fromRGB(45,45,45), SliderAccent = Color3.fromRGB(235,235,235), Toggle = Color3.fromRGB(230, 230, 230), ToggleAccent = Color3.fromRGB(235, 235, 235), Dropdown = Color3.fromRGB(45, 45, 45), DropdownAccent = Color3.fromRGB(235,235,235), ColorPicker = Color3.fromRGB(10, 10, 10), ColorPickerAccent = Color3.fromRGB(235,235,235), TextField = Color3.fromRGB(55,55,55), TextFieldAccent = Color3.fromRGB(235,235,235), }})
@@ -76,6 +85,10 @@ local function GetBestEquipmentName(Muscle)
     end
 
     return Best
+end
+
+for Index, Connection in getconnections(client.Idled) do
+    Connection:Disconnect()
 end
 
 for i,v in (playergui.Frames.GymStore.PowerUps.CanvasGroup.List:GetChildren()) do
@@ -305,6 +318,10 @@ local script_handler = {}; do
         local root = get_root(char)
         local hum = get_hum(char)
 
+        if self.autonextworld then
+            self:try_next_world()
+        end
+
         if not (char and hum and root) then 
             self.current_path = nil
             return 
@@ -516,6 +533,20 @@ local script_handler = {}; do
             end
         end
     end
+
+    function script_handler:get_best_world()
+        return DataController:GetData()._replica.Data.world
+    end
+
+    function script_handler:try_next_world()
+        local BestWorld = self:get_best_world()
+        if not BestWorld then return end
+        local WorldData = WorldsModule[BestWorld]
+        if not WorldData then return end
+        if WorldData.place == game.PlaceId then return end
+        
+        WorldService:teleport(BestWorld)
+    end
 end
 
 local handler = script_handler.new()
@@ -594,8 +625,9 @@ local misc_tab = UI.New({Title = 'Misc'}); do
     end})
 
     misc_tab.Label({Text = 'Quests'})
-    misc_tab.Toggle({Text = 'Auto Quest', Callback = function(self)
+    misc_tab.Toggle({Text = 'Auto Quest + World', Callback = function(self)
         handler.autoquest = self
+        handler.autonextworld = self
     end})
 
     misc_tab.Label({Text = 'Aura'})
