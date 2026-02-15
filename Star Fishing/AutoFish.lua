@@ -33,7 +33,7 @@ local function Cast()
     if not Rod then 
         Rod = Backpack:FindFirstChild('Rod')
         if not Rod then return end
-        
+        if not Flags.AutoEquipRod then return end
         Rod.Parent = Character
     end
 
