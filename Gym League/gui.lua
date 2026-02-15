@@ -323,6 +323,7 @@ local script_handler = {}; do
         end
 
         if self.autonextworld then
+            self:unlock_world()
             self:try_next_world()
         end
 
@@ -344,6 +345,9 @@ local script_handler = {}; do
                 if (not self.use_all_powerups and not v) then continue end
                 if (self.use_all_powerups and i == 'Milk') then continue end
 
+                local IsActive = playergui.Main.BottomCenter.Boosts.Scrolling.Inside:FindFirstChild(i)
+                if IsActive then continue end
+                
                 self:powerup_handler(i)
             end
         end
@@ -513,11 +517,11 @@ local script_handler = {}; do
     function script_handler:powerup_handler(item)
         local char = get_char(client)
         local backpack = get_backpack(client)
-        local boost = playergui.Main.BottomCenter.Boosts.Scrolling.Inside:FindFirstChild(item)
+        local boost = playergui.Frames.PlayerInventory.PowerUps.CanvasGroup.List:FindFirstChild(item)
 
         if (char and backpack) then
-            local character_item = char:FindFirstChild(item)
-            local backpack_item = backpack:FindFirstChild(item)
+            -- local character_item = char:FindFirstChild(item)
+            -- local backpack_item = backpack:FindFirstChild(item)
 
             if (boost) then
                 if (self.use_powerup) then
@@ -543,6 +547,13 @@ local script_handler = {}; do
 
     function script_handler:get_best_world()
         return DataController:GetData()._replica.Data.world
+    end
+
+    function script_handler:unlock_world()
+        local Locked = playergui.Frames.Stats.Main.MuscleList.FullBody.Locked
+        if not Locked or not Locked.Visible then return end
+
+        self:call('WorldService', 'RF', 'unlock')
     end
 
     function script_handler:try_next_world()
