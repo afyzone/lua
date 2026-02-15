@@ -5,7 +5,8 @@
 local Flags = Flags or {
     Farm = 'Self', -- Self, Milky Way, Andromeda, Centaurus A, Hoag's Object, Negative Galaxy, The Eye
     SellAll = true,
-    SellAllDebounce = 10
+    SellAllDebounce = 10,
+    AutoEquipRod = true,
 }
 
 local Players = game:GetService("Players")
