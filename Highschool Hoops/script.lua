@@ -4,31 +4,13 @@
 -- Off Ball Move to Player (Hold Q)
 -- Hold to shoot
 
-local services = setmetatable({}, {
-	__index = function(self, key)
-		local service = pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
-		rawset(self, key, service)
-
-		return rawget(self, key)
-	end
-})
-
-local players = services.Players
-local runservice = services.RunService
-local virtualinputmanager = services.VirtualInputManager
-local userinputservice = services.UserInputService
-
-local client = players.LocalPlayer
-local playergui = client:WaitForChild('PlayerGui')
-local random = Random.new()
-local additional_speed, last_e_release, firing, e_held, off_ball, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
-
 shared.afy_flags = shared.afy_flags or {
 	auto_block = false,
 	auto_ankle_break = false,
 	ball_reach = true,
 	force_standing_shots = true,
 	addition_close_in_speed = 0,
+	dribble_boost = 1.03,
 
 	spam_hold_shoot_bind = 'E',
 
@@ -45,6 +27,31 @@ shared.afy_flags = shared.afy_flags or {
 		distance = 4,
 	},
 }
+
+local services = setmetatable({}, {
+	__index = function(self, key)
+		local service = pcall(cloneref, game:FindService(key)) and cloneref(game:GetService(key)) or Instance.new(key)
+		rawset(self, key, service)
+
+		return rawget(self, key)
+	end
+})
+
+local players = services.Players
+local runservice = services.RunService
+local virtualinputmanager = services.VirtualInputManager
+local userinputservice = services.UserInputService
+
+local client = players.LocalPlayer
+local playergui = client:WaitForChild('PlayerGui')
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Client = Players.LocalPlayer
+local Lib = require(ReplicatedStorage.Lib)
+local BannerNotificationModule = require(Lib.ReplicatedStorage.BannerNotification_Storage.BannerNotificationModule)
+local random = Random.new()
+local HiddenFlags = {Connections = {}}
+local additional_speed, last_e_release, firing, e_held, off_ball, target_position, body_velocity, direction_anim, target_hold_player = 0, 0, false
 
 local hoops = {}; do
 	if (workspace:FindFirstChild('Hoops')) then
@@ -135,7 +142,7 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
 		return factor
 	end
 
-	check_close_in = function(target_layuping, target_shooting, target_dunking)
+	check_close_in = function(target_layuping, target_shooting, target_dunking, hoop_dist)
 		if (target_dunking) then return end
 		
 		local first_condition = (hoop_dist < 20 and target_layuping and target_layuping > 7.5)
@@ -145,15 +152,7 @@ local get_char, get_root, get_hum, position_between_two_instances, get_closest_i
 	end
 end
 
-if (not original_namecall) then
-	getgenv().original_namecall = hookmetamethod(game, '__namecall', function(...)
-		return old_namecall(...)
-	end)
-end
-
-getgenv().old_namecall = function(...)
-	if (not shared.afy) then return original_namecall(...) end
-
+local original_namecall; original_namecall = hookmetamethod(game, '__namecall', function(...)
 	local method, self, args = getnamecallmethod(), select(1, ...), {select(2, ...)}
 
 	if (method == 'SetAttribute' and args[1] == 'Direction' and direction_anim) then
@@ -177,13 +176,9 @@ getgenv().old_namecall = function(...)
 	end
 
 	return original_namecall(...)
-end
+end)
 
-local con; con = runservice.Heartbeat:Connect(function()
-	if (not shared.afy) then
-		return con:Disconnect()
-	end
-
+table.insert(HiddenFlags.Connections, runservice.Heartbeat:Connect(function()
 	local char = get_char(client)
 	local root = get_root(char)
 	local hum = get_hum(char)
@@ -230,13 +225,9 @@ local con; con = runservice.Heartbeat:Connect(function()
 			direction_anim = nil
 		end
 	end
-end)
+end))
 
-local input_start_con; input_start_con = userinputservice.InputBegan:Connect(function(input, chat)
-	if (not shared.afy) then
-		return input_start_con:Disconnect()
-	end
-
+table.insert(HiddenFlags.Connections, userinputservice.InputBegan:Connect(function(input, chat)
 	if (chat) then return end
 
 	if (input.KeyCode == Enum.KeyCode[shared.afy_flags.spam_hold_shoot_bind] and not e_held and os.clock() - last_e_release > 0.2) then
@@ -246,13 +237,9 @@ local input_start_con; input_start_con = userinputservice.InputBegan:Connect(fun
 	if (input.KeyCode == Enum.KeyCode[shared.afy_flags.off_ball_lock.keybind]) then
 		off_ball = true
 	end
-end)
+end))
 
-local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(function(input, chat)
-	if (not shared.afy) then
-		return input_ended_con:Disconnect()
-	end
-
+table.insert(HiddenFlags.Connections, userinputservice.InputEnded:Connect(function(input, chat)
 	if (chat) then return end
 
 	if (input.KeyCode == Enum.KeyCode[shared.afy_flags.spam_hold_shoot_bind]) then
@@ -263,18 +250,23 @@ local input_ended_con; input_ended_con = userinputservice.InputEnded:Connect(fun
 	if (input.KeyCode == Enum.KeyCode[shared.afy_flags.off_ball_lock.keybind]) then
 		off_ball = false
 	end
-end)
+end))
 
-local on_teleport, executed; on_teleport = client.OnTeleport:Connect(function()
-	if (not shared.afy) then
-		return on_teleport:Disonnect()
-	end
-
-	if (queue_on_teleport and not executed) then
-		executed = true
+table.insert(HiddenFlags.Connections, client.OnTeleport:Connect(function()
+	if (queue_on_teleport and not HiddenFlags.Executed) then
+		HiddenFlags.Executed = true
 		queue_on_teleport(`shared.afy_flags = {shared.afy_flags}; loadstring(game:HttpGet('https://raw.githubusercontent.com/afyzone/lua/refs/heads/main/Highschool%20Hoops/script.lua'))()`)
 	end
-end)
+end))
+
+local UIEvent = ReplicatedStorage.Lib.EventsPlayer.UIEvent
+table.insert(HiddenFlags.Connections, UIEvent.OnClientEvent:Connect(function(Type, Data)
+    if Type ~= 'ShotFeedback' then return end
+    if Data.Player ~= Client then return end
+	local NotifData = { 0.3, Color3.fromRGB(0, 0, 0), 0, Color3.fromRGB(255, 255, 255) }
+	local Info = ('Shot Accuracy: %d\nSelection: %s\nRelease: %s\nContest: %d'):format(math.round((Data.ShotAcc or 0) * 100), Data.Selection or 'Unknown', Data.Release or 'Unknown', Data.Contest or 0)
+	BannerNotificationModule:Notify(Type, Info, "rbxassetid://15634218701", 6.5, NotifData)
+end))
 
 shared.afy = not shared.afy
 print(shared.afy)
@@ -285,6 +277,15 @@ while (shared.afy and task.wait()) do
 	local hum = get_hum(char)
 
 	if (char and root and hum) then
+		local Handles = root:FindFirstChild('Handles')
+		
+		if Handles and not HiddenFlags.Handles ~= Handles then
+			HiddenFlags.Handles = Handles
+			local Current = Handles.Velocity
+			local NewVelocity = Current * (shared.afy_flags.dribble_boost or 1)
+			Handles.Velocity = NewVelocity
+		end
+
 		local meter = client:GetAttribute('MeterActive')
 		
 		if (meter) then
@@ -362,7 +363,7 @@ while (shared.afy and task.wait()) do
 				local target_dunking = closest_ball_holder:GetAttribute('Dunking')
 				local target_posting = closest_ball_holder:GetAttribute('Posting')
 				
-				local close_in = check_close_in(target_layuping, target_shooting, target_dunking)
+				local close_in = check_close_in(target_layuping, target_shooting, target_dunking, hoop_dist)
 
 				additional_speed = close_in and shared.afy_flags.addition_close_in_speed or 0
 				local distance = target_posting and shared.afy_flags.auto_guard.posted_guard_distance or shared.afy_flags.auto_guard.guard_distance
@@ -370,9 +371,9 @@ while (shared.afy and task.wait()) do
 				local move_pos = position_between_two_instances(closest_ball_holder_root, closest_hoop, close_in and shared.afy_flags.auto_guard.close_in_guard_distance or distance)
 
 				if (move_pos) then
-					local direction = (move_pos - root.Position)
+					local distance = vector.magnitude(move_pos - root.Position)
 
-					if (vector.magnitude(direction) > 1) then
+					if (distance > 1) then
 						target_position = move_pos
 						hum.WalkToPoint = move_pos
 					end
@@ -398,9 +399,9 @@ while (shared.afy and task.wait()) do
 				local move_pos = position_between_two_instances(target_hold_player, closest_ball, shared.afy_flags.off_ball_lock.distance)
 
 				if (move_pos) then
-					local direction = (move_pos - root.Position)
+					local distance = vector.magnitude(move_pos - root.Position)
 
-					if (vector.magnitude(direction) > 0.2) then
+					if (distance > 0.2) then
 						hum.WalkToPoint = move_pos
 					end
 				end
@@ -413,4 +414,9 @@ while (shared.afy and task.wait()) do
 			virtualinputmanager:SendKeyEvent(true, 'E', false, nil)
 		end
 	end
+end
+
+hookmetamethod(game, '__namecall', original_namecall)
+for Index, Connection in HiddenFlags.Connections do
+	Connection:Disconnect()
 end
