@@ -3,16 +3,18 @@
 -- Auto Fish
 
 local Flags = Flags or {
-    Farm = "Self", -- Self, Milky Way, Andromeda, Centaurus A, Hoag's Object, Negative Galaxy, The Eye
+    Farm = 'Self', -- Self, Milky Way, Andromeda, Centaurus A, Hoag's Object, Negative Galaxy, The Eye
     SellAll = true,
-    AutoEquipRod = true,
+    SellAllDebounce = 10
 }
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Client = Players.LocalPlayer
 local Backpack = Client:FindFirstChildWhichIsA('Backpack')
-local Connections = {}
+local HiddenFlags = {
+    Connections = {}
+}
 
 shared.afy = not shared.afy
 print('[afy]', shared.afy)
@@ -31,7 +33,6 @@ local function Cast()
         Rod = Backpack:FindFirstChild('Rod')
         if not Rod then return end
         
-        if not Flags.AutoEquipRod then return end
         Rod.Parent = Character
     end
 
@@ -52,7 +53,7 @@ local function Cast()
 end
 
 local ClientRecieveItems = ReplicatedStorage.Events.Global.ClientRecieveItems
-table.insert(Connections, ClientRecieveItems.OnClientEvent:Connect(function(...)
+table.insert(HiddenFlags.Connections, ClientRecieveItems.OnClientEvent:Connect(function(...)
     local Data = {...}
     local Info = Data[4] or {}
     local TimingTbl = Data[6] or {}
@@ -75,12 +76,13 @@ while shared.afy and task.wait() do
     
     Cast()
 
-    if Flags.SellAll then
+    if Flags.SellAll and tick() - (Flags.SellAllDebounce or 10) > (HiddenFlags.SellAllDebounce or 0) then
         local ClientChoosesDialogueOption = ReplicatedStorage.Dialogue.Events.Global.ClientChoosesDialogueOption
         ClientChoosesDialogueOption:FireServer({ id = "sell-all", text = "Sell <font color='#26ff47'>all</font> of my stars.", npc = "Star Merchant" })
+        HiddenFlags.SellAllDebounce = tick()
     end
 end
 
-for Index, Connection in Connections do
+for Index, Connection in HiddenFlags.Connections do
     Connection:Disconnect()
 end
