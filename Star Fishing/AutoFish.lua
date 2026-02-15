@@ -3,12 +3,15 @@
 -- Auto Fish
 
 local Flags = Flags or {
-    Farm = 'Self', -- Self, Milky Way, Andromeda, Centaurus A, Hoag's Object, Negative Galaxy, The Eye
+    Farm = "Self", -- Self, Milky Way, Andromeda, Centaurus A, Hoag's Object, Negative Galaxy, The Eye
+    SellAll = true,
+    AutoEquipRod = true,
 }
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Client = Players.LocalPlayer
+local Backpack = Client:FindFirstChildWhichIsA('Backpack')
 local Connections = {}
 
 shared.afy = not shared.afy
@@ -24,7 +27,13 @@ local function Cast()
     if not Root then return end
 
     local Rod = Character:FindFirstChild('Rod')
-    if not Rod then return end
+    if not Rod then 
+        Rod = Backpack:FindFirstChild('Rod')
+        if not Rod then return end
+        
+        if not Flags.AutoEquipRod then return end
+        Rod.Parent = Character
+    end
 
     local Farming = Flags.Farm == 'Self' and Root or workspace.Galaxies:FindFirstChild(Flags.Farm) or Root
     local FarmType = {Farming:GetPivot().Position + vector.create(0, 5, 0), Farming:GetPivot().LookVector}
@@ -65,6 +74,11 @@ while shared.afy and task.wait() do
     if not Root then continue end
     
     Cast()
+
+    if Flags.SellAll then
+        local ClientChoosesDialogueOption = ReplicatedStorage.Dialogue.Events.Global.ClientChoosesDialogueOption
+        ClientChoosesDialogueOption:FireServer({ id = "sell-all", text = "Sell <font color='#26ff47'>all</font> of my stars.", npc = "Star Merchant" })
+    end
 end
 
 for Index, Connection in Connections do
