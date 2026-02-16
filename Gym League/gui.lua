@@ -19,6 +19,7 @@ local BigNum = require(ReplicatedStorage.Packages.BigNum)
 local KnitModule = require(ReplicatedStorage.Packages.knit)
 local GymsList = require(ReplicatedStorage.HotControllers:WaitForChild('GymsList_Loaded'))
 local WorldsModule = require(ReplicatedStorage.Shared.presets.worlds)
+local LibraryModule = require(ReplicatedStorage.Shared.library)
 local WorldService = KnitModule.GetService("WorldService")
 local DataController = KnitModule.GetController("DataController")
 local ActiveWorlds = GymsList.Config.GetActiveWorlds and GymsList.Config.GetActiveWorlds()
@@ -138,7 +139,8 @@ local script_handler = {}; do
         self.autocomp = false
         self.comp_yield = false
 
-        self.next_alter = false
+        self.auto_alter = false
+        self.auto_trainer = false
         
         self.auraautoroll = false
         self.buyaurarolls = false
@@ -147,6 +149,8 @@ local script_handler = {}; do
         self.use_powerup = false
         self.use_all_powerups = false
         self.selected_powerup = {}
+
+        self.ClientData = DataController:GetData()._replica.Data
         
         -- self.ui_funcs = {}; do
         --     for i,v in (equipment_rewards) do
@@ -210,6 +214,12 @@ local script_handler = {}; do
         local MaxStamina = BigNum.fromString64(client:GetAttribute('maxStamina') or BigNum.One)
 
         return (Stamina:native() / MaxStamina:native()) * 100
+    end
+    
+    function script_handler:grab_cash()
+        local Cash = BigNum.fromString64(self.ClientData.cash or BigNum.One)
+
+        return Cash:native()
     end
 
     function script_handler:move(pos: Vector3)
@@ -325,6 +335,17 @@ local script_handler = {}; do
         if self.autonextworld then
             self:unlock_world()
             self:try_next_world()
+        end
+
+        if self.auto_trainer then
+            local Id = (self.ClientData.ownedTrainers or 0) + 1
+            local TrainerData = LibraryModule.trainers[Id]
+            local TrainerPrice = TrainerData and TrainerData.price
+            local ClientCash = self:grab_cash()
+
+            if TrainerPrice and ClientCash and ClientCash >= TrainerPrice then
+                self:call('TrainerService', 'RF', 'NextTrainer', Id)
+            end
         end
 
         if not (char and hum and root) then 
@@ -466,7 +487,7 @@ local script_handler = {}; do
             end
         end)()
 
-        if (all_stats_maxed and self.next_alter) then
+        if (all_stats_maxed and self.auto_alter) then
             self:call('CharacterService', 'RF', 'NextAlter')
         end
     
@@ -545,10 +566,6 @@ local script_handler = {}; do
         end
     end
 
-    function script_handler:get_best_world()
-        return DataController:GetData()._replica.Data.world
-    end
-
     function script_handler:unlock_world()
         local Locked = playergui.Frames.Stats.Main.MuscleList.FullBody.Locked
         if not Locked or not Locked.Visible then return end
@@ -557,7 +574,7 @@ local script_handler = {}; do
     end
 
     function script_handler:try_next_world()
-        local BestWorld = self:get_best_world()
+        local BestWorld = self.ClientData.world
         if not BestWorld then return end
         local WorldData = WorldsModule[BestWorld]
         if not WorldData then return end
@@ -590,7 +607,7 @@ local main_tab = UI.New({Title = 'Main'}); do
     --     Menu = handler.ui_funcs
     -- })
 
-    main_tab.Dropdown({Text = 'Choose manual farm', Default = 'Stamina', Options = EquipmentNaming, Callback = function(Value)
+    main_tab.Dropdown({Text = 'Choose manual farm', Options = EquipmentNaming, Callback = function(Value)
         handler.manual_farm = Value
     end})
     
@@ -617,6 +634,13 @@ local main_tab = UI.New({Title = 'Main'}); do
         end
 
         handler.autonextworld = self
+    end})
+
+    main_tab.Toggle({Text = 'Auto Body Alter', Callback = function(self)
+        handler.auto_alter = self
+    end})
+    main_tab.Toggle({Text = 'Auto Trainer', Callback = function(self)
+        handler.auto_trainer = self
     end})
     
     main_tab.Toggle({Text = 'Auto Clicker', Enabled = false, Callback = function(self)
@@ -658,10 +682,6 @@ local misc_tab = UI.New({Title = 'Misc'}); do
             handler.comp_yield = false
             handler.current_path = nil
         end
-    end})
-
-    misc_tab.Toggle({Text = 'Next Alter (Upgrades body)', Callback = function(self)
-        handler.next_alter = self
     end})
 
     misc_tab.Label({Text = 'Aura'})
