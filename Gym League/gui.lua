@@ -22,21 +22,8 @@ local WorldsModule = require(ReplicatedStorage.Shared.presets.worlds)
 local LibraryModule = require(ReplicatedStorage.Shared.library)
 local WorldService = KnitModule.GetService("WorldService")
 local DataController = KnitModule.GetController("DataController")
+local ArmWrestleInfo = require(ReplicatedStorage.Shared.minigames.ArmWrestle.Info)
 local ActiveWorlds = GymsList.Config.GetActiveWorlds and GymsList.Config.GetActiveWorlds()
-
-local FortuneModule = require(ReplicatedStorage.Shared.presets.fortune)
-local FortDailyModule = require(ReplicatedStorage.Shared.presets.fortuneDaily)
-local DailyGiftModule = require(ReplicatedStorage.Shared.presets.dailyGift)
-local RouletteModule = require(ReplicatedStorage.Shared.presets.roulette)
-local GalaxyLevelsModule = require(ReplicatedStorage.Shared.presets.galaxyLevels)
-local CratesModule = require(ReplicatedStorage.Shared.presets.crates)
-local RaritiesModule = require(ReplicatedStorage.Shared.presets.rarities)
-local BattlepassModule = require(ReplicatedStorage.Shared.presets.battlepass)
-local BattlepassProducts = require(ReplicatedStorage.Shared.presets.battlepassProducts)
-local ClanRewards = require(ReplicatedStorage.Shared.presets.clanRewards)
-local ClanLeagues = require(ReplicatedStorage.Shared.presets.clanLeagues)
-local SettingsModule = require(ReplicatedStorage.Shared.presets.settings)
-local ReplicaController = require(ReplicatedStorage.Shared.lib.replication.ReplicaController)
 
 local Material = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone/8874e6a5f489d7e548db2ed8f5b87004/raw/"))()
 local UI = Material.Load({Title = "@cats - Gym League",Style = 1,SizeX = 500,SizeY = 400, ColorOverrides = { MainFrame = Color3.fromRGB(15,15,15), Minimise = Color3.fromRGB(68, 208, 255), MinimiseAccent = Color3.fromRGB(3, 188, 182), Maximise = Color3.fromRGB(25,255,0), MaximiseAccent = Color3.fromRGB(0,255,110), NavBar = Color3.fromRGB(15,15,15), NavBarAccent = Color3.fromRGB(255,255,255), NavBarInvert = Color3.fromRGB(15,15,15), TitleBar = Color3.fromRGB(30, 30, 30), TitleBarAccent = Color3.fromRGB(255,255,255), Overlay = Color3.fromRGB(30, 30, 30), Banner = Color3.fromRGB(30, 30, 30), BannerAccent = Color3.fromRGB(255,255,255), Content = Color3.fromRGB(85,85,85), Button = Color3.fromRGB(40, 40, 40), ButtonAccent = Color3.fromRGB(235, 235, 235), ChipSet = Color3.fromRGB(170, 170, 170), ChipSetAccent = Color3.fromRGB(100,100,100), DataTable = Color3.fromRGB(160,160,160), DataTableAccent = Color3.fromRGB(45,45,45), Slider = Color3.fromRGB(45,45,45), SliderAccent = Color3.fromRGB(235,235,235), Toggle = Color3.fromRGB(230, 230, 230), ToggleAccent = Color3.fromRGB(235, 235, 235), Dropdown = Color3.fromRGB(45, 45, 45), DropdownAccent = Color3.fromRGB(235,235,235), ColorPicker = Color3.fromRGB(10, 10, 10), ColorPickerAccent = Color3.fromRGB(235,235,235), TextField = Color3.fromRGB(55,55,55), TextFieldAccent = Color3.fromRGB(235,235,235), }})
@@ -44,6 +31,7 @@ local UI = Material.Load({Title = "@cats - Gym League",Style = 1,SizeX = 500,Siz
 local client = players.LocalPlayer
 local playergui = client:WaitForChild('PlayerGui')
 local label_timer = workspace.Podium.entrance.billboard.billboard.labelTimer
+local label_text = workspace.Podium.entrance.billboard.billboard.labelText
 
 local powerups, fast_mode = {}, {
     ['Stamina'] = false,
@@ -80,7 +68,7 @@ for Index, EquipmentInfo in EquipmentsModule do
 	end
 end
 
-local function GetBestEquipmentName(Muscle)
+local function GetBestEquipmentName(Muscle, EncodedMuscles, World)
     local Highest, Best = 0, nil
 
     for MachineName, Info in Equipments do
@@ -89,6 +77,20 @@ local function GetBestEquipmentName(Muscle)
 
         local Stat = Info[Muscle]
         if not Stat then continue end
+
+        local Req = EquipmentsModule.required(MachineName, World)
+        if Req then
+            local CanUse = true
+            for RequiredMuscle, RequiredValue in pairs(Req) do
+                local PlayerEncoded = EncodedMuscles[RequiredMuscle] or "0"
+                local PlayerStat = BigNum.fromString64(PlayerEncoded):native()
+                if PlayerStat < RequiredValue then
+                    CanUse = false
+                    break
+                end
+            end
+            if not CanUse then continue end
+        end
 
         if Stat > Highest then
             Highest = Stat
@@ -168,9 +170,7 @@ local script_handler = {}; do
 
         self.auto_dailygift = false
         self.auto_fortune = false
-        self.auto_fortune_daily = false
         self.auto_roulette = false
-        self.auto_crates = false
         self.auto_galaxy = false
         self.auto_battlepass = false
         self.auto_battlepass_premium = false
@@ -178,6 +178,8 @@ local script_handler = {}; do
         self.auto_gear = false
         self.buygear = false
         self.autoclaim_clan = false
+        self.auto_squidgame = false
+        self.auto_trainmods = false
 
         self._knitBase = nil
 
@@ -427,14 +429,14 @@ local script_handler = {}; do
 
         self:collect_daily_gift()
         self:spin_fortune()
-        self:spin_fortune_daily()
         self:spin_roulette()
-        self:open_crates()
         self:buy_galaxy_level()
         self:claim_battlepass()
         self:complete_event_quests()
         self:roll_gear()
         self:claim_clan_rewards()
+        self:join_squid_game()
+        self:upgrade_training_mods()
 
         if (self.autoquest) then
             for Index, Quest in playergui.Frames.Quests.MainQuestsList:GetChildren() do
@@ -530,7 +532,7 @@ local script_handler = {}; do
                 if (v == 100) then continue end
                 all_stats_maxed = false
 
-                local EquipmentName = GetBestEquipmentName(i)
+                local EquipmentName = GetBestEquipmentName(i, self.ClientData.muscles, self.ClientData.currentWorld)
                 if not EquipmentName then continue end
 
                 local equipment = self:get_equipment(EquipmentName)
@@ -550,7 +552,28 @@ local script_handler = {}; do
             return self.manual_farm
         end
 
-        return selected_farm or GetBestEquipmentName('Stamina')
+        return selected_farm or GetBestEquipmentName('Stamina', self.ClientData.muscles, self.ClientData.currentWorld)
+    end
+
+    function script_handler:can_do_armwrestle()
+        local TotalPower = BigNum.fromString64(self.ClientData.calculatedTotalPower):native()
+        local MinTP = ArmWrestleInfo.WorldMinTp or 0
+        if TotalPower < MinTP then return false end
+
+        local ReqStats = ArmWrestleInfo.RecommendedStats
+        if not ReqStats then return true end
+
+        for StatName, Required in pairs(ReqStats) do
+            local MuscleKey = StatName
+            if StatName == "Bicep" then MuscleKey = "Biceps"
+            elseif StatName == "Tricep" then MuscleKey = "Triceps" end
+            local Encoded = self.ClientData.muscles[MuscleKey]
+            if not Encoded then return false end
+            local Actual = BigNum.fromString64(Encoded):native()
+            if Actual < Required then return false end
+        end
+
+        return true
     end
 
     function script_handler:competition()
@@ -572,6 +595,13 @@ local script_handler = {}; do
         else
             if (label_timer.Text:lower():find('starting')) then 
                 self.comp_yield = true
+
+                if label_text and label_text.Text:lower():find("arm") then
+                    if not self:can_do_armwrestle() then
+                        self.comp_yield = false
+                        return
+                    end
+                end
 
                 if (os.clock() - (self.debounces['competition'] or 0) > 3) then
                     self.current_farming_instance = nil
@@ -642,7 +672,7 @@ local script_handler = {}; do
         if not self.auto_dailygift then return end
         if os.clock() - (self.debounces['dailygift'] or 0) < 5 then return end
         self.debounces['dailygift'] = os.clock()
-        self:call('DailyGiftService', 'RF', 'GetReward')
+        self:call('DailyService', 'RE', 'GetGift')
     end
 
     function script_handler:spin_fortune()
@@ -652,33 +682,11 @@ local script_handler = {}; do
         self:call('FortuneService', 'RF', 'Spin')
     end
 
-    function script_handler:spin_fortune_daily()
-        if not self.auto_fortune_daily then return end
-        if os.clock() - (self.debounces['fortune_daily'] or 0) < 5 then return end
-        self.debounces['fortune_daily'] = os.clock()
-        self:call('FortuneService', 'RF', 'DailySpin')
-    end
-
     function script_handler:spin_roulette()
         if not self.auto_roulette then return end
         if os.clock() - (self.debounces['roulette'] or 0) < 3 then return end
         self.debounces['roulette'] = os.clock()
-        self:call('RouletteService', 'RF', 'Spin')
-    end
-
-    function script_handler:open_crates()
-        if not self.auto_crates then return end
-        local CrateData = self.ClientData.crates
-        if not CrateData then return end
-        if os.clock() - (self.debounces['crates'] or 0) < 3 then return end
-
-        for CrateName, CrateAmount in pairs(CrateData) do
-            if type(CrateAmount) == "number" and CrateAmount > 0 then
-                self.debounces['crates'] = os.clock()
-                self:call('CrateService', 'RF', 'Open', CrateName)
-                break
-            end
-        end
+        self:call('RouletteService', 'RF', 'Roll')
     end
 
     function script_handler:buy_galaxy_level()
@@ -687,7 +695,7 @@ local script_handler = {}; do
 
         local CurrentLevel = self.ClientData.galaxyLevel or 1
         local NextLevel = CurrentLevel + 1
-        local GalaxyData = GalaxyLevelsModule[NextLevel]
+        local GalaxyData = LibraryModule.galaxyLevels[NextLevel]
         if not GalaxyData then return end
 
         local Cash = self:grab_cash()
@@ -696,7 +704,7 @@ local script_handler = {}; do
 
         if Cash >= Price then
             self.debounces['galaxy'] = os.clock()
-            self:call('GalaxyService', 'RF', 'BuyLevel', NextLevel)
+            self:call('EquipmentService', 'RF', 'changeGalaxyLevel', NextLevel)
         end
     end
 
@@ -709,14 +717,14 @@ local script_handler = {}; do
         local PremiumRewards = BPData.battlepassPremiumRewards or {}
         local Level = BPData.battlepassLevel or 0
 
-        local BattlepassData = BattlepassModule
+        local BattlepassData = LibraryModule.battlepass
         for Tier = 1, Level do
             local TierData = BattlepassData[Tier]
             if not TierData then break end
             local FreeReward = TierData.free
             if FreeReward and not FreeRewards[Tier] then
                 self.debounces['battlepass'] = os.clock()
-                self:call('BattlepassService', 'RF', 'ClaimFreeReward', Tier)
+                self:call('BattlepassService', 'RE', 'Claim')
                 break
             end
 
@@ -724,7 +732,7 @@ local script_handler = {}; do
                 local PremReward = TierData.premium
                 if PremReward and not PremiumRewards[Tier] then
                     self.debounces['battlepass'] = os.clock()
-                    self:call('BattlepassService', 'RF', 'ClaimPremiumReward', Tier)
+                    self:call('BattlepassService', 'RE', 'Claim')
                     break
                 end
             end
@@ -752,14 +760,31 @@ local script_handler = {}; do
         if not self.auto_gear then return end
         if os.clock() - (self.debounces['gear_roll'] or 0) < 3 then return end
         self.debounces['gear_roll'] = os.clock()
-        self:roll('GearService', self.buygear)
+        if self.buygear then
+            self:call('GearService', 'RF', 'BuyGear')
+        end
+        self:call('GearService', 'RF', 'CollectGear')
     end
 
     function script_handler:claim_clan_rewards()
         if not self.autoclaim_clan then return end
         if os.clock() - (self.debounces['clan'] or 0) < 10 then return end
         self.debounces['clan'] = os.clock()
-        self:call('ClanService', 'RF', 'ClaimRewards')
+        self:call('ClanService', 'RF', 'ClaimReward')
+    end
+
+    function script_handler:join_squid_game()
+        if not self.auto_squidgame then return end
+        if os.clock() - (self.debounces['squid'] or 0) < 30 then return end
+        self.debounces['squid'] = os.clock()
+        self:call('SquidGameService', 'RF', 'Teleport')
+    end
+
+    function script_handler:upgrade_training_mods()
+        if not self.auto_trainmods then return end
+        if os.clock() - (self.debounces['trainmods'] or 0) < 5 then return end
+        self.debounces['trainmods'] = os.clock()
+        self:call('TrainingModifiersService', 'RF', 'Upgrade')
     end
 end
 
@@ -885,19 +910,13 @@ local misc_tab = UI.New({Title = 'Misc'}); do
     misc_tab.Toggle({Text = 'Auto Fortune Spin', Callback = function(self)
         handler.auto_fortune = self
     end})
-    misc_tab.Toggle({Text = 'Auto Fortune Daily', Callback = function(self)
-        handler.auto_fortune_daily = self
-    end})
     misc_tab.Toggle({Text = 'Auto Roulette Spin', Callback = function(self)
         handler.auto_roulette = self
     end})
 
-    misc_tab.Label({Text = 'Gear & Crates'})
+    misc_tab.Label({Text = 'Gear'})
     misc_tab.Toggle({Text = 'Auto Gear Roll', Callback = function(self)
         handler.auto_gear = self
-    end})
-    misc_tab.Toggle({Text = 'Auto Open Crates', Callback = function(self)
-        handler.auto_crates = self
     end})
 end
 
@@ -923,6 +942,14 @@ local progression_tab = UI.New({Title = 'Progression'}); do
     progression_tab.Toggle({Text = 'Auto Clan Rewards', Callback = function(self)
         handler.autoclaim_clan = self
     end})
+
+    progression_tab.Label({Text = 'Minigames & Modifiers'})
+    -- progression_tab.Toggle({Text = 'Auto Join Squid Game', Callback = function(self)
+    --     handler.auto_squidgame = self
+    -- end, Menu = { Information = function(self) UI.Banner({Text = "Teleports to squid game minigames when available." }) end}})
+    progression_tab.Toggle({Text = 'Auto Upgrade Training Mods', Callback = function(self)
+        handler.auto_trainmods = self
+    end, Menu = { Information = function(self) UI.Banner({Text = "Buys training modifier upgrades when affordable." }) end}})
 end
 
 if shared.afy then
