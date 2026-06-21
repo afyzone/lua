@@ -24,6 +24,20 @@ local WorldService = KnitModule.GetService("WorldService")
 local DataController = KnitModule.GetController("DataController")
 local ActiveWorlds = GymsList.Config.GetActiveWorlds and GymsList.Config.GetActiveWorlds()
 
+local FortuneModule = require(ReplicatedStorage.Shared.presets.fortune)
+local FortDailyModule = require(ReplicatedStorage.Shared.presets.fortuneDaily)
+local DailyGiftModule = require(ReplicatedStorage.Shared.presets.dailyGift)
+local RouletteModule = require(ReplicatedStorage.Shared.presets.roulette)
+local GalaxyLevelsModule = require(ReplicatedStorage.Shared.presets.galaxyLevels)
+local CratesModule = require(ReplicatedStorage.Shared.presets.crates)
+local RaritiesModule = require(ReplicatedStorage.Shared.presets.rarities)
+local BattlepassModule = require(ReplicatedStorage.Shared.presets.battlepass)
+local BattlepassProducts = require(ReplicatedStorage.Shared.presets.battlepassProducts)
+local ClanRewards = require(ReplicatedStorage.Shared.presets.clanRewards)
+local ClanLeagues = require(ReplicatedStorage.Shared.presets.clanLeagues)
+local SettingsModule = require(ReplicatedStorage.Shared.presets.settings)
+local ReplicaController = require(ReplicatedStorage.Shared.lib.replication.ReplicaController)
+
 local Material = loadstring(game:HttpGet("https://gist.githubusercontent.com/afyzone/8874e6a5f489d7e548db2ed8f5b87004/raw/"))()
 local UI = Material.Load({Title = "@cats - Gym League",Style = 1,SizeX = 500,SizeY = 400, ColorOverrides = { MainFrame = Color3.fromRGB(15,15,15), Minimise = Color3.fromRGB(68, 208, 255), MinimiseAccent = Color3.fromRGB(3, 188, 182), Maximise = Color3.fromRGB(25,255,0), MaximiseAccent = Color3.fromRGB(0,255,110), NavBar = Color3.fromRGB(15,15,15), NavBarAccent = Color3.fromRGB(255,255,255), NavBarInvert = Color3.fromRGB(15,15,15), TitleBar = Color3.fromRGB(30, 30, 30), TitleBarAccent = Color3.fromRGB(255,255,255), Overlay = Color3.fromRGB(30, 30, 30), Banner = Color3.fromRGB(30, 30, 30), BannerAccent = Color3.fromRGB(255,255,255), Content = Color3.fromRGB(85,85,85), Button = Color3.fromRGB(40, 40, 40), ButtonAccent = Color3.fromRGB(235, 235, 235), ChipSet = Color3.fromRGB(170, 170, 170), ChipSetAccent = Color3.fromRGB(100,100,100), DataTable = Color3.fromRGB(160,160,160), DataTableAccent = Color3.fromRGB(45,45,45), Slider = Color3.fromRGB(45,45,45), SliderAccent = Color3.fromRGB(235,235,235), Toggle = Color3.fromRGB(230, 230, 230), ToggleAccent = Color3.fromRGB(235, 235, 235), Dropdown = Color3.fromRGB(45, 45, 45), DropdownAccent = Color3.fromRGB(235,235,235), ColorPicker = Color3.fromRGB(10, 10, 10), ColorPickerAccent = Color3.fromRGB(235,235,235), TextField = Color3.fromRGB(55,55,55), TextFieldAccent = Color3.fromRGB(235,235,235), }})
 
@@ -151,7 +165,22 @@ local script_handler = {}; do
         self.selected_powerup = {}
 
         self.ClientData = DataController:GetData()._replica.Data
-        
+
+        self.auto_dailygift = false
+        self.auto_fortune = false
+        self.auto_fortune_daily = false
+        self.auto_roulette = false
+        self.auto_crates = false
+        self.auto_galaxy = false
+        self.auto_battlepass = false
+        self.auto_battlepass_premium = false
+        self.auto_eventquest = false
+        self.auto_gear = false
+        self.buygear = false
+        self.autoclaim_clan = false
+
+        self._knitBase = nil
+
         -- self.ui_funcs = {}; do
         --     for i,v in (equipment_rewards) do
         --         self.ui_funcs[i] = function(self)
@@ -298,20 +327,35 @@ local script_handler = {}; do
         end
     end
 
+    function script_handler:get_knit_service(service)
+        if not self._knitBase then
+            for _, child in ipairs(replicatedstorage.Packages._Index:GetChildren()) do
+                if child.Name:find("sleitnick_knit@") then
+                    self._knitBase = child:FindFirstChild("knit") or child
+                    break
+                end
+            end
+        end
+        if not self._knitBase then return end
+        local ServicesFolder = self._knitBase:FindFirstChild("Services")
+        if not ServicesFolder then return end
+        return ServicesFolder:FindFirstChild(service)
+    end
+
     function script_handler:call(service, folder, remote, ...)
-        local remote_service = replicatedstorage.Packages._Index["sleitnick_knit@1.5.1"].knit.Services[service]
+        local remote_service = self:get_knit_service(service)
         local remote_folder = remote_service and remote_service[folder]
-        local remote = remote_folder and remote_folder[remote]
+        local remoteObj = remote_folder and remote_folder[remote]
         local args = {...}
 
-        if (not remote) then return end
+        if (not remoteObj) then return end
 
-        if (remote:IsA('RemoteEvent') or remote:IsA('UnreliableRemoteEvent')) then
-            return remote:FireServer(unpack(args))
+        if (remoteObj:IsA('RemoteEvent') or remoteObj:IsA('UnreliableRemoteEvent')) then
+            return remoteObj:FireServer(unpack(args))
         end
         
-        if (remote:IsA('RemoteFunction')) then
-            return remote:InvokeServer(unpack(args))
+        if (remoteObj:IsA('RemoteFunction')) then
+            return remoteObj:InvokeServer(unpack(args))
         end
     end
 
@@ -380,6 +424,17 @@ local script_handler = {}; do
         if (self.auraposeroll) then
             self:roll('PoseService', self.buyposerolls)
         end
+
+        self:collect_daily_gift()
+        self:spin_fortune()
+        self:spin_fortune_daily()
+        self:spin_roulette()
+        self:open_crates()
+        self:buy_galaxy_level()
+        self:claim_battlepass()
+        self:complete_event_quests()
+        self:roll_gear()
+        self:claim_clan_rewards()
 
         if (self.autoquest) then
             for Index, Quest in playergui.Frames.Quests.MainQuestsList:GetChildren() do
@@ -582,6 +637,130 @@ local script_handler = {}; do
         
         WorldService:teleport(BestWorld)
     end
+
+    function script_handler:collect_daily_gift()
+        if not self.auto_dailygift then return end
+        if os.clock() - (self.debounces['dailygift'] or 0) < 5 then return end
+        self.debounces['dailygift'] = os.clock()
+        self:call('DailyGiftService', 'RF', 'GetReward')
+    end
+
+    function script_handler:spin_fortune()
+        if not self.auto_fortune then return end
+        if os.clock() - (self.debounces['fortune_spin'] or 0) < 3 then return end
+        self.debounces['fortune_spin'] = os.clock()
+        self:call('FortuneService', 'RF', 'Spin')
+    end
+
+    function script_handler:spin_fortune_daily()
+        if not self.auto_fortune_daily then return end
+        if os.clock() - (self.debounces['fortune_daily'] or 0) < 5 then return end
+        self.debounces['fortune_daily'] = os.clock()
+        self:call('FortuneService', 'RF', 'DailySpin')
+    end
+
+    function script_handler:spin_roulette()
+        if not self.auto_roulette then return end
+        if os.clock() - (self.debounces['roulette'] or 0) < 3 then return end
+        self.debounces['roulette'] = os.clock()
+        self:call('RouletteService', 'RF', 'Spin')
+    end
+
+    function script_handler:open_crates()
+        if not self.auto_crates then return end
+        local CrateData = self.ClientData.crates
+        if not CrateData then return end
+        if os.clock() - (self.debounces['crates'] or 0) < 3 then return end
+
+        for CrateName, CrateAmount in pairs(CrateData) do
+            if type(CrateAmount) == "number" and CrateAmount > 0 then
+                self.debounces['crates'] = os.clock()
+                self:call('CrateService', 'RF', 'Open', CrateName)
+                break
+            end
+        end
+    end
+
+    function script_handler:buy_galaxy_level()
+        if not self.auto_galaxy then return end
+        if os.clock() - (self.debounces['galaxy'] or 0) < 5 then return end
+
+        local CurrentLevel = self.ClientData.galaxyLevel or 1
+        local NextLevel = CurrentLevel + 1
+        local GalaxyData = GalaxyLevelsModule[NextLevel]
+        if not GalaxyData then return end
+
+        local Cash = self:grab_cash()
+        local Price = GalaxyData.price
+        if type(Price) ~= "number" then return end
+
+        if Cash >= Price then
+            self.debounces['galaxy'] = os.clock()
+            self:call('GalaxyService', 'RF', 'BuyLevel', NextLevel)
+        end
+    end
+
+    function script_handler:claim_battlepass()
+        if not self.auto_battlepass then return end
+        if os.clock() - (self.debounces['battlepass'] or 0) < 3 then return end
+
+        local BPData = self.ClientData
+        local FreeRewards = BPData.battlepassFreeRewards or {}
+        local PremiumRewards = BPData.battlepassPremiumRewards or {}
+        local Level = BPData.battlepassLevel or 0
+
+        local BattlepassData = BattlepassModule
+        for Tier = 1, Level do
+            local TierData = BattlepassData[Tier]
+            if not TierData then break end
+            local FreeReward = TierData.free
+            if FreeReward and not FreeRewards[Tier] then
+                self.debounces['battlepass'] = os.clock()
+                self:call('BattlepassService', 'RF', 'ClaimFreeReward', Tier)
+                break
+            end
+
+            if self.auto_battlepass_premium then
+                local PremReward = TierData.premium
+                if PremReward and not PremiumRewards[Tier] then
+                    self.debounces['battlepass'] = os.clock()
+                    self:call('BattlepassService', 'RF', 'ClaimPremiumReward', Tier)
+                    break
+                end
+            end
+        end
+    end
+
+    function script_handler:complete_event_quests()
+        if not self.auto_eventquest then return end
+        if os.clock() - (self.debounces['eventquest'] or 0) < 5 then return end
+
+        local EventQuests = self.ClientData.eventQuests
+        if not EventQuests then return end
+
+        for QuestName, QuestData in pairs(EventQuests) do
+            if type(QuestData) ~= "table" then continue end
+            if QuestData.isCompleted then continue end
+
+            self.debounces['eventquest'] = os.clock()
+            self:call('QuestService', 'RF', 'complete', QuestName)
+            break
+        end
+    end
+
+    function script_handler:roll_gear()
+        if not self.auto_gear then return end
+        if os.clock() - (self.debounces['gear_roll'] or 0) < 3 then return end
+        self.debounces['gear_roll'] = os.clock()
+        self:roll('GearService', self.buygear)
+    end
+
+    function script_handler:claim_clan_rewards()
+        if not self.autoclaim_clan then return end
+        if os.clock() - (self.debounces['clan'] or 0) < 10 then return end
+        self.debounces['clan'] = os.clock()
+        self:call('ClanService', 'RF', 'ClaimRewards')
+    end
 end
 
 local handler = script_handler.new()
@@ -700,6 +879,49 @@ local misc_tab = UI.New({Title = 'Misc'}); do
 
     misc_tab.Toggle({Text = 'Buy Pose Roll', Callback = function(self)
         handler.buyposerolls = self
+    end})
+
+    misc_tab.Label({Text = 'Fortune & Roulette'})
+    misc_tab.Toggle({Text = 'Auto Fortune Spin', Callback = function(self)
+        handler.auto_fortune = self
+    end})
+    misc_tab.Toggle({Text = 'Auto Fortune Daily', Callback = function(self)
+        handler.auto_fortune_daily = self
+    end})
+    misc_tab.Toggle({Text = 'Auto Roulette Spin', Callback = function(self)
+        handler.auto_roulette = self
+    end})
+
+    misc_tab.Label({Text = 'Gear & Crates'})
+    misc_tab.Toggle({Text = 'Auto Gear Roll', Callback = function(self)
+        handler.auto_gear = self
+    end})
+    misc_tab.Toggle({Text = 'Auto Open Crates', Callback = function(self)
+        handler.auto_crates = self
+    end})
+end
+
+local progression_tab = UI.New({Title = 'Progression'}); do
+    progression_tab.Label({Text = 'Daily & Battlepass'})
+    progression_tab.Toggle({Text = 'Auto Daily Gift', Callback = function(self)
+        handler.auto_dailygift = self
+    end})
+    progression_tab.Toggle({Text = 'Auto Battlepass Claim', Callback = function(self)
+        handler.auto_battlepass = self
+    end})
+    progression_tab.Toggle({Text = 'Claim Premium Too', Callback = function(self)
+        handler.auto_battlepass_premium = self
+    end})
+
+    progression_tab.Label({Text = 'World & Galaxy'})
+    progression_tab.Toggle({Text = 'Auto Galaxy Level', Callback = function(self)
+        handler.auto_galaxy = self
+    end, Menu = { Information = function(self) UI.Banner({Text = "Buys next galaxy level when you can afford it." }) end}})
+    progression_tab.Toggle({Text = 'Auto Event Quests', Callback = function(self)
+        handler.auto_eventquest = self
+    end})
+    progression_tab.Toggle({Text = 'Auto Clan Rewards', Callback = function(self)
+        handler.autoclaim_clan = self
     end})
 end
 
