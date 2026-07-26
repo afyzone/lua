@@ -4,12 +4,13 @@ shared.afy = not shared.afy
 print('[afy]', shared.afy)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local OriginalRequire = require
 local GameRequire = (function()
+	local OriginalRequire = require
     require(ReplicatedStorage:FindFirstChild("Require") or game:FindFirstChild("Require", true))()
-    return require
+	local Require = require
+	require = OriginalRequire
+    return Require
 end)()
-require = OriginalRequire
 
 local Players = game:GetService('Players')
 local Client = Players.LocalPlayer
