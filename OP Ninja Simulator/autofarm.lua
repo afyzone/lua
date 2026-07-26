@@ -49,22 +49,22 @@ local AutoUpgrade = function()
         local Class = UpgradeF["ClassF"]:FindFirstChild("ClassImgBtn")
         local Realm = UpgradeF["AscendF"]:FindFirstChild("AscendImgBtn")
 
-        if Sword and tick() - SwordDelay > 2 then
+        if Sword and tick() - SwordDelay > 0.5 then
             PersonalRemotes.RemoteFunction:InvokeServer(RemoteData.Sword)
             SwordDelay = tick()
         end
 
-        if Shuriken and tick() - ShurikenDelay > 2 then
+        if Shuriken and tick() - ShurikenDelay > 0.5 then
             PersonalRemotes.RemoteFunction:InvokeServer(RemoteData.Shuriken)
             ShurikenDelay = tick()
         end
 
-        if Class and tick() - ClassDelay > 2 then
+        if Class and tick() - ClassDelay > 0.5 then
             PersonalRemotes.RemoteFunction:InvokeServer(RemoteData.Class)
             ClassDelay = tick()
         end
 
-        if Realm and tick() - RealmDelay > 2 then
+        if Realm and tick() - RealmDelay > 0.5 then
             PersonalRemotes.RemoteFunction:InvokeServer(RemoteData.Realm)
             RealmDelay = tick()
         end
@@ -96,7 +96,7 @@ while shared.afy and task.wait() do
 
         if Katana then
             Katana:Activate()
-            Katana.Parent = Backpack
+            -- Katana.Parent = Backpack
         end
 
         AutoUpgrade()
