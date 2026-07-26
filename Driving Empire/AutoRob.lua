@@ -37,7 +37,7 @@ local function GetATM()
 
         if ATMModel then
             if ATMModel:GetAttribute('State') == 'Busted' then continue end
-            local ProximityPrompt = ATMModel:FindFirstChild('Attachment') and ATMModel.Attachment:FindFirstChild('ProximityPrompt')
+            local ProximityPrompt = ATMModel:FindFirstChild('ProximityPrompt', true)
 
             if ProximityPrompt and ProximityPrompt.Enabled then
                 return ATMModel
@@ -77,13 +77,19 @@ while shared.afy and task.wait() do
     local ATM = GetATM()
 
     if ATM then
-        Root:PivotTo(CFrame.new(ATM:GetPivot().Position + vector.create(0, 3, 0)))
+		Root:PivotTo(CFrame.new(ATM:GetPivot().Position - vector.create(0, 5, 0)))
         local State = {ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("AttemptATMBustStart"):InvokeServer(ATM)}
         if not State[1] then continue end
-        task.wait(3)
+
+		local Waiting = true; task.delay(3, function() Waiting = false end)
+		while Waiting do task.wait()
+        	Root:PivotTo(CFrame.new(ATM:GetPivot().Position - vector.create(0, 5, 0)))
+		end
+
         local State = {ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("AttemptATMBustComplete"):InvokeServer(ATM)}
     else
-        local Floater = workspace.Game.Jobs.CriminalDropOffSpawners.CriminalDropOffSpawnerPermanent
+		local CanDeposit = workspace.Game.Jobs.CriminalDropOffSpawners.CriminalDropOffSpawnerPermanent.CriminalDropOffPoint.Zone.Effect.Attachment.ParticleEmitter.Enabled
+        local Floater = CanDeposit and workspace.Game.Jobs.CriminalDropOffSpawners.CriminalDropOffSpawnerPermanent or Floater
         Root:PivotTo(Floater.CFrame + vector.create(0, 2.5, 5))
         Humanoid:UnequipTools()
 
