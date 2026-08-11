@@ -7,7 +7,7 @@ local Flags = Flags or {
     SafeFarm = true,
     OptimalWorld = true,
     Transform = true,
-    DragonBallFinder = true,
+    DragonBallFinder = false,
 }
 
 if not game:IsLoaded() then game.Loaded:Wait() task.wait(1) end
@@ -105,7 +105,7 @@ local GetRoot; do
     Transform = function()
         local EquippedMode, EnabledMode = GetTransformInfo()
 
-        if EquippedMode and (not EnabledMode or EnabledMode == '') then
+        if EquippedMode and EquippedMode ~= '' and (not EnabledMode or EnabledMode == '') then
             Network:InvokeServer("Transform", "Quick")
             return true
         end
